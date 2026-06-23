@@ -198,7 +198,8 @@ const { useState, useMemo, useEffect, useRef } = React;
 const GAS_URL = "https://script.google.com/macros/s/AKfycby48Nyzb4q5265opAIWwRGTdBFlnYnsa-0lS9w0EIGAaRVCNBYqvd9Wc5Hip2DySgEiwQ/exec";
 const LS_CUSTOMER = "order_customer";
 const LS_PRODUCTS  = "order_products";
-const LS_VERSION   = "order_cache_v2"; // ← 版本號，改這裡可強制所有人重新登入
+const LS_CART      = "order_cart";
+const LS_VERSION   = "order_cache_v2";
 const IDLE_MINUTES = 30;
 
 // 啟動時檢查快取版本，舊版自動清除
@@ -324,17 +325,12 @@ function App() {
   const [stage,    setStage]    = useState(() => {
     try {
       const s = JSON.parse(localStorage.getItem(LS_CUSTOMER));
-      // 驗證快取格式：name 不能是純數字（統編），否則是舊格式，清掉重新登入
-      if (s && /^\d+$/.test(s.name||"")) { localStorage.removeItem(LS_CUSTOMER); localStorage.removeItem(LS_PRODUCTS); return "login"; }
       return s ? "shop" : "login";
     } catch { return "login"; }
   });
   const [customer, setCustomer] = useState(() => {
-    try {
-      const s = JSON.parse(localStorage.getItem(LS_CUSTOMER));
-      if (s && /^\d+$/.test(s.name||"")) return null; // 舊格式清掉
-      return s || null;
-    } catch { return null; }
+    try { return JSON.parse(localStorage.getItem(LS_CUSTOMER)) || null; }
+    catch { return null; }
   });
   const [products, setProducts] = useState(() => { try{return JSON.parse(localStorage.getItem(LS_PRODUCTS))||[];}catch{return [];} });
   const [loginStep, setLoginStep] = useState("input");
@@ -343,8 +339,12 @@ function App() {
   const [pendingCompany, setPendingCompany] = useState(null);
   const [selectedBranchCode, setSelectedBranchCode] = useState("");
   const [loading, setLoading] = useState(false);
-  const [cart, setCart] = useState({});
+  const [cart, setCart] = useState(() => {
+    try { return JSON.parse(localStorage.getItem(LS_CART)) || {}; } catch { return {}; }
+  });
   const [search, setSearch] = useState("");
+  const [sortBy, setSortBy] = useState("default"); // default|price_asc|price_desc|code
+  const [orderNote, setOrderNote] = useState(""); // 訂單備註
   // 兩層分類：activeCat = {parent:"哺育系列", child:"奶嘴"} 或 null（全部）
   const [activeCat, setActiveCat] = useState(null);
   const [openParents, setOpenParents] = useState({}); // 哪些大類展開
@@ -385,6 +385,7 @@ function App() {
 
   function doLogout() {
     localStorage.removeItem(LS_CUSTOMER); localStorage.removeItem(LS_PRODUCTS);
+    localStorage.removeItem(LS_CART);
     [idleTimer, logoutTimer].forEach(r => { if(r.current) clearTimeout(r.current); });
     setStage("login"); setCustomer(null); setCart({}); setTaxIdInput(""); setLoginError("");
     setLoginStep("input"); setPendingCompany(null); setSelectedBranchCode(""); setProducts([]); setIdleWarning(false);
@@ -408,12 +409,18 @@ function App() {
   const treeParents = useMemo(() => Object.keys(catTree), [catTree]);
   const hasCatTree  = treeParents.length > 0;
 
-  const filtered = useMemo(() => products.filter(p => {
-    const matchSearch = !search || p.name.includes(search) || p.code.includes(search);
-    if (!activeCat) return matchSearch; // 全部
-    if (activeCat.child) return matchSearch && p.subCategory === activeCat.child && p.category === activeCat.parent;
-    return matchSearch && p.category === activeCat.parent; // 大類全選
-  }), [products, activeCat, search]);
+  const filtered = useMemo(() => {
+    let list = products.filter(p => {
+      const matchSearch = !search || p.name.includes(search) || p.code.includes(search);
+      if (!activeCat) return matchSearch;
+      if (activeCat.child) return matchSearch && p.subCategory === activeCat.child && p.category === activeCat.parent;
+      return matchSearch && p.category === activeCat.parent;
+    });
+    if (sortBy==="price_asc")  list = [...list].sort((a,b)=>Number(a.unitPrice)-Number(b.unitPrice));
+    if (sortBy==="price_desc") list = [...list].sort((a,b)=>Number(b.unitPrice)-Number(a.unitPrice));
+    if (sortBy==="code")       list = [...list].sort((a,b)=>a.code.localeCompare(b.code));
+    return list;
+  }, [products, activeCat, search, sortBy]);
 
   function countByParent(parent) { return products.filter(p=>p.category===parent).length; }
   function countByChild(parent,child) { return products.filter(p=>p.category===parent&&p.subCategory===child).length; }
@@ -521,7 +528,13 @@ function App() {
   const cartCount  = cartLines.reduce((s,l)=>s+l.qty, 0);
   const cartTotal  = cartLines.reduce((s,l)=>s+l.amount, 0);
   const hasReview  = cartLines.some(l=>l.flag==="review");
-  function setQty(code, qty) { setCart(p=>({...p,[code]:Math.max(0,qty)})); }
+  function setQty(code, qty) {
+    setCart(p => {
+      const next = {...p, [code]: Math.max(0, qty)};
+      localStorage.setItem(LS_CART, JSON.stringify(next));
+      return next;
+    });
+  }
 
   async function handleTaxIdSubmit() {
     const id = taxIdInput.trim(); if (!id) { setLoginError("請輸入統一編號"); return; }
@@ -543,9 +556,10 @@ function App() {
   async function submitOrder() {
     setSubmitting(true); setPageError("");
     try {
-      const d = await callGAS("submitOrder",{order:{taxId:customer.taxId,customerName:customer.name+"（"+customer.code+"）"+customer.branchName,branchCode:customer.code,
+      const d = await callGAS("submitOrder",{order:{taxId:customer.taxId,customerName:customer.name+"（"+customer.code+"）"+customer.branchName,branchCode:customer.code, note:orderNote,
         lines:cartLines.map(l=>({code:l.product.code,name:l.product.name,qty:l.qty,giftQty:l.giftQty||0,unitPrice:l.product.unitPrice,amount:l.amount,activity:l.product.activity||"",needsReview:l.flag==="review"}))}});
-      setLastOrder({id:d.orderId,customer:customer.name,needsReview:hasReview}); setCart({}); setDrawerOpen(false); setStage("confirmed");
+      localStorage.removeItem(LS_CART);
+      setLastOrder({id:d.orderId,customer:customer.name,needsReview:hasReview}); setCart({}); setOrderNote(""); setDrawerOpen(false); setStage("confirmed");
     } catch(e) { setPageError("訂單送出失敗："+e.message+"，請稍後再試一次"); }
     finally { setSubmitting(false); }
   }
@@ -732,7 +746,15 @@ function App() {
     <div>
       <div className="app-header">
         <span className="who"><b>{customer.name||customer.companyName||""}</b>（{customer.code||customer.branchCode||""}）{customer.branchName||""}</span>
-        <button className="cart-pill" onClick={()=>setDrawerOpen(true)}>🛒 購物車 {cartCount>0&&`(${cartCount})`}</button>
+        <div className="search-box"><input placeholder="搜尋品名或產品編號…" value={search} onChange={e=>setSearch(e.target.value)}/></div>
+        <select value={sortBy} onChange={e=>setSortBy(e.target.value)}
+          style={{padding:"7px 10px",border:"1px solid var(--line)",borderRadius:8,fontSize:13,background:"#fff"}}>
+          <option value="default">預設排序</option>
+          <option value="code">品號</option>
+          <option value="price_asc">價格↑</option>
+          <option value="price_desc">價格↓</option>
+        </select>
+        <button className="cart-pill" onClick={()=>setDrawerOpen(true)}>🛒 {cartCount>0?`購物車 (${cartCount})`:"購物車"}</button>
         <button className="logout-link" onClick={doLogout}>登出</button>
       </div>
       <div className="layout">
@@ -815,6 +837,9 @@ function App() {
           <div className="drawer-foot">
             <div className="total-row grand"><span>合計</span><span>${cartTotal.toLocaleString()}</span></div>
             {hasReview&&<div className="review-note">此訂單含特殊促銷品項，系統試算金額僅供參考，正式金額將由業務人員複核後確認。</div>}
+            <textarea value={orderNote} onChange={e=>setOrderNote(e.target.value)}
+              placeholder="備註（選填）：送貨時間、特殊需求…"
+              style={{width:"100%",padding:"9px 11px",border:"1px solid var(--line)",borderRadius:8,fontSize:13,resize:"vertical",minHeight:52,fontFamily:"inherit",marginBottom:8,marginTop:8}}/>
             {pageError&&<div className="login-error">{pageError}</div>}
             <button className="submit-btn" disabled={cartLines.length===0||submitting} onClick={submitOrder}>{submitting?"送出中…":"送出訂單"}</button>
           </div>
