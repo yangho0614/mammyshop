@@ -133,11 +133,16 @@ function fixImgUrl(url) {
   return url;
 }
 
-// 訂單客戶名稱顯示：若 customerName 已含括號則直接用，否則補上分店代號
-function formatOrderName(customerName, branchCode) {
-  if (!customerName) return branchCode || "";
-  if (customerName.includes("（") || customerName.includes("(")) return customerName;
-  return customerName + (branchCode ? "（" + branchCode + "）" : "");
+// 訂單客戶名稱顯示：公司名稱（分店代號）分店名稱
+function formatOrderName(customerName, branchCode, branchName) {
+  var name = customerName || "";
+  // 如果已是完整格式（含括號）直接用
+  if (name.includes("（") || name.includes("(")) return name;
+  // 組合：公司名（分店代號）分店名稱
+  var result = name;
+  if (branchCode) result += "（" + branchCode + "）";
+  if (branchName) result += branchName;
+  return result || branchCode || "";
 }
 
 // UTC 時間字串轉台灣時間顯示格式
@@ -490,7 +495,7 @@ function Admin() {
                           <td onClick={e=>e.stopPropagation()}><input type="checkbox" checked={!!checkedOrders[o.orderId]} onChange={()=>toggleCheck(o.orderId)}/></td>
                           <td style={{color:"var(--ink-soft)",fontSize:11}}>{expandedOrders[o.orderId]?"▼":"▶"}</td>
                           <td style={{fontFamily:"monospace",fontSize:12}}>{o.orderId}</td>
-                          <td style={{fontSize:13}}>{formatOrderName(o.customerName, o.branchCode)}</td>
+                          <td style={{fontSize:13}}>{formatOrderName(o.customerName, o.branchCode, o.branchName)}</td>
                           <td style={{fontSize:12}}>{formatTime(o.time)}</td>
                           <td style={{fontWeight:600}}>${o.total.toLocaleString()}</td>
                           <td onClick={e=>e.stopPropagation()}>
