@@ -472,12 +472,16 @@ function Admin() {
   }
 
   // ── 商品排序 ──
-  const [mSort, setMSort] = useState("code"); // code|name|listPrice
+  const [mSort, setMSort] = useState("code");
   const [mSortDir, setMSortDir] = useState("asc");
   function toggleSort(col) {
     if (mSort===col) setMSortDir(d=>d==="asc"?"desc":"asc");
     else { setMSort(col); setMSortDir("asc"); }
   }
+  const filteredMaster = useMemo(() => masterRows.filter(r => {
+    if (mCatFilter && r.category !== mCatFilter) return false;
+    return !mSearch || r.name.includes(mSearch) || r.code.includes(mSearch) || (r.category||"").includes(mSearch);
+  }), [masterRows, mSearch, mCatFilter]);
   const sortedMaster = useMemo(() => [...filteredMaster].sort((a,b)=>{
     let va=a[mSort]||"", vb=b[mSort]||"";
     if (!isNaN(va) && !isNaN(vb)) { va=Number(va); vb=Number(vb); }
@@ -570,11 +574,6 @@ function Admin() {
     finally { setMLoading(false); }
   }
   useEffect(() => { if (tab==="master" && authed && masterRows.length===0) loadMaster(); }, [tab, authed]);
-
-  const filteredMaster = useMemo(() => masterRows.filter(r => {
-    if (mCatFilter && r.category !== mCatFilter) return false;
-    return !mSearch || r.name.includes(mSearch) || r.code.includes(mSearch) || (r.category||"").includes(mSearch);
-  }), [masterRows, mSearch, mCatFilter]);
 
   function startEdit(row) { setEditCode(row.code); setEditDraft({name:row.name, category:row.category, listPrice:row.listPrice, boxQty:row.boxQty, cost:row.cost||"", inactive:row.inactive}); }
   function cancelEdit() { setEditCode(null); setEditDraft({}); }
@@ -978,10 +977,10 @@ function Admin() {
                 <table className="mgmt-table">
                   <thead><tr>
                     <th style={{width:36}}><input type="checkbox" checked={allMasterChecked} onChange={toggleAllMaster} style={{width:15,height:15,accentColor:"var(--brand)"}}/></th>
-                    <th><button className="sort-btn"+(mSort==="code"?" active":"") onClick={()=>toggleSort("code")} style={{background:"none",border:"none",cursor:"pointer",fontWeight:600,padding:0,fontSize:13}}>品號 {mSort==="code"?(mSortDir==="asc"?"↑":"↓"):""}</button></th>
-                    <th><button onClick={()=>toggleSort("name")} style={{background:"none",border:"none",cursor:"pointer",fontWeight:600,padding:0,fontSize:13}}>品名 {mSort==="name"?(mSortDir==="asc"?"↑":"↓"):""}</button></th>
+                    <th><button className={"sort-btn"+(mSort==="code"?" active":"")} onClick={()=>toggleSort("code")} style={{cursor:"pointer",fontWeight:600,padding:"4px 8px",fontSize:13}}>品號 {mSort==="code"?(mSortDir==="asc"?"↑":"↓"):""}</button></th>
+                    <th><button className={"sort-btn"+(mSort==="name"?" active":"")} onClick={()=>toggleSort("name")} style={{cursor:"pointer",fontWeight:600,padding:"4px 8px",fontSize:13}}>品名 {mSort==="name"?(mSortDir==="asc"?"↑":"↓"):""}</button></th>
                     <th>大類別</th>
-                    <th><button onClick={()=>toggleSort("listPrice")} style={{background:"none",border:"none",cursor:"pointer",fontWeight:600,padding:0,fontSize:13}}>定價 {mSort==="listPrice"?(mSortDir==="asc"?"↑":"↓"):""}</button></th>
+                    <th><button className={"sort-btn"+(mSort==="listPrice"?" active":"")} onClick={()=>toggleSort("listPrice")} style={{cursor:"pointer",fontWeight:600,padding:"4px 8px",fontSize:13}}>定價 {mSort==="listPrice"?(mSortDir==="asc"?"↑":"↓"):""}</button></th>
                     <th>成本</th><th>箱入</th><th style={{textAlign:"center"}}>失效</th><th>圖片</th><th style={{width:160}}>操作</th>
                   </tr></thead>
                   <tbody>
