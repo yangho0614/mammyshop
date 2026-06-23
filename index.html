@@ -171,7 +171,18 @@ const { useState, useMemo, useEffect, useRef } = React;
 const GAS_URL = "https://script.google.com/macros/s/AKfycby48Nyzb4q5265opAIWwRGTdBFlnYnsa-0lS9w0EIGAaRVCNBYqvd9Wc5Hip2DySgEiwQ/exec";
 const LS_CUSTOMER = "order_customer";
 const LS_PRODUCTS  = "order_products";
+const LS_VERSION   = "order_cache_v2"; // ← 版本號，改這裡可強制所有人重新登入
 const IDLE_MINUTES = 30;
+
+// 啟動時檢查快取版本，舊版自動清除
+(function() {
+  if (localStorage.getItem("order_cache_ver") !== LS_VERSION) {
+    localStorage.removeItem(LS_CUSTOMER);
+    localStorage.removeItem(LS_PRODUCTS);
+    localStorage.removeItem("cat_tree");
+    localStorage.setItem("order_cache_ver", LS_VERSION);
+  }
+})();
 
 async function callGAS(action, payload) {
   const res = await fetch(GAS_URL, { method:"POST", headers:{"Content-Type":"text/plain;charset=utf-8"}, body:JSON.stringify(Object.assign({action}, payload)) });
@@ -269,8 +280,21 @@ function computeLine(p, qty) {
 }
 
 function App() {
-  const [stage,    setStage]    = useState(() => { try{return JSON.parse(localStorage.getItem(LS_CUSTOMER))?"shop":"login";}catch{return "login";} });
-  const [customer, setCustomer] = useState(() => { try{return JSON.parse(localStorage.getItem(LS_CUSTOMER))||null;}catch{return null;} });
+  const [stage,    setStage]    = useState(() => {
+    try {
+      const s = JSON.parse(localStorage.getItem(LS_CUSTOMER));
+      // 驗證快取格式：name 不能是純數字（統編），否則是舊格式，清掉重新登入
+      if (s && /^\d+$/.test(s.name||"")) { localStorage.removeItem(LS_CUSTOMER); localStorage.removeItem(LS_PRODUCTS); return "login"; }
+      return s ? "shop" : "login";
+    } catch { return "login"; }
+  });
+  const [customer, setCustomer] = useState(() => {
+    try {
+      const s = JSON.parse(localStorage.getItem(LS_CUSTOMER));
+      if (s && /^\d+$/.test(s.name||"")) return null; // 舊格式清掉
+      return s || null;
+    } catch { return null; }
+  });
   const [products, setProducts] = useState(() => { try{return JSON.parse(localStorage.getItem(LS_PRODUCTS))||[];}catch{return [];} });
   const [loginStep, setLoginStep] = useState("input");
   const [taxIdInput, setTaxIdInput] = useState("");
@@ -444,7 +468,7 @@ function App() {
   if (stage==="history") return (
     <div>
       <div className="app-header">
-        <span className="who"><b>{customer.name}</b>（{customer.code}）{customer.branchName}</span>
+        <span className="who"><b>{customer.name||customer.companyName||""}</b>（{customer.code||customer.branchCode||""}）{customer.branchName||""}</span>
         <button className="ghost-btn" style={{marginLeft:"auto"}} onClick={()=>setStage("shop")}>返回選購</button>
         <button className="logout-link" style={{marginLeft:8}} onClick={doLogout}>登出</button>
       </div>
@@ -492,8 +516,7 @@ function App() {
   return (
     <div>
       <div className="app-header">
-        <span className="who"><b>{customer.name}</b>（{customer.code}）{customer.branchName}</span>
-        <div className="search-box"><input placeholder="搜尋品名或產品編號…" value={search} onChange={e=>setSearch(e.target.value)}/></div>
+        <span className="who"><b>{customer.name||customer.companyName||""}</b>（{customer.code||customer.branchCode||""}）{customer.branchName||""}</span>
         <button className="cart-pill" onClick={()=>setDrawerOpen(true)}>🛒 購物車 {cartCount>0&&`(${cartCount})`}</button>
         <button className="logout-link" onClick={doLogout}>登出</button>
       </div>
