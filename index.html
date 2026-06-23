@@ -197,7 +197,11 @@ function ImageSlider({ images }) {
   const touchStartY = React.useRef(null);
   const isDragging  = React.useRef(false);
 
-  if (!images || images.length === 0) {
+  const [validImgs, setValidImgs] = React.useState(images);
+  React.useEffect(() => { setValidImgs(images); }, [images.join(',')]);
+  function onImgError(url) { setValidImgs(prev => prev.filter(u => u !== url)); }
+
+  if (!images || images.length === 0 || validImgs.length === 0) {
     return <div className="card-img-wrap"><div className="card-img-placeholder">📦</div></div>;
   }
 
@@ -236,13 +240,13 @@ function ImageSlider({ images }) {
       onTouchEnd={onTouchEnd}
     >
       <div className="card-img-slider" style={{transform:`translateX(${-idx*100}%)`}}>
-        {images.map((url, i) => <img key={i} src={url} alt="" loading={i===0?"eager":"lazy"}/>)}
+        {validImgs.map((url, i) => <img key={url} src={url} alt="" loading={i===0?"eager":"lazy"} onError={()=>onImgError(url)}/>)}
       </div>
       {hasMult && <button className="card-img-arrow prev" onClick={prev}>‹</button>}
       {hasMult && <button className="card-img-arrow next" onClick={next}>›</button>}
       {hasMult && (
         <div className="card-img-dots">
-          {images.map((_, i) => <span key={i} className={i===idx?"active":""}/>)}
+          {validImgs.map((_, i) => <span key={i} className={i===idx?"active":""}/>)}
         </div>
       )}
     </div>
@@ -376,7 +380,7 @@ function App() {
   async function submitOrder() {
     setSubmitting(true); setPageError("");
     try {
-      const d = await callGAS("submitOrder",{order:{taxId:customer.taxId,customerName:customer.name,branchCode:customer.code,
+      const d = await callGAS("submitOrder",{order:{taxId:customer.taxId,customerName:customer.name+"（"+customer.code+"）"+customer.branchName,branchCode:customer.code,
         lines:cartLines.map(l=>({code:l.product.code,name:l.product.name,qty:l.qty,giftQty:l.giftQty||0,unitPrice:l.product.unitPrice,amount:l.amount,activity:l.product.activity||"",needsReview:l.flag==="review"}))}});
       setLastOrder({id:d.orderId,customer:customer.name,needsReview:hasReview}); setCart({}); setDrawerOpen(false); setStage("confirmed");
     } catch(e) { setPageError("訂單送出失敗："+e.message+"，請稍後再試一次"); }
@@ -440,7 +444,7 @@ function App() {
   if (stage==="history") return (
     <div>
       <div className="app-header">
-        <span className="who">客戶：<b>{customer.name}</b></span>
+        <span className="who"><b>{customer.name}</b>（{customer.code}）{customer.branchName}</span>
         <button className="ghost-btn" style={{marginLeft:"auto"}} onClick={()=>setStage("shop")}>返回選購</button>
         <button className="logout-link" style={{marginLeft:8}} onClick={doLogout}>登出</button>
       </div>
@@ -488,7 +492,7 @@ function App() {
   return (
     <div>
       <div className="app-header">
-        <span className="who">客戶：<b>{customer.name}</b>{customer.branchName!==customer.name&&<span style={{color:"var(--ink-soft)"}}>（{customer.branchName}）</span>}</span>
+        <span className="who"><b>{customer.name}</b>（{customer.code}）{customer.branchName}</span>
         <div className="search-box"><input placeholder="搜尋品名或產品編號…" value={search} onChange={e=>setSearch(e.target.value)}/></div>
         <button className="cart-pill" onClick={()=>setDrawerOpen(true)}>🛒 購物車 {cartCount>0&&`(${cartCount})`}</button>
         <button className="logout-link" onClick={doLogout}>登出</button>

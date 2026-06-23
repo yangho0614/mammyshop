@@ -640,7 +640,7 @@ function Admin() {
                             <div className="img-thumb-row">
                               {imgs.map((url,i)=>(
                                 <div key={i} className="img-thumb-sm">
-                                  <img src={url} alt="" loading="lazy" onClick={()=>openLb(imgs,i,row.name)}/>
+                                  <img src={url} alt="" loading="lazy" onClick={()=>openLb(imgs,i,row.name)} onError={e=>{e.target.style.opacity="0.2";e.target.nextSibling&&(e.target.nextSibling.style.display="none");}} />
                                   <button className="del-img" title="刪除此圖" onClick={e=>{e.stopPropagation();handleDelImg(row.code,url);}}>✕</button>
                                 </div>
                               ))}
