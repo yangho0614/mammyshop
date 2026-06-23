@@ -114,6 +114,74 @@
 
   /* 上傳遮罩 */
   .uploading-mask{position:fixed;inset:0;z-index:70;background:rgba(20,30,28,.5);display:flex;align-items:center;justify-content:center;color:#fff;font-size:16px;flex-direction:column;gap:10px;}
+
+  /* 數據儀表板 */
+  .dash-kpi-row{display:flex;gap:12px;flex-wrap:wrap;margin-bottom:20px;}
+  .kpi-card{flex:1;min-width:130px;background:#fff;border:1px solid var(--line);border-radius:10px;padding:16px 18px;}
+  .kpi-card .k-label{font-size:11px;color:var(--ink-soft);margin-bottom:6px;letter-spacing:.04em;}
+  .kpi-card .k-value{font-size:26px;font-weight:800;color:var(--ink);}
+  .kpi-card .k-value.green{color:var(--brand-dark);}
+  .kpi-card .k-value.warn{color:var(--warn);}
+  .kpi-card .k-value.blue{color:#3d4f9e;}
+  .kpi-card .k-sub{font-size:11px;color:var(--ink-soft);margin-top:4px;}
+  .dash-section{background:#fff;border:1px solid var(--line);border-radius:10px;padding:18px 20px;margin-bottom:16px;}
+  .dash-section h3{font-size:14px;margin:0 0 14px;color:var(--ink);}
+  /* 長條圖 */
+  .bar-chart{display:flex;flex-direction:column;gap:8px;}
+  .bar-row{display:flex;align-items:center;gap:10px;font-size:12px;}
+  .bar-label{width:120px;flex-shrink:0;color:var(--ink-soft);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+  .bar-track{flex:1;background:#f0f4f3;border-radius:4px;height:18px;overflow:hidden;}
+  .bar-fill{height:100%;border-radius:4px;background:var(--brand);transition:width .4s ease;}
+  .bar-val{width:70px;text-align:right;font-weight:600;flex-shrink:0;}
+  /* 折線圖（純 CSS SVG） */
+  .line-chart-wrap{width:100%;overflow-x:auto;}
+  .trend-table{width:100%;border-collapse:collapse;font-size:12px;}
+  .trend-table th{background:#f4f6f5;padding:5px 8px;text-align:right;font-weight:600;}
+  .trend-table th:first-child{text-align:left;}
+  .trend-table td{padding:5px 8px;border-bottom:1px solid var(--line);text-align:right;}
+  .trend-table td:first-child{text-align:left;color:var(--ink-soft);}
+  /* 圓餅狀態圖 */
+  .status-chips{display:flex;gap:10px;flex-wrap:wrap;}
+  .status-chip{display:flex;align-items:center;gap:6px;padding:6px 12px;border-radius:20px;font-size:12px;font-weight:600;}
+  .status-chip.unc{background:var(--warn-tint);color:var(--warn);}
+  .status-chip.prep{background:#eef1fb;color:#3d4f9e;}
+  .status-chip.ship{background:var(--brand-tint);color:var(--brand-dark);}
+  /* 日期篩選列 */
+  .dash-filter{display:flex;gap:10px;margin-bottom:18px;flex-wrap:wrap;align-items:center;}
+  .dash-filter input[type="date"]{padding:8px 10px;border:1px solid var(--line);border-radius:8px;font-size:13px;}
+  .dash-filter select{padding:8px 10px;border:1px solid var(--line);border-radius:8px;font-size:13px;background:#fff;}
+  .dash-quick-btn{padding:7px 14px;border:1px solid var(--line);border-radius:7px;background:#fff;font-size:12px;cursor:pointer;}
+  .dash-quick-btn.active{background:var(--brand);color:#fff;border-color:var(--brand);}
+
+  /* 客戶管理 */
+  .cust-mgmt-table{width:100%;border-collapse:collapse;font-size:13px;background:#fff;border:1px solid var(--line);border-radius:8px;overflow:hidden;}
+  .cust-mgmt-table th{text-align:left;background:#f4f6f5;padding:9px 12px;border-bottom:1px solid var(--line);font-weight:600;}
+  .cust-mgmt-table td{padding:8px 12px;border-bottom:1px solid var(--line);vertical-align:middle;}
+
+  /* 新訂單通知 */
+  .notif-badge{position:absolute;top:-4px;right:-4px;background:var(--danger);color:#fff;border-radius:50%;width:16px;height:16px;font-size:10px;display:flex;align-items:center;justify-content:center;font-weight:700;}
+  .tab-wrap{position:relative;display:inline-block;}
+  .new-order-banner{position:fixed;top:56px;right:16px;z-index:40;background:var(--brand-dark);color:#fff;padding:10px 18px;border-radius:8px;font-size:13px;display:flex;align-items:center;gap:10px;box-shadow:0 4px 16px rgba(0,0,0,.2);}
+  .new-order-banner button{background:rgba(255,255,255,.2);border:none;color:#fff;padding:4px 10px;border-radius:5px;font-size:12px;cursor:pointer;}
+
+  /* 訂單備註 */
+  .order-note-box{margin-top:8px;padding:8px 12px;background:#fffbf3;border:1px solid #e8d9b5;border-radius:6px;font-size:12px;color:#7a6030;}
+  .note-edit-area{width:100%;padding:7px 10px;border:1px solid var(--line);border-radius:6px;font-size:13px;resize:vertical;min-height:56px;font-family:inherit;}
+
+  /* Excel 匯入 */
+  .import-zone{border:2px dashed var(--line);border-radius:10px;padding:30px;text-align:center;cursor:pointer;transition:border-color .2s;}
+  .import-zone:hover,.import-zone.drag{border-color:var(--brand);background:var(--brand-tint);}
+  .import-zone p{margin:8px 0 0;font-size:13px;color:var(--ink-soft);}
+  .import-preview{margin-top:14px;overflow-x:auto;}
+  .import-preview table{width:100%;border-collapse:collapse;font-size:12px;}
+  .import-preview th{background:#f4f6f5;padding:5px 8px;text-align:left;font-weight:600;}
+  .import-preview td{padding:5px 8px;border-bottom:1px solid var(--line);}
+
+  /* 商品批次操作 */
+  .batch-action-bar{display:flex;gap:8px;align-items:center;padding:8px 12px;background:var(--warn-tint);border:1px solid #e8d9b5;border-radius:8px;margin-bottom:12px;font-size:13px;}
+  .sort-bar{display:flex;gap:6px;align-items:center;font-size:12px;color:var(--ink-soft);}
+  .sort-btn{padding:4px 10px;border:1px solid var(--line);border-radius:5px;background:#fff;font-size:12px;cursor:pointer;}
+  .sort-btn.active{background:var(--brand);color:#fff;border-color:var(--brand);}
 </style>
 </head>
 <body>
@@ -178,6 +246,28 @@ function Admin() {
 
   // ── Tab ──
   const [tab, setTab] = useState("orders");
+
+  // ── 新訂單通知 ──
+  const [newOrderCount, setNewOrderCount] = useState(0);
+  const lastOrderCount = useRef(0);
+  const pollTimer = useRef(null);
+
+  // 後台輪詢：每60秒檢查新訂單
+  useEffect(() => {
+    if (!authed) return;
+    function poll() {
+      callGAS("listOrders").then(d => {
+        const unconfirmed = d.orders.filter(o=>o.orderStatus==="未確認").length;
+        if (lastOrderCount.current > 0 && unconfirmed > lastOrderCount.current) {
+          setNewOrderCount(unconfirmed - lastOrderCount.current);
+        }
+        lastOrderCount.current = unconfirmed;
+        if (tab === "orders") setOrders(d.orders);
+      }).catch(()=>{});
+    }
+    pollTimer.current = setInterval(poll, 60000);
+    return () => clearInterval(pollTimer.current);
+  }, [authed, tab]);
 
   // ── 訂單 ──
   const [orders,      setOrders]      = useState([]);
@@ -284,6 +374,178 @@ function Admin() {
   // ── 訂單展開 & 狀態切換 ──
   const [expandedOrders, setExpandedOrders] = useState({});
   function toggleOrderExpand(id) { setExpandedOrders(p=>({...p,[id]:!p[id]})); }
+
+  // ── 訂單備註編輯 ──
+  const [editingNote, setEditingNote] = useState(null); // orderId
+  const [noteDraft, setNoteDraft]     = useState("");
+  async function saveNote(orderId) {
+    try {
+      await callGAS("updateOrderNote",{orderId, note:noteDraft});
+      setOrders(prev=>prev.map(o=>o.orderId===orderId?{...o,note:noteDraft}:o));
+      setEditingNote(null);
+    } catch(e) { alert("儲存備註失敗："+e.message); }
+  }
+
+  // ── 數據儀表板 ──
+  const [dash, setDash]           = useState(null);
+  const [dashLoading, setDashLoading] = useState(false);
+  const [dashFrom, setDashFrom]   = useState("");
+  const [dashTo, setDashTo]       = useState("");
+  const [dashPeriod, setDashPeriod] = useState("month"); // today|week|month|custom
+
+  function setQuickPeriod(p) {
+    setDashPeriod(p);
+    const now = new Date();
+    const pad = n => String(n).padStart(2,"0");
+    const fmt = d => `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`;
+    const today = fmt(now);
+    if (p==="today") { setDashFrom(today); setDashTo(today); }
+    else if (p==="week") {
+      const mon = new Date(now); mon.setDate(now.getDate()-now.getDay()+1);
+      setDashFrom(fmt(mon)); setDashTo(today);
+    } else if (p==="month") {
+      setDashFrom(`${now.getFullYear()}-${pad(now.getMonth()+1)}-01`); setDashTo(today);
+    } else if (p==="quarter") {
+      const qm = Math.floor(now.getMonth()/3)*3;
+      setDashFrom(`${now.getFullYear()}-${pad(qm+1)}-01`); setDashTo(today);
+    } else if (p==="year") {
+      setDashFrom(`${now.getFullYear()}-01-01`); setDashTo(today);
+    }
+  }
+
+  async function loadDash() {
+    setDashLoading(true);
+    try { const d = await callGAS("getDashboard",{dateFrom:dashFrom||undefined, dateTo:dashTo||undefined}); setDash(d); }
+    catch(e) { alert("儀表板載入失敗："+e.message); }
+    finally { setDashLoading(false); }
+  }
+  useEffect(() => {
+    if (tab==="dashboard" && authed) { setQuickPeriod("month"); }
+  }, [tab, authed]);
+  useEffect(() => {
+    if (tab==="dashboard" && authed && (dashFrom||dashTo)) loadDash();
+  }, [dashFrom, dashTo, tab, authed]);
+
+  // ── 客戶管理 ──
+  const [custRows,    setCustRows]    = useState([]);
+  const [custLoading, setCustLoading] = useState(false);
+  const [custSearch,  setCustSearch]  = useState("");
+  const [editCust,    setEditCust]    = useState(null); // 正在編輯的 branchCode
+  const [custDraft,   setCustDraft]   = useState({});
+  const [showAddCust, setShowAddCust] = useState(false);
+  const [newCust, setNewCust] = useState({taxId:"",companyName:"",branchCode:"",branchName:""});
+
+  async function loadCustomers() {
+    setCustLoading(true);
+    try { const d = await callGAS("listCustomers"); setCustRows(d.rows); }
+    catch(e) { alert("載入失敗："+e.message); }
+    finally { setCustLoading(false); }
+  }
+  useEffect(() => { if (tab==="customers" && authed && custRows.length===0) loadCustomers(); }, [tab, authed]);
+
+  const filteredCust = useMemo(() => custRows.filter(r =>
+    !custSearch || r.companyName.includes(custSearch) || r.branchCode.includes(custSearch) || r.branchName.includes(custSearch) || r.taxId.includes(custSearch)
+  ), [custRows, custSearch]);
+
+  async function saveCust(row) {
+    try {
+      await callGAS("saveCustomer",{row:{...row,...custDraft}});
+      setCustRows(prev=>prev.map(r=>r.branchCode===row.branchCode?{...r,...custDraft}:r));
+      setEditCust(null); setCustDraft({});
+    } catch(e) { alert("儲存失敗："+e.message); }
+  }
+  async function delCust(row) {
+    if (!confirm(`確定刪除「${row.companyName} ${row.branchName}」？`)) return;
+    try {
+      await callGAS("deleteCustomer",{taxId:row.taxId, branchCode:row.branchCode});
+      setCustRows(prev=>prev.filter(r=>r.branchCode!==row.branchCode));
+    } catch(e) { alert("刪除失敗："+e.message); }
+  }
+  async function addCust() {
+    if (!newCust.branchCode || !newCust.companyName) { alert("公司名稱和分店代號為必填"); return; }
+    try {
+      await callGAS("saveCustomer",{row:newCust});
+      setCustRows(prev=>[...prev,{...newCust}]);
+      setNewCust({taxId:"",companyName:"",branchCode:"",branchName:""});
+      setShowAddCust(false);
+    } catch(e) { alert("新增失敗："+e.message); }
+  }
+
+  // ── 商品排序 ──
+  const [mSort, setMSort] = useState("code"); // code|name|listPrice
+  const [mSortDir, setMSortDir] = useState("asc");
+  function toggleSort(col) {
+    if (mSort===col) setMSortDir(d=>d==="asc"?"desc":"asc");
+    else { setMSort(col); setMSortDir("asc"); }
+  }
+  const sortedMaster = useMemo(() => [...filteredMaster].sort((a,b)=>{
+    let va=a[mSort]||"", vb=b[mSort]||"";
+    if (!isNaN(va) && !isNaN(vb)) { va=Number(va); vb=Number(vb); }
+    if (va<vb) return mSortDir==="asc"?-1:1;
+    if (va>vb) return mSortDir==="asc"?1:-1;
+    return 0;
+  }), [filteredMaster, mSort, mSortDir]);
+
+  // ── 商品批次操作 ──
+  const [checkedMaster, setCheckedMaster] = useState({});
+  const checkedMasterList = sortedMaster.filter(r=>checkedMaster[r.code]);
+  const allMasterChecked = sortedMaster.length>0 && checkedMasterList.length===sortedMaster.length;
+  function toggleMasterCheck(code) { setCheckedMaster(p=>({...p,[code]:!p[code]})); }
+  function toggleAllMaster() {
+    if (allMasterChecked) setCheckedMaster({});
+    else { const n={}; sortedMaster.forEach(r=>{n[r.code]=true;}); setCheckedMaster(n); }
+  }
+  async function batchSetInactive(val) {
+    if (!confirm(`確定將 ${checkedMasterList.length} 筆商品設為「${val?"失效":"有效"}」？`)) return;
+    try {
+      for (const row of checkedMasterList) {
+        await callGAS("saveMasterRow",{row:{...row,inactive:val}});
+      }
+      setMasterRows(prev=>prev.map(r=>checkedMaster[r.code]?{...r,inactive:val}:r));
+      setCheckedMaster({});
+    } catch(e) { alert("批次操作失敗："+e.message); }
+  }
+
+  // ── Excel 匯入商品 ──
+  const [importPreview, setImportPreview] = useState(null); // [{code,name,category,...}]
+  const [importDrag, setImportDrag]       = useState(false);
+  const importFileRef = useRef(null);
+
+  function handleImportFile(file) {
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = e => {
+      try {
+        const wb = XLSX.read(e.target.result, {type:"array"});
+        const ws = wb.Sheets[wb.SheetNames[0]];
+        const rows = XLSX.utils.sheet_to_json(ws, {defval:""});
+        // 欄位對照（支援中英文）
+        const mapped = rows.map(r => ({
+          code:      String(r["品號"]||r["code"]||r["產品編號"]||"").trim().padStart(6,"0"),
+          name:      String(r["品名"]||r["name"]||"").trim(),
+          category:  String(r["分類"]||r["category"]||"").trim(),
+          listPrice: String(r["定價"]||r["listPrice"]||"").trim(),
+          boxQty:    String(r["箱入"]||r["箱入數"]||r["boxQty"]||"").trim(),
+          cost:      String(r["成本"]||r["cost"]||"").trim(),
+          inactive:  String(r["失效"]||r["inactive"]||"").trim()==="是",
+        })).filter(r=>r.code && r.name);
+        setImportPreview(mapped);
+      } catch(err) { alert("檔案解析失敗："+err.message); }
+    };
+    reader.readAsArrayBuffer(file);
+  }
+  async function doImport() {
+    if (!importPreview || importPreview.length===0) return;
+    if (!confirm(`確定匯入 ${importPreview.length} 筆商品？現有相同品號的資料會被覆蓋。`)) return;
+    try {
+      for (const row of importPreview) {
+        await callGAS("saveMasterRow",{row});
+      }
+      await loadMaster();
+      setImportPreview(null);
+      alert(`成功匯入 ${importPreview.length} 筆商品`);
+    } catch(e) { alert("匯入失敗："+e.message); }
+  }
 
   const ORDER_STATUSES = ["未確認","準備中","已出貨"];
   function statusStyle(s) {
@@ -443,10 +705,28 @@ function Admin() {
 
       <div className="admin-wrap">
         <div className="admin-tabs">
-          {[["orders","📋 訂單管理"],["master","📦 商品主檔"],["prices","💰 客戶價格表"]].map(([k,l])=>(
-            <button key={k} className={"tab-btn"+(tab===k?" active":"")} onClick={()=>setTab(k)}>{l}</button>
+          {[
+            ["orders",    "📋 訂單管理"],
+            ["dashboard", "📊 數據儀表板"],
+            ["master",    "📦 商品主檔"],
+            ["prices",    "💰 客戶價格表"],
+            ["customers", "👥 客戶管理"],
+          ].map(([k,l])=>(
+            <div key={k} className="tab-wrap">
+              <button className={"tab-btn"+(tab===k?" active":"")} onClick={()=>setTab(k)}>{l}</button>
+              {k==="orders" && newOrderCount>0 && <span className="notif-badge">{newOrderCount}</span>}
+            </div>
           ))}
         </div>
+
+        {/* 新訂單通知橫幅 */}
+        {newOrderCount>0 && tab!=="orders" && (
+          <div className="new-order-banner">
+            🔔 有 {newOrderCount} 筆新訂單等待處理
+            <button onClick={()=>{setTab("orders");setNewOrderCount(0);loadOrders();}}>立即查看</button>
+            <button onClick={()=>setNewOrderCount(0)}>✕</button>
+          </div>
+        )}
 
         {/* ===== 訂單管理 ===== */}
         {tab==="orders" && (
@@ -538,6 +818,25 @@ function Admin() {
                                     <td style={{padding:"8px 12px",textAlign:"right",fontWeight:700,fontSize:14}}>${o.total.toLocaleString()}</td>
                                     <td></td>
                                   </tr>
+                                  {/* 備註列 */}
+                                  <tr style={{background:"#fffbf3"}}>
+                                    <td colSpan={7} style={{padding:"8px 12px"}}>
+                                      {editingNote===o.orderId ? (
+                                        <div style={{display:"flex",gap:8,alignItems:"flex-start"}}>
+                                          <textarea className="note-edit-area" value={noteDraft} onChange={e=>setNoteDraft(e.target.value)} placeholder="輸入內部備註…"/>
+                                          <div style={{display:"flex",flexDirection:"column",gap:4}}>
+                                            <button className="btn-save" style={{fontSize:11}} onClick={()=>saveNote(o.orderId)}>儲存</button>
+                                            <button className="btn-cancel" style={{fontSize:11}} onClick={()=>setEditingNote(null)}>取消</button>
+                                          </div>
+                                        </div>
+                                      ) : (
+                                        <div style={{display:"flex",alignItems:"center",gap:8}}>
+                                          <span style={{fontSize:12,color:"#7a6030",flex:1}}>{o.note ? `📝 ${o.note}` : <span style={{color:"#bbb"}}>無備註</span>}</span>
+                                          <button className="btn-edit" style={{fontSize:11,padding:"3px 8px"}} onClick={()=>{setEditingNote(o.orderId);setNoteDraft(o.note||"");}}>編輯備註</button>
+                                        </div>
+                                      )}
+                                    </td>
+                                  </tr>
                                 </tbody>
                               </table>
                             </td>
@@ -565,11 +864,42 @@ function Admin() {
                 {Object.keys(catTree).map(p=><option key={p} value={p}>{p}</option>)}
               </select>
               <button className="btn-edit" style={{padding:"8px 14px",fontSize:13}} onClick={()=>setShowCatMgr(true)}>⚙ 管理分類</button>
+              <button className="btn-edit" style={{padding:"8px 14px",fontSize:13}} onClick={()=>importFileRef.current&&importFileRef.current.click()}>📥 Excel匯入</button>
+              <input type="file" accept=".xlsx,.xls,.csv" style={{display:"none"}} ref={importFileRef} onChange={e=>{handleImportFile(e.target.files[0]);e.target.value="";}}/>
               <button className="btn-save" style={{padding:"8px 16px",fontSize:13}} onClick={()=>setShowAddM(v=>!v)}>
                 {showAddM?"取消新增":"＋ 新增商品"}
               </button>
               <span style={{fontSize:12,color:"var(--ink-soft)"}}>{filteredMaster.length} 項</span>
             </div>
+
+            {/* Excel 匯入預覽 */}
+            {importPreview&&(
+              <div style={{background:"var(--brand-tint)",border:"1px solid #b0d0c8",borderRadius:8,padding:14,marginBottom:14}}>
+                <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:10}}>
+                  <span style={{fontSize:13,fontWeight:600}}>預覽匯入 {importPreview.length} 筆商品</span>
+                  <div style={{display:"flex",gap:8}}>
+                    <button className="btn-save" onClick={doImport}>確認匯入</button>
+                    <button className="btn-cancel" onClick={()=>setImportPreview(null)}>取消</button>
+                  </div>
+                </div>
+                <div className="import-preview">
+                  <table><thead><tr><th>品號</th><th>品名</th><th>分類</th><th>定價</th><th>成本</th><th>箱入</th><th>失效</th></tr></thead>
+                  <tbody>{importPreview.slice(0,5).map((r,i)=><tr key={i}><td>{r.code}</td><td>{r.name}</td><td>{r.category}</td><td>{r.listPrice}</td><td>{r.cost}</td><td>{r.boxQty}</td><td>{r.inactive?"是":""}</td></tr>)}</tbody>
+                  </table>
+                  {importPreview.length>5&&<p style={{fontSize:11,color:"var(--ink-soft)",margin:"6px 0 0"}}>⋯ 僅顯示前5筆，共 {importPreview.length} 筆</p>}
+                </div>
+              </div>
+            )}
+
+            {/* 批次操作列 */}
+            {checkedMasterList.length>0&&(
+              <div className="batch-action-bar">
+                <span>已選 {checkedMasterList.length} 筆</span>
+                <button className="btn-save" style={{fontSize:12,padding:"4px 12px"}} onClick={()=>batchSetInactive(false)}>批次設為有效</button>
+                <button className="btn-del" style={{fontSize:12,padding:"4px 12px"}} onClick={()=>batchSetInactive(true)}>批次設為失效</button>
+                <button className="btn-cancel" style={{fontSize:12,padding:"4px 12px"}} onClick={()=>setCheckedMaster({})}>取消選取</button>
+              </div>
+            )}
             {showAddM&&(
               <div className="add-form">
                 <label className="narrow">品號＊<input value={newM.code} onChange={e=>setNewM(p=>({...p,code:e.target.value}))} placeholder="021605"/></label>
@@ -646,13 +976,21 @@ function Admin() {
             {mLoading?<p style={{color:"var(--ink-soft)",fontSize:14}}>載入中…</p>:(
               <div style={{overflowX:"auto"}}>
                 <table className="mgmt-table">
-                  <thead><tr><th>品號</th><th>品名</th><th>大類別</th><th>定價</th><th>成本</th><th>箱入</th><th style={{textAlign:"center"}}>失效</th><th>圖片</th><th style={{width:160}}>操作</th></tr></thead>
+                  <thead><tr>
+                    <th style={{width:36}}><input type="checkbox" checked={allMasterChecked} onChange={toggleAllMaster} style={{width:15,height:15,accentColor:"var(--brand)"}}/></th>
+                    <th><button className="sort-btn"+(mSort==="code"?" active":"") onClick={()=>toggleSort("code")} style={{background:"none",border:"none",cursor:"pointer",fontWeight:600,padding:0,fontSize:13}}>品號 {mSort==="code"?(mSortDir==="asc"?"↑":"↓"):""}</button></th>
+                    <th><button onClick={()=>toggleSort("name")} style={{background:"none",border:"none",cursor:"pointer",fontWeight:600,padding:0,fontSize:13}}>品名 {mSort==="name"?(mSortDir==="asc"?"↑":"↓"):""}</button></th>
+                    <th>大類別</th>
+                    <th><button onClick={()=>toggleSort("listPrice")} style={{background:"none",border:"none",cursor:"pointer",fontWeight:600,padding:0,fontSize:13}}>定價 {mSort==="listPrice"?(mSortDir==="asc"?"↑":"↓"):""}</button></th>
+                    <th>成本</th><th>箱入</th><th style={{textAlign:"center"}}>失效</th><th>圖片</th><th style={{width:160}}>操作</th>
+                  </tr></thead>
                   <tbody>
-                    {filteredMaster.map(row=>{
+                    {sortedMaster.map(row=>{
                       const isE = editCode===row.code;
                       const imgs = (row.images||[]).map(fixImgUrl);
                       return (
                         <tr key={row.code} className={isE?"editing":""}>
+                          <td><input type="checkbox" checked={!!checkedMaster[row.code]} onChange={()=>toggleMasterCheck(row.code)} style={{width:15,height:15,accentColor:"var(--brand)"}}/></td>
                           <td style={{fontFamily:"monospace",fontSize:12,whiteSpace:"nowrap"}}>{row.code}</td>
                           <td style={{minWidth:180}}>{isE?<input className="cell-input" value={editDraft.name||""} onChange={e=>setEditDraft(p=>({...p,name:e.target.value}))}/>:<span className="cell-text" onClick={()=>startEdit(row)}>{row.name||<em className="empty">點擊編輯</em>}</span>}</td>
                           <td style={{minWidth:100}}>{isE?(
@@ -756,6 +1094,181 @@ function Admin() {
             )}
           </React.Fragment>
         )}
+
+        {/* ===== 數據儀表板 ===== */}
+        {tab==="dashboard" && (
+          <React.Fragment>
+            {/* 日期篩選 */}
+            <div className="dash-filter">
+              {[["today","今日"],["week","本週"],["month","本月"],["quarter","本季"],["year","今年"]].map(([p,l])=>(
+                <button key={p} className={"dash-quick-btn"+(dashPeriod===p?" active":"")} onClick={()=>setQuickPeriod(p)}>{l}</button>
+              ))}
+              <input type="date" value={dashFrom} onChange={e=>{setDashFrom(e.target.value);setDashPeriod("custom");}}/>
+              <span style={{fontSize:12,color:"var(--ink-soft)"}}>至</span>
+              <input type="date" value={dashTo} onChange={e=>{setDashTo(e.target.value);setDashPeriod("custom");}}/>
+              <button className="btn-save" style={{padding:"8px 16px",fontSize:13}} onClick={loadDash}>{dashLoading?"載入中…":"查詢"}</button>
+            </div>
+
+            {!dash && !dashLoading && <p style={{color:"var(--ink-soft)",fontSize:14}}>選擇日期範圍後按「查詢」</p>}
+            {dashLoading && <p style={{color:"var(--ink-soft)",fontSize:14}}>計算中…</p>}
+
+            {dash && (
+              <React.Fragment>
+                {/* KPI 卡片 */}
+                <div className="dash-kpi-row">
+                  <div className="kpi-card"><div className="k-label">總營業額</div><div className="k-value green">${dash.summary.totalRevenue.toLocaleString()}</div><div className="k-sub">篩選期間累計</div></div>
+                  <div className="kpi-card"><div className="k-label">訂單總數</div><div className="k-value blue">{dash.summary.totalOrders}</div><div className="k-sub">筆</div></div>
+                  <div className="kpi-card"><div className="k-label">未確認訂單</div><div className={"k-value"+(dash.summary.pendingCount>0?" warn":"")}>{dash.summary.pendingCount}</div><div className="k-sub">待後台確認</div></div>
+                  <div className="kpi-card"><div className="k-label">平均客單價</div><div className="k-value">${dash.summary.totalOrders>0?Math.round(dash.summary.totalRevenue/dash.summary.totalOrders).toLocaleString():"0"}</div></div>
+                </div>
+
+                {/* 訂單狀態分布 */}
+                <div className="dash-section">
+                  <h3>訂單狀態分布</h3>
+                  <div className="status-chips">
+                    {[["未確認","unc"],["準備中","prep"],["已出貨","ship"]].map(([s,cls])=>(
+                      <div key={s} className={"status-chip "+cls}>
+                        <span>{s}</span>
+                        <span style={{fontSize:18,fontWeight:800}}>{dash.summary.statusMap[s]||0}</span>
+                        <span>筆</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                {/* 月度趨勢 */}
+                {dash.monthly.length>0 && (
+                  <div className="dash-section">
+                    <h3>月度營業額趨勢</h3>
+                    <div className="bar-chart">
+                      {(()=>{
+                        const max = Math.max(...dash.monthly.map(m=>m.revenue), 1);
+                        return dash.monthly.map(m=>(
+                          <div key={m.month} className="bar-row">
+                            <span className="bar-label">{m.month}</span>
+                            <div className="bar-track"><div className="bar-fill" style={{width:`${(m.revenue/max*100).toFixed(1)}%`}}/></div>
+                            <span className="bar-val">${m.revenue.toLocaleString()}</span>
+                          </div>
+                        ));
+                      })()}
+                    </div>
+                  </div>
+                )}
+
+                {/* 每日趨勢表格 */}
+                {dash.daily.length>0 && (
+                  <div className="dash-section">
+                    <h3>每日明細</h3>
+                    <div className="line-chart-wrap">
+                      <table className="trend-table">
+                        <thead><tr><th>日期</th><th>營業額</th></tr></thead>
+                        <tbody>
+                          {[...dash.daily].reverse().slice(0,30).map(d=>(
+                            <tr key={d.date}>
+                              <td>{d.date}</td>
+                              <td>${d.revenue.toLocaleString()}</td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  </div>
+                )}
+
+                <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:16}}>
+                  {/* Top 客戶 */}
+                  <div className="dash-section">
+                    <h3>Top 10 客戶（依金額）</h3>
+                    <div className="bar-chart">
+                      {(()=>{
+                        const max = Math.max(...dash.topCustomers.map(c=>c.revenue), 1);
+                        return dash.topCustomers.map((c,i)=>(
+                          <div key={c.code} className="bar-row">
+                            <span className="bar-label" title={c.name}>{i+1}. {c.name}</span>
+                            <div className="bar-track"><div className="bar-fill" style={{width:`${(c.revenue/max*100).toFixed(1)}%`,background:"#3d4f9e"}}/></div>
+                            <span className="bar-val">${c.revenue.toLocaleString()}</span>
+                          </div>
+                        ));
+                      })()}
+                    </div>
+                  </div>
+
+                  {/* Top 商品 */}
+                  <div className="dash-section">
+                    <h3>Top 10 商品（依金額）</h3>
+                    <div className="bar-chart">
+                      {(()=>{
+                        const max = Math.max(...dash.topProducts.map(p=>p.revenue), 1);
+                        return dash.topProducts.map((p,i)=>(
+                          <div key={p.code} className="bar-row">
+                            <span className="bar-label" title={p.name}>{i+1}. {p.name}</span>
+                            <div className="bar-track"><div className="bar-fill" style={{width:`${(p.revenue/max*100).toFixed(1)}%`,background:"var(--warn)"}}/></div>
+                            <span className="bar-val">${p.revenue.toLocaleString()}</span>
+                          </div>
+                        ));
+                      })()}
+                    </div>
+                  </div>
+                </div>
+              </React.Fragment>
+            )}
+          </React.Fragment>
+        )}
+
+        {/* ===== 客戶管理 ===== */}
+        {tab==="customers" && (
+          <React.Fragment>
+            <div style={{display:"flex",gap:10,marginBottom:14,alignItems:"center",flexWrap:"wrap"}}>
+              <input placeholder="搜尋公司名稱、分店代號、統編…" value={custSearch} onChange={e=>setCustSearch(e.target.value)}
+                style={{flex:1,minWidth:160,padding:"8px 11px",border:"1px solid var(--line)",borderRadius:8,fontSize:13}}/>
+              <button className="btn-save" style={{padding:"8px 16px",fontSize:13}} onClick={()=>setShowAddCust(v=>!v)}>
+                {showAddCust?"取消新增":"＋ 新增客戶"}
+              </button>
+              <button className="btn-edit" style={{padding:"8px 14px",fontSize:13}} onClick={loadCustomers}>重新整理</button>
+              <span style={{fontSize:12,color:"var(--ink-soft)"}}>{filteredCust.length} 個分店</span>
+            </div>
+
+            {showAddCust&&(
+              <div className="add-form">
+                <label className="narrow">統一編號<input value={newCust.taxId} onChange={e=>setNewCust(p=>({...p,taxId:e.target.value}))} placeholder="12345678"/></label>
+                <label className="wide">公司名稱＊<input value={newCust.companyName} onChange={e=>setNewCust(p=>({...p,companyName:e.target.value}))} placeholder="麗兒采家"/></label>
+                <label className="narrow">分店代號＊<input value={newCust.branchCode} onChange={e=>setNewCust(p=>({...p,branchCode:e.target.value}))} placeholder="J204200"/></label>
+                <label className="narrow">分店名稱<input value={newCust.branchName} onChange={e=>setNewCust(p=>({...p,branchName:e.target.value}))} placeholder="麗兒總倉"/></label>
+                <button className="btn-save" style={{alignSelf:"flex-end",padding:"8px 20px"}} onClick={addCust}>確認新增</button>
+              </div>
+            )}
+
+            {custLoading?<p style={{color:"var(--ink-soft)",fontSize:14}}>載入中…</p>:(
+              <div style={{overflowX:"auto"}}>
+                <table className="cust-mgmt-table">
+                  <thead><tr><th>統一編號</th><th>公司名稱</th><th>分店代號</th><th>分店名稱</th><th style={{width:140}}>操作</th></tr></thead>
+                  <tbody>
+                    {filteredCust.map(row=>{
+                      const isE = editCust===row.branchCode;
+                      return (
+                        <tr key={row.branchCode} className={isE?"editing":""}>
+                          <td style={{fontFamily:"monospace",fontSize:12}}>{isE?<input className="cell-input" value={custDraft.taxId??row.taxId} onChange={e=>setCustDraft(p=>({...p,taxId:e.target.value}))} style={{width:90}}/>:row.taxId||<em style={{color:"#bbb"}}>—</em>}</td>
+                          <td>{isE?<input className="cell-input" value={custDraft.companyName??row.companyName} onChange={e=>setCustDraft(p=>({...p,companyName:e.target.value}))}/>:<span className="cell-text" onClick={()=>{setEditCust(row.branchCode);setCustDraft({});}}>{row.companyName}</span>}</td>
+                          <td style={{fontFamily:"monospace",fontSize:12}}>{row.branchCode}</td>
+                          <td>{isE?<input className="cell-input" value={custDraft.branchName??row.branchName} onChange={e=>setCustDraft(p=>({...p,branchName:e.target.value}))}/>:<span className="cell-text" onClick={()=>{setEditCust(row.branchCode);setCustDraft({});}}>{row.branchName||<em style={{color:"#bbb"}}>—</em>}</span>}</td>
+                          <td>
+                            <div className="row-actions">
+                              {isE
+                                ?<React.Fragment><button className="btn-save" onClick={()=>saveCust(row)}>儲存</button><button className="btn-cancel" onClick={()=>{setEditCust(null);setCustDraft({});}}>取消</button></React.Fragment>
+                                :<React.Fragment><button className="btn-edit" onClick={()=>{setEditCust(row.branchCode);setCustDraft({});}}>編輯</button><button className="btn-del" onClick={()=>delCust(row)}>刪除</button></React.Fragment>
+                              }
+                            </div>
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              </div>
+            )}
+          </React.Fragment>
+        )}
+
       </div>
     </div>
   );
