@@ -1,632 +1,1054 @@
 <!DOCTYPE html>
-<html lang="zh-TW">
+<html lang="zh-Hant">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>AUROS TESLA 一站式改裝預約</title>
+<title>業務訂購系統</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.production.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.production.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/7.23.5/babel.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <style>
-*{box-sizing:border-box;margin:0;padding:0}
-body{font-family:-apple-system,"PingFang TC",sans-serif;background:#f5f5f5;color:#1a1a1a;padding:24px 16px}
-.wrap{max-width:480px;margin:0 auto}
+  :root{
+    --ink:#1c2b2d;
+    --ink-soft:#4a5a5c;
+    --line:#dde3e1;
+    --paper:#fafaf8;
+    --panel:#ffffff;
+    --brand:#2f6f5e;
+    --brand-dark:#1f4d40;
+    --brand-tint:#eaf3f0;
+    --warn:#b5762b;
+    --warn-tint:#fbf0e2;
+    --danger:#a3402f;
+    --danger-tint:#fbeae6;
+    --radius:10px;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0;
+    font-family:"Noto Sans TC","PingFang TC","Microsoft JhengHei",sans-serif;
+    background:var(--paper);
+    color:var(--ink);
+  }
+  #root{min-height:100vh;}
 
-/* 標題 */
-.hd{text-align:center;margin-bottom:24px}
-.hd .logo{width:44px;height:44px;background:#1a1a1a;border-radius:10px;display:inline-flex;align-items:center;justify-content:center;color:#fff;font-size:20px;font-weight:700;margin-bottom:8px}
-.hd h1{font-size:17px;font-weight:700}
-.hd p{font-size:12px;color:#888;margin-top:2px}
+  /* ---------- 登入畫面 ---------- */
+  .login-wrap{
+    min-height:100vh;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    padding:24px;
+  }
+  .login-card{
+    width:100%;
+    max-width:380px;
+    background:var(--panel);
+    border:1px solid var(--line);
+    border-radius:var(--radius);
+    padding:32px 28px;
+  }
+  .login-card h1{
+    font-size:20px;
+    margin:0 0 4px;
+    letter-spacing:.02em;
+  }
+  .login-card p.sub{
+    color:var(--ink-soft);
+    font-size:13px;
+    margin:0 0 24px;
+  }
+  .cust-btn{
+    display:block;
+    width:100%;
+    text-align:left;
+    padding:14px 16px;
+    margin-bottom:8px;
+    border:1px solid var(--line);
+    background:#fff;
+    border-radius:8px;
+    font-size:15px;
+    cursor:pointer;
+    transition:border-color .15s, background .15s;
+  }
+  .cust-btn:hover{border-color:var(--brand); background:var(--brand-tint);}
 
-/* 卡片 */
-.card{background:#fff;border:1px solid #e5e5e5;border-radius:14px;padding:20px;margin-bottom:16px}
-.lbl{font-size:12px;color:#888;margin-bottom:8px;display:block}
+  .taxid-input{
+    width:100%;
+    padding:13px 14px;
+    border:1px solid var(--line);
+    border-radius:8px;
+    font-size:18px;
+    letter-spacing:.08em;
+    margin-bottom:10px;
+  }
+  .taxid-input:focus{
+    outline:none;
+    border-color:var(--brand);
+  }
+  .login-error{
+    font-size:13px;
+    color:var(--danger);
+    background:var(--danger-tint);
+    padding:9px 12px;
+    border-radius:6px;
+    margin-bottom:12px;
+    line-height:1.5;
+  }
+  .login-hint{
+    font-size:12px;
+    color:#9aa6a4;
+    margin-top:14px;
+    text-align:center;
+  }
+  .confirm-box{
+    border:1px solid var(--line);
+    background:var(--brand-tint);
+    border-radius:8px;
+    padding:14px 16px;
+    margin-bottom:16px;
+  }
+  .confirm-row{
+    display:flex;
+    justify-content:space-between;
+    font-size:14px;
+    padding:6px 0;
+  }
+  .confirm-row span{color:var(--ink-soft);}
+  .confirm-row b{color:var(--brand-dark);}
+  .branch-list{
+    margin-bottom:16px;
+    max-height:240px;
+    overflow-y:auto;
+  }
+  .branch-btn{
+    display:block;
+    width:100%;
+    text-align:left;
+    padding:12px 14px;
+    margin-bottom:6px;
+    border:1px solid var(--line);
+    background:#fff;
+    border-radius:8px;
+    font-size:14px;
+    cursor:pointer;
+  }
+  .branch-btn.active{
+    border-color:var(--brand);
+    background:var(--brand-tint);
+    font-weight:600;
+  }
 
-/* 按鈕通用 */
-.btn{display:inline-flex;align-items:center;justify-content:center;border:1px solid #ddd;border-radius:9px;background:#fff;font-family:inherit;font-size:14px;cursor:pointer;padding:10px 8px;transition:border-color .15s}
-.btn:hover{border-color:#aaa}
-.btn.on{background:#1a1a1a;border-color:#1a1a1a;color:#fff}
-.btn:disabled{opacity:.35;cursor:not-allowed}
+  /* ---------- 版面 ---------- */
+  .app-header{
+    position:sticky; top:0; z-index:20;
+    background:var(--panel);
+    border-bottom:1px solid var(--line);
+    padding:10px 16px;
+    display:flex;
+    align-items:center;
+    gap:12px;
+  }
+  .app-header .who{
+    font-size:13px;
+    color:var(--ink-soft);
+  }
+  .app-header .who b{color:var(--ink);}
+  .search-box{
+    flex:1;
+    max-width:420px;
+    position:relative;
+  }
+  .search-box input{
+    width:100%;
+    padding:8px 12px 8px 32px;
+    border:1px solid var(--line);
+    border-radius:8px;
+    font-size:14px;
+    background:#fff;
+  }
+  .search-box::before{
+    content:"";
+  }
+  .cart-pill{
+    margin-left:auto;
+    display:flex;
+    align-items:center;
+    gap:6px;
+    background:var(--brand);
+    color:#fff;
+    border:none;
+    border-radius:20px;
+    padding:8px 16px;
+    font-size:14px;
+    cursor:pointer;
+  }
+  .logout-link{
+    font-size:12px;
+    color:var(--ink-soft);
+    background:none;
+    border:none;
+    text-decoration:underline;
+    cursor:pointer;
+    padding:0;
+  }
 
-/* 車型 4 欄 */
-.g4{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:14px}
-.g4 .btn{width:100%}
+  .layout{
+    display:flex;
+    max-width:1200px;
+    margin:0 auto;
+  }
+  .sidebar{
+    width:180px;
+    flex-shrink:0;
+    padding:18px 12px;
+    border-right:1px solid var(--line);
+    position:sticky;
+    top:53px;
+    align-self:flex-start;
+    height:calc(100vh - 53px);
+    overflow-y:auto;
+  }
+  .sidebar button{
+    display:block;
+    width:100%;
+    text-align:left;
+    padding:9px 10px;
+    margin-bottom:2px;
+    border:none;
+    background:none;
+    border-radius:6px;
+    font-size:14px;
+    color:var(--ink-soft);
+    cursor:pointer;
+  }
+  .sidebar button.active{
+    background:var(--brand-tint);
+    color:var(--brand-dark);
+    font-weight:600;
+  }
+  .sidebar .count{
+    float:right;
+    color:#9aa6a4;
+    font-size:12px;
+  }
 
-/* 版本群組（彈性欄數） */
-.gen-grp{display:grid;gap:8px;margin-bottom:14px}
-.gen-grp .btn{width:100%;font-size:13px}
+  .main{
+    flex:1;
+    padding:18px 20px 80px;
+    min-width:0;
+  }
+  .main h2{
+    font-size:16px;
+    margin:0 0 14px;
+    color:var(--ink);
+  }
+  .grid{
+    display:grid;
+    grid-template-columns:repeat(auto-fill, minmax(220px,1fr));
+    gap:12px;
+  }
+  .card{
+    background:var(--panel);
+    border:1px solid var(--line);
+    border-radius:var(--radius);
+    padding:14px;
+    display:flex;
+    flex-direction:column;
+    gap:8px;
+  }
+  .card .code{
+    font-size:11px;
+    color:#9aa6a4;
+    letter-spacing:.03em;
+  }
+  .card .name{
+    font-size:14px;
+    line-height:1.4;
+    min-height:38px;
+  }
+  .card .price-row{
+    display:flex;
+    align-items:baseline;
+    gap:6px;
+  }
+  .card .unit-price{
+    font-size:18px;
+    font-weight:700;
+    color:var(--brand-dark);
+  }
+  .card .list-price{
+    font-size:12px;
+    color:#9aa6a4;
+    text-decoration:line-through;
+  }
+  .card .box-qty{
+    font-size:12px;
+    color:var(--ink-soft);
+  }
+  .tag{
+    display:inline-block;
+    font-size:11px;
+    padding:2px 8px;
+    border-radius:4px;
+    width:fit-content;
+  }
+  .tag.gift{background:var(--brand-tint); color:var(--brand-dark);}
+  .tag.box{background:#eef1fb; color:#3d4f9e;}
+  .tag.review{background:var(--warn-tint); color:var(--warn);}
+  .tag.stop{background:var(--danger-tint); color:var(--danger);}
 
-/* ── 服務項目 ── */
-.svc-section{margin-bottom:14px}
-.svc-title{
-  display:flex;align-items:center;gap:8px;
-  border:1px solid #ddd;border-radius:9px;
-  padding:11px 13px;background:#fff;cursor:pointer;
-  font-size:14px;font-weight:500;
-  user-select:none;
-}
-.svc-title:hover{border-color:#aaa}
-.svc-title .name{flex:1}
-.svc-title .badge{
-  font-size:11px;background:#f0f0f0;color:#333;
-  padding:2px 8px;border-radius:20px;white-space:nowrap;
-}
-.svc-title .arr{font-size:11px;color:#aaa;transition:transform .2s;flex-shrink:0}
-.svc-title.open .arr{transform:rotate(180deg)}
+  .qty-row{
+    display:flex;
+    align-items:center;
+    gap:8px;
+    margin-top:auto;
+  }
+  .qty-row button{
+    width:30px; height:30px;
+    border:1px solid var(--line);
+    background:#fff;
+    border-radius:6px;
+    font-size:16px;
+    cursor:pointer;
+  }
+  .qty-row input{
+    width:48px;
+    text-align:center;
+    padding:6px 2px;
+    border:1px solid var(--line);
+    border-radius:6px;
+    font-size:14px;
+  }
+  .qty-row .added{
+    margin-left:auto;
+    font-size:12px;
+    color:var(--brand-dark);
+  }
+  .card.disabled{opacity:.55;}
+  .card.disabled .qty-row button, .card.disabled .qty-row input{
+    pointer-events:none;
+    background:#f3f3f1;
+  }
 
-.svc-items{
-  max-height:0;overflow:hidden;transition:max-height .25s ease;
-  display:flex;flex-direction:column;gap:6px;padding-left:4px;
-}
-.svc-items.open{max-height:400px;margin-top:6px}
+  /* ---------- 購物車面板 ---------- */
+  .drawer-mask{
+    position:fixed; inset:0;
+    background:rgba(20,30,28,.35);
+    z-index:30;
+  }
+  .drawer{
+    position:fixed;
+    top:0; right:0;
+    width:min(420px, 100vw);
+    height:100vh;
+    background:var(--panel);
+    z-index:31;
+    display:flex;
+    flex-direction:column;
+    box-shadow:-8px 0 24px rgba(0,0,0,.08);
+  }
+  .drawer-head{
+    padding:16px 18px;
+    border-bottom:1px solid var(--line);
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+  }
+  .drawer-head h3{margin:0; font-size:16px;}
+  .drawer-head button{
+    background:none; border:none; font-size:20px; cursor:pointer; color:var(--ink-soft);
+  }
+  .drawer-body{
+    flex:1;
+    overflow-y:auto;
+    padding:12px 18px;
+  }
+  .cart-line{
+    display:flex;
+    gap:10px;
+    padding:12px 0;
+    border-bottom:1px solid var(--line);
+  }
+  .cart-line .info{flex:1; min-width:0;}
+  .cart-line .name{font-size:13px; line-height:1.4;}
+  .cart-line .meta{font-size:12px; color:var(--ink-soft); margin-top:2px;}
+  .cart-line .remove{
+    background:none; border:none; color:var(--danger); font-size:12px; cursor:pointer; padding:0;
+    text-decoration:underline;
+  }
+  .cart-line .lineprice{font-size:13px; font-weight:600; white-space:nowrap;}
 
-.svc-chip{
-  display:flex;align-items:center;gap:10px;
-  border:1px solid #ddd;border-radius:9px;
-  padding:10px 13px;background:#fff;cursor:pointer;font-size:13px;
-}
-.svc-chip:hover{border-color:#aaa}
-.svc-chip.on{border-color:#1a1a1a;background:#fafafa}
-.svc-chip .cb{
-  width:16px;height:16px;border-radius:4px;border:1.5px solid #ccc;
-  flex-shrink:0;display:flex;align-items:center;justify-content:center;
-}
-.svc-chip.on .cb{background:#1a1a1a;border-color:#1a1a1a}
-.svc-chip.on .cb::after{content:'✓';color:#fff;font-size:10px;line-height:1}
-.svc-chip .dur{margin-left:auto;font-size:11px;color:#aaa;flex-shrink:0}
-/* ──────────── */
+  .drawer-foot{
+    border-top:1px solid var(--line);
+    padding:16px 18px;
+  }
+  .total-row{
+    display:flex;
+    justify-content:space-between;
+    font-size:15px;
+    margin-bottom:4px;
+  }
+  .total-row.grand{
+    font-size:18px;
+    font-weight:700;
+    margin-top:8px;
+  }
+  .review-note{
+    font-size:12px;
+    color:var(--warn);
+    background:var(--warn-tint);
+    padding:8px 10px;
+    border-radius:6px;
+    margin:10px 0;
+    line-height:1.5;
+  }
+  .submit-btn{
+    width:100%;
+    padding:13px;
+    background:var(--brand);
+    color:#fff;
+    border:none;
+    border-radius:8px;
+    font-size:15px;
+    font-weight:600;
+    cursor:pointer;
+    margin-top:10px;
+  }
+  .submit-btn:disabled{background:#c7cdcb; cursor:not-allowed;}
+  .empty-cart{
+    text-align:center;
+    color:var(--ink-soft);
+    padding:60px 20px;
+    font-size:14px;
+  }
 
-/* 月曆 */
-.cal-nav{display:flex;align-items:center;gap:8px;margin-bottom:10px}
-.cal-nav .m-lbl{flex:1;text-align:center;font-weight:600;font-size:15px}
-.cal-wd{display:grid;grid-template-columns:repeat(7,1fr);gap:3px;margin-bottom:4px;text-align:center;font-size:11px;color:#aaa}
-.cal-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:3px;margin-bottom:14px}
-.cal-day{
-  aspect-ratio:1;display:flex;align-items:center;justify-content:center;
-  font-size:13px;border-radius:8px;border:1px solid transparent;
-  background:#f7f7f7;cursor:pointer;
-}
-.cal-day:hover{background:#ececec}
-.cal-day.today{font-weight:700;border-color:#1a1a1a}
-.cal-day.sel{background:#1a1a1a;color:#fff;border-color:#1a1a1a}
-.cal-day.dis{color:#ccc;cursor:not-allowed;background:transparent}
-.cal-day.emp{visibility:hidden;cursor:default}
-.cal-day.wkend:not(.dis){color:#c0392b}
-.cal-day.sel.wkend{color:#fff}
+  /* ---------- 訂單完成畫面 ---------- */
+  .confirm-wrap{
+    max-width:560px;
+    margin:60px auto;
+    padding:0 20px;
+    text-align:center;
+  }
+  .confirm-wrap .badge{
+    width:56px;height:56px;
+    border-radius:50%;
+    background:var(--brand-tint);
+    color:var(--brand-dark);
+    display:flex;align-items:center;justify-content:center;
+    font-size:28px;
+    margin:0 auto 16px;
+  }
+  .confirm-wrap h2{margin:0 0 8px;}
+  .confirm-wrap p{color:var(--ink-soft); font-size:14px; line-height:1.7;}
+  .order-id{
+    display:inline-block;
+    background:var(--brand-tint);
+    color:var(--brand-dark);
+    padding:6px 14px;
+    border-radius:6px;
+    font-family:monospace;
+    font-size:13px;
+    margin:8px 0 20px;
+  }
+  .ghost-btn{
+    padding:11px 22px;
+    background:#fff;
+    border:1px solid var(--line);
+    border-radius:8px;
+    font-size:14px;
+    cursor:pointer;
+    margin-top:8px;
+  }
 
-/* 時段 */
-.g3{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:14px}
-.g3 .btn{width:100%;flex-direction:column;gap:2px;font-size:13px}
-.g3 .sub{font-size:10px;color:#aaa}
-.g3 .btn.on .sub{color:#ccc}
+  /* ---------- 後台(老闆)畫面 ---------- */
+  .admin-wrap{
+    max-width:1000px;
+    margin:0 auto;
+    padding:20px;
+  }
+  .admin-table{
+    width:100%;
+    border-collapse:collapse;
+    font-size:13px;
+    background:#fff;
+    border:1px solid var(--line);
+    border-radius:8px;
+    overflow:hidden;
+  }
+  .admin-table th{
+    text-align:left;
+    background:#f4f6f5;
+    padding:10px 12px;
+    border-bottom:1px solid var(--line);
+    font-weight:600;
+  }
+  .admin-table td{
+    padding:10px 12px;
+    border-bottom:1px solid var(--line);
+    vertical-align:top;
+  }
+  .download-btn{
+    background:var(--brand);
+    color:#fff;
+    border:none;
+    padding:8px 16px;
+    border-radius:6px;
+    font-size:13px;
+    cursor:pointer;
+  }
+  .pill-status{
+    display:inline-block;
+    font-size:11px;
+    padding:2px 8px;
+    border-radius:10px;
+  }
+  .pill-status.ok{background:var(--brand-tint); color:var(--brand-dark);}
+  .pill-status.review{background:var(--warn-tint); color:var(--warn);}
 
-input[type=text],input[type=tel]{
-  width:100%;padding:10px 12px;font-size:14px;border:1px solid #ddd;
-  border-radius:9px;margin-bottom:12px;font-family:inherit;
-}
-
-/* 摘要 */
-.summary{background:#f0f0f0;border-radius:9px;padding:13px;font-size:13px;line-height:1.7;margin-bottom:14px}
-
-/* 確認按鈕 */
-.confirm-btn{
-  width:100%;padding:14px;font-size:15px;font-weight:600;
-  border-radius:9px;border:none;background:#1a1a1a;color:#fff;
-  cursor:pointer;font-family:inherit;
-}
-.confirm-btn:disabled{background:#ccc;cursor:not-allowed}
-
-/* 訊息 */
-.msg{text-align:center;padding:10px;border-radius:8px;font-size:13px;margin-top:10px}
-.msg.ok{background:#e6f7ed;color:#0a7a3d}
-.msg.err{background:#fde8e8;color:#b91c1c}
-.note{font-size:12px;color:#aaa;margin-top:4px}
-
-/* 取消按鈕 */
-.cancel-btn{
-  width:100%;margin-top:10px;padding:8px;font-size:13px;
-  border:1px solid #f0c0c0;border-radius:8px;background:#fff;
-  color:#b91c1c;cursor:pointer;font-family:inherit;
-}
+  @media (max-width:760px){
+    .sidebar{
+      position:static;
+      width:100%;
+      height:auto;
+      border-right:none;
+      border-bottom:1px solid var(--line);
+      display:flex;
+      overflow-x:auto;
+      padding:10px 12px;
+      gap:4px;
+    }
+    .sidebar button{white-space:nowrap; width:auto;}
+    .sidebar .count{display:none;}
+    .layout{flex-direction:column;}
+    .drawer{width:100vw;}
+    .app-header{flex-wrap:wrap;}
+    .search-box{order:3; max-width:100%; flex:1 1 100%;}
+  }
 </style>
 </head>
 <body>
-<div class="wrap">
+<div id="root"></div>
+<script type="text/babel" data-presets="env,react">
+const { useState, useMemo, useEffect } = React;
 
-  <!-- 標題 -->
-  <div class="hd">
-    <div class="logo">A</div>
-    <h1>AUROS TESLA</h1>
-    <p>一站式改裝預約</p>
-  </div>
+// ---------------------------------------------------------------
+// 測試資料：來自實際上傳的客戶訂貨單(已抽取核心欄位)
+// 正式上線時，這個區塊會換成從後端/資料庫讀取
+// ---------------------------------------------------------------
+// ---------------------------------------------------------------
+// GAS 後端設定：所有客戶名單/商品/價格/訂單資料都改由後端的
+// Google試算表讀寫，這裡不再寫死任何測試資料
+// ---------------------------------------------------------------
+const GAS_URL = "https://script.google.com/macros/s/AKfycby48Nyzb4q5265opAIWwRGTdBFlnYnsa-0lS9w0EIGAaRVCNBYqvd9Wc5Hip2DySgEiwQ/exec";
 
-  <!-- 預約表單 -->
-  <div class="card">
+async function callGAS(action, payload) {
+  const res = await fetch(GAS_URL, {
+    method: "POST",
+    headers: { "Content-Type": "text/plain;charset=utf-8" }, // 避免觸發瀏覽器的CORS預檢請求
+    body: JSON.stringify(Object.assign({ action: action }, payload)),
+  });
+  const data = await res.json();
+  if (!data.ok) throw new Error(data.error || "後端回應失敗");
+  return data;
+}
 
-    <!-- 車型 -->
-    <span class="lbl">車型</span>
-    <div class="g4" id="model-grp">
-      <button class="btn" data-v="Model 3">Model 3</button>
-      <button class="btn" data-v="Model Y">Model Y</button>
-      <button class="btn" data-v="Model X">Model X</button>
-      <button class="btn" data-v="Model S">Model S</button>
+// ---------------------------------------------------------------
+// 促銷規則判斷：分三類
+// 1. autoGift  -> N+M 買贈，可全自動算贈品數量(不計價)
+// 2. autoBox   -> 成箱固定價，可全自動算金額
+// 3. needReview-> 規則模糊(促/合清價/合清直走/未達3000加運/洗衣精活動贈品/70U)，標註待人工複核
+// ---------------------------------------------------------------
+function parseActivity(activity) {
+  if (!activity) return null;
+  const a = activity.trim();
+
+  // 成箱固定價：例如 "成箱$1944"
+  const boxMatch = a.match(/成箱\$?(\d+)/);
+  if (boxMatch) {
+    return { type: "autoBox", boxPrice: Number(boxMatch[1]), label: `整箱 $${boxMatch[1]}` };
+  }
+
+  // 標準買贈：例如 "2+1" "4+2" "5+1" "7+3" "10+2" "11+1"
+  const giftMatch = a.match(/^(\d+)\+(\d+)$/);
+  if (giftMatch) {
+    return { type: "autoGift", buy: Number(giftMatch[1]), free: Number(giftMatch[2]), label: `買${giftMatch[1]}送${giftMatch[2]}` };
+  }
+
+  // 其餘一律視為需人工複核(促、合清價、合清直走、未達3000加運、洗衣精活動贈品、70U...)
+  return { type: "needReview", label: a };
+}
+
+function computeLine(product, qty) {
+  const rule = parseActivity(product.activity);
+  let payQty = qty;
+  let giftQty = 0;
+  let amount = qty * product.unitPrice;
+  let flag = null;
+
+  if (rule && rule.type === "autoGift" && qty > 0) {
+    const sets = Math.floor(qty / rule.buy);
+    giftQty = sets * rule.free;
+    // 贈品不計價，付費數量仍是 qty(贈品另外出貨，不影響應付金額)
+    amount = qty * product.unitPrice;
+  } else if (rule && rule.type === "autoBox" && qty > 0) {
+    const boxQty = Number(product.boxQty) || 1;
+    const boxes = Math.ceil(qty / boxQty);
+    amount = boxes * rule.boxPrice;
+    flag = `依整箱價計算，共 ${boxes} 箱`;
+  } else if (rule && rule.type === "needReview") {
+    flag = "review";
+  }
+
+  return { payQty, giftQty, amount, rule, flag };
+}
+
+// ---------------------------------------------------------------
+// 主程式
+// ---------------------------------------------------------------
+function App() {
+  const [stage, setStage] = useState("login"); // login | shop | confirmed | admin
+  const [customer, setCustomer] = useState(null); // 最終登入後的客戶資料(含company/branch)
+  const [taxIdInput, setTaxIdInput] = useState("");
+  const [loginError, setLoginError] = useState("");
+  const [loginStep, setLoginStep] = useState("input"); // input | confirm | chooseBranch
+  const [pendingCompany, setPendingCompany] = useState(null); // 統編查到的公司資料(尚未選分店)
+  const [selectedBranchCode, setSelectedBranchCode] = useState("");
+  const [cart, setCart] = useState({}); // code -> qty
+  const [search, setSearch] = useState("");
+  const [activeCat, setActiveCat] = useState("全部");
+  const [drawerOpen, setDrawerOpen] = useState(false);
+  const [orders, setOrders] = useState([]); // 從GAS載入的歷史訂單
+  const [lastOrder, setLastOrder] = useState(null);
+  const [products, setProducts] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [pageError, setPageError] = useState("");
+  const [submitting, setSubmitting] = useState(false);
+
+  const categories = useMemo(() => {
+    const set = new Set(products.map(p => p.category));
+    return ["全部", ...set];
+  }, [products]);
+
+  const filtered = useMemo(() => {
+    return products.filter(p => {
+      const inCat = activeCat === "全部" || p.category === activeCat;
+      const inSearch = !search || p.name.includes(search) || p.code.includes(search);
+      return inCat && inSearch;
+    });
+  }, [products, activeCat, search]);
+
+  const cartLines = useMemo(() => {
+    return Object.entries(cart)
+      .filter(([_, qty]) => qty > 0)
+      .map(([code, qty]) => {
+        const product = products.find(p => p.code === code);
+        const calc = computeLine(product, qty);
+        return { product, qty, ...calc };
+      });
+  }, [cart, products]);
+
+  const cartCount = cartLines.reduce((s, l) => s + l.qty, 0);
+  const cartTotal = cartLines.reduce((s, l) => s + l.amount, 0);
+  const hasReviewItem = cartLines.some(l => l.flag === "review");
+
+  function setQty(code, qty) {
+    setCart(prev => ({ ...prev, [code]: Math.max(0, qty) }));
+  }
+
+  async function handleTaxIdSubmit() {
+    const id = taxIdInput.trim();
+    if (!id) {
+      setLoginError("請輸入統一編號");
+      return;
+    }
+    setLoginError("");
+    setLoading(true);
+    try {
+      const data = await callGAS("lookupTaxId", { taxId: id });
+      const found = { companyName: data.companyName, branches: data.branches };
+      setPendingCompany(found);
+      if (found.branches.length > 1) {
+        setLoginStep("chooseBranch");
+      } else {
+        setSelectedBranchCode(found.branches[0].code);
+        setLoginStep("confirm");
+      }
+    } catch (err) {
+      setLoginError(err.message || "查無此統一編號對應的客戶資料，請確認輸入是否正確，或聯繫業務人員");
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  async function handleConfirmLogin() {
+    const branch = pendingCompany.branches.find(b => b.code === selectedBranchCode) || pendingCompany.branches[0];
+    const newCustomer = {
+      name: pendingCompany.companyName,
+      branchName: branch.name,
+      code: branch.code,
+      taxId: taxIdInput.trim(),
+    };
+    setLoading(true);
+    setPageError("");
+    try {
+      const data = await callGAS("getProducts", { branchCode: branch.code });
+      setProducts(data.products);
+      setCustomer(newCustomer);
+      setStage("shop");
+    } catch (err) {
+      setLoginError("商品資料載入失敗：" + err.message);
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  function backToTaxIdInput() {
+    setLoginStep("input");
+    setPendingCompany(null);
+    setSelectedBranchCode("");
+    setLoginError("");
+  }
+
+  function resetLogin() {
+    setStage("login");
+    setCustomer(null);
+    setCart({});
+    setTaxIdInput("");
+    setLoginError("");
+    setLoginStep("input");
+    setPendingCompany(null);
+    setSelectedBranchCode("");
+    setProducts([]);
+  }
+
+  async function submitOrder() {
+    setSubmitting(true);
+    setPageError("");
+    try {
+      const payload = {
+        taxId: customer.taxId,
+        customerName: customer.name,
+        branchCode: customer.code,
+        lines: cartLines.map(l => ({
+          code: l.product.code,
+          name: l.product.name,
+          qty: l.qty,
+          giftQty: l.giftQty || 0,
+          unitPrice: l.product.unitPrice,
+          amount: l.amount,
+          activity: l.product.activity || "",
+          needsReview: l.flag === "review",
+        })),
+      };
+      const data = await callGAS("submitOrder", { order: payload });
+      setLastOrder({
+        id: data.orderId,
+        customer: customer.name,
+        branchName: customer.branchName,
+        needsReview: hasReviewItem,
+      });
+      setCart({});
+      setDrawerOpen(false);
+      setStage("confirmed");
+    } catch (err) {
+      setPageError("訂單送出失敗：" + err.message + "，請稍後再試一次");
+    } finally {
+      setSubmitting(false);
+    }
+  }
+
+  async function loadOrders() {
+    setLoading(true);
+    setPageError("");
+    try {
+      const data = await callGAS("listOrders", {});
+      setOrders(data.orders);
+    } catch (err) {
+      setPageError("訂單清單載入失敗：" + err.message);
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  function exportExcel(order) {
+    const rows = order.lines.map(l => ({
+      "客戶代號": order.branchCode,
+      "客戶名稱": order.customerName,
+      "產品編號": l.code,
+      "品名": l.name,
+      "訂購數量": l.qty,
+      "贈品數量": l.giftQty || 0,
+      "單價": l.unitPrice,
+      "金額": l.amount,
+      "促銷規則": l.activity || "",
+      "狀態": l.status,
+    }));
+    const ws = XLSX.utils.json_to_sheet(rows);
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, "訂單明細");
+    XLSX.writeFile(wb, `${order.orderId}_${order.customerName}.xlsx`);
+  }
+
+  // ---------------- 登入畫面 ----------------
+  if (stage === "login") {
+    return (
+      <div className="login-wrap">
+        <div className="login-card">
+          <h1>業務訂購系統</h1>
+
+          {loginStep === "input" && (
+            <React.Fragment>
+              <p className="sub">請輸入統一編號，系統將自動帶出對應的客戶資料</p>
+              <input
+                className="taxid-input"
+                placeholder="請輸入統一編號"
+                value={taxIdInput}
+                maxLength={8}
+                inputMode="numeric"
+                pattern="[0-9]*"
+                autoComplete="off"
+                onChange={e => { setTaxIdInput(e.target.value.replace(/\D/g, "")); setLoginError(""); }}
+                onKeyDown={e => { if (e.key === "Enter") handleTaxIdSubmit(); }}
+              />
+              {loginError && <div className="login-error">{loginError}</div>}
+              <button className="submit-btn" disabled={loading} onClick={handleTaxIdSubmit}>
+                {loading ? "查詢中…" : "查詢"}
+              </button>
+            </React.Fragment>
+          )}
+
+          {loginStep === "confirm" && pendingCompany && (
+            <React.Fragment>
+              <p className="sub">請核對以下客戶資料是否正確</p>
+              <div className="confirm-box">
+                <div className="confirm-row"><span>統一編號</span><b>{taxIdInput}</b></div>
+                <div className="confirm-row"><span>客戶名稱</span><b>{pendingCompany.companyName}</b></div>
+                <div className="confirm-row"><span>出貨對象</span><b>{pendingCompany.branches[0].name}（{pendingCompany.branches[0].code}）</b></div>
+              </div>
+              {loginError && <div className="login-error">{loginError}</div>}
+              <button className="submit-btn" disabled={loading} onClick={handleConfirmLogin}>
+                {loading ? "登入中…" : "確認並登入"}
+              </button>
+              <button className="ghost-btn" style={{width:"100%", marginTop:8}} onClick={backToTaxIdInput}>重新輸入統編</button>
+            </React.Fragment>
+          )}
+
+          {loginStep === "chooseBranch" && pendingCompany && (
+            <React.Fragment>
+              <p className="sub">
+                統編 {taxIdInput}「{pendingCompany.companyName}」名下有多個分店，請選擇本次要代表哪一個分店下單
+              </p>
+              <div className="branch-list">
+                {pendingCompany.branches.map(b => (
+                  <button
+                    key={b.code}
+                    className={"branch-btn" + (selectedBranchCode === b.code ? " active" : "")}
+                    onClick={() => setSelectedBranchCode(b.code)}
+                  >
+                    {b.name} <span style={{color:"#9aa6a4", fontSize:12}}>（{b.code}）</span>
+                  </button>
+                ))}
+              </div>
+              {loginError && <div className="login-error">{loginError}</div>}
+              <button className="submit-btn" disabled={!selectedBranchCode || loading} onClick={handleConfirmLogin}>
+                {loading ? "登入中…" : "確認並登入"}
+              </button>
+              <button className="ghost-btn" style={{width:"100%", marginTop:8}} onClick={backToTaxIdInput}>重新輸入統編</button>
+            </React.Fragment>
+          )}
+
+          {loginStep === "input" && (
+            <button className="cust-btn" style={{marginTop:24, background:"#f4f6f5"}} onClick={() => { setStage("admin"); loadOrders(); }}>
+              內部後台（查看所有訂單）
+            </button>
+          )}
+        </div>
+      </div>
+    );
+  }
+
+  // ---------------- 後台畫面 ----------------
+  if (stage === "admin") {
+    return (
+      <div>
+        <div className="app-header">
+          <span className="who"><b>內部後台</b></span>
+          <button className="logout-link" style={{marginLeft:"auto"}} onClick={resetLogin}>返回登入</button>
+        </div>
+        <div className="admin-wrap">
+          <h2 style={{fontSize:16}}>歷史訂單（{orders.length} 筆）</h2>
+          {pageError && <div className="login-error">{pageError}</div>}
+          {loading ? (
+            <p style={{color:"var(--ink-soft)", fontSize:14}}>載入中…</p>
+          ) : orders.length === 0 ? (
+            <p style={{color:"var(--ink-soft)", fontSize:14}}>目前尚無訂單，客戶下單後會顯示在這裡。</p>
+          ) : (
+            <table className="admin-table">
+              <thead>
+                <tr>
+                  <th>訂單編號</th><th>客戶</th><th>時間</th><th>品項數</th><th>金額</th><th>狀態</th><th></th>
+                </tr>
+              </thead>
+              <tbody>
+                {orders.map(o => (
+                  <tr key={o.orderId}>
+                    <td>{o.orderId}</td>
+                    <td>{o.customerName}</td>
+                    <td>{o.time}</td>
+                    <td>{o.lines.length}</td>
+                    <td>${o.total.toLocaleString()}</td>
+                    <td>
+                      {o.needsReview
+                        ? <span className="pill-status review">含待複核項目</span>
+                        : <span className="pill-status ok">可匯出</span>}
+                    </td>
+                    <td><button className="download-btn" onClick={() => exportExcel(o)}>下載 Excel</button></td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          )}
+        </div>
+      </div>
+    );
+  }
+
+  // ---------------- 訂單完成畫面 ----------------
+  if (stage === "confirmed" && lastOrder) {
+    return (
+      <div className="confirm-wrap">
+        <div className="badge">✓</div>
+        <h2>訂單已送出</h2>
+        <p>
+          {lastOrder.customer} 您好，我們已收到您的訂單。
+          {lastOrder.needsReview && "其中含有特殊促銷條件的品項，將由業務人員複核後正式確認金額，"}
+          如有問題會主動與您聯繫。
+        </p>
+        <div className="order-id">訂單編號 {lastOrder.id}</div>
+        <div>
+          <button className="ghost-btn" onClick={() => { setStage("shop"); }}>返回繼續選購</button>
+        </div>
+      </div>
+    );
+  }
+
+  // ---------------- 購物畫面 ----------------
+  return (
+    <div>
+      <div className="app-header">
+        <span className="who">客戶：<b>{customer.name}</b>{customer.branchName !== customer.name && <span style={{color:"var(--ink-soft)"}}>（{customer.branchName}）</span>}</span>
+        <div className="search-box">
+          <input
+            placeholder="搜尋品名或產品編號…"
+            value={search}
+            onChange={e => setSearch(e.target.value)}
+          />
+        </div>
+        <button className="cart-pill" onClick={() => setDrawerOpen(true)}>
+          🛒 購物車 {cartCount > 0 && `(${cartCount})`}
+        </button>
+        <button className="logout-link" onClick={resetLogin}>登出</button>
+      </div>
+
+      <div className="layout">
+        <div className="sidebar">
+          {categories.map(cat => {
+            const n = cat === "全部" ? products.length : products.filter(p => p.category === cat).length;
+            return (
+              <button key={cat} className={activeCat === cat ? "active" : ""} onClick={() => setActiveCat(cat)}>
+                {cat}<span className="count">{n}</span>
+              </button>
+            );
+          })}
+        </div>
+
+        <div className="main">
+          <h2>{activeCat}　共 {filtered.length} 項商品</h2>
+          <div className="grid">
+            {filtered.map(p => {
+              const rule = parseActivity(p.activity);
+              const qty = cart[p.code] || 0;
+              const calc = computeLine(p, qty);
+              return (
+                <div key={p.code} className={"card" + (p.discontinued ? " disabled" : "")}>
+                  <div className="code">{p.code}</div>
+                  <div className="name">{p.name}</div>
+                  <div className="price-row">
+                    <span className="unit-price">${p.unitPrice}</span>
+                    {p.listPrice && <span className="list-price">${p.listPrice}</span>}
+                  </div>
+                  <div className="box-qty">每箱 {p.boxQty} 入</div>
+
+                  {rule && rule.type === "autoGift" && <span className="tag gift">{rule.label}</span>}
+                  {rule && rule.type === "autoBox" && <span className="tag box">{rule.label}</span>}
+                  {rule && rule.type === "needReview" && <span className="tag review">⚠ {rule.label}・待複核</span>}
+                  {p.note === "停產" && <span className="tag stop">已停產</span>}
+
+                  <div className="qty-row">
+                    <button onClick={() => setQty(p.code, qty - 1)}>－</button>
+                    <input type="number" min="0" value={qty} onChange={e => setQty(p.code, Number(e.target.value) || 0)} />
+                    <button onClick={() => setQty(p.code, qty + 1)}>＋</button>
+                    {qty > 0 && calc.giftQty > 0 && <span className="added">送{calc.giftQty}</span>}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      </div>
+
+      {drawerOpen && (
+        <React.Fragment>
+          <div className="drawer-mask" onClick={() => setDrawerOpen(false)} />
+          <div className="drawer">
+            <div className="drawer-head">
+              <h3>購物車</h3>
+              <button onClick={() => setDrawerOpen(false)}>✕</button>
+            </div>
+            <div className="drawer-body">
+              {cartLines.length === 0 ? (
+                <div className="empty-cart">購物車是空的，請先選購商品</div>
+              ) : cartLines.map(l => (
+                <div className="cart-line" key={l.product.code}>
+                  <div className="info">
+                    <div className="name">{l.product.name}</div>
+                    <div className="meta">
+                      {l.qty} 件 × ${l.product.unitPrice}
+                      {l.giftQty > 0 && `　送 ${l.giftQty} 件`}
+                      {l.flag && l.flag !== "review" && `　${l.flag}`}
+                      {l.flag === "review" && <span style={{color:"var(--warn)"}}>　⚠待業務複核</span>}
+                    </div>
+                    <button className="remove" onClick={() => setQty(l.product.code, 0)}>移除</button>
+                  </div>
+                  <div className="lineprice">${l.amount.toLocaleString()}</div>
+                </div>
+              ))}
+            </div>
+            <div className="drawer-foot">
+              <div className="total-row grand">
+                <span>合計</span>
+                <span>${cartTotal.toLocaleString()}</span>
+              </div>
+              {hasReviewItem && (
+                <div className="review-note">
+                  此訂單含有規則較特殊的促銷品項（例如：促銷活動、合清價等），系統試算金額僅供參考，正式金額將由業務人員複核後確認。
+                </div>
+              )}
+              {pageError && <div className="login-error">{pageError}</div>}
+              <button className="submit-btn" disabled={cartLines.length === 0 || submitting} onClick={submitOrder}>
+                {submitting ? "送出中…" : "送出訂單"}
+              </button>
+            </div>
+          </div>
+        </React.Fragment>
+      )}
     </div>
-
-    <!-- 版本（Model 3 / Y 才出現） -->
-    <div id="gen-grp" class="gen-grp" style="display:none"></div>
-
-    <!-- 服務項目 -->
-    <span class="lbl">服務項目（可複選）</span>
-    <div id="svc-grp" class="svc-section"></div>
-
-    <!-- 日期月曆 -->
-    <span class="lbl">選擇日期</span>
-    <div class="cal-nav">
-      <button class="btn" id="prev-m" style="width:38px">←</button>
-      <div class="m-lbl" id="m-lbl"></div>
-      <button class="btn" id="next-m" style="width:38px">→</button>
-    </div>
-    <div class="cal-wd" id="cal-wd"></div>
-    <div class="cal-grid" id="cal-grid"></div>
-
-    <!-- 時段 -->
-    <span class="lbl" id="slot-lbl">選擇起始時間</span>
-    <div class="g3" id="slot-grp" style="display:none"></div>
-    <p class="note" id="note-svc" style="display:none">請先選擇服務項目</p>
-    <p class="note" id="note-loading" style="display:none">載入時段中…</p>
-
-    <!-- 姓名 / 電話 -->
-    <span class="lbl">姓名</span>
-    <input type="text" id="inp-name" placeholder="請輸入姓名">
-    <span class="lbl">聯絡電話</span>
-    <input type="tel" id="inp-phone" placeholder="請輸入手機號碼">
-
-  </div>
-
-  <div class="summary" id="summary">請選擇車型、服務項目與時段</div>
-  <button class="confirm-btn" id="confirm-btn" disabled>確認預約</button>
-  <div id="result"></div>
-
-  <!-- 查詢預約 -->
-  <div class="card" style="margin-top:20px">
-    <span class="lbl" style="font-size:14px;font-weight:600;color:#1a1a1a">查詢我的預約</span>
-    <span class="lbl" style="margin-top:10px">聯絡電話</span>
-    <input type="tel" id="lookup-phone" placeholder="請輸入手機號碼">
-    <button class="btn" id="lookup-btn" style="width:100%;padding:10px">查詢預約</button>
-    <div id="lookup-result" style="margin-top:12px"></div>
-  </div>
-
-</div><!-- /wrap -->
-
-<script>
-// ─── 設定 ────────────────────────────────────────────────
-var API = 'https://script.google.com/macros/s/AKfycbx8ic_5WXffnJXALsVYraPWuQnkz8_eLaHnDKg9fhje3_nZQCq6OXKNO-ljPDzt7c61DA/exec';
-var WD  = ['週日','週一','週二','週三','週四','週五','週六'];
-var OPEN = 9, CLOSE = 18;
-
-var NEEDS_GEN = { 'Model 3': true, 'Model Y': true };
-var GEN_OPTS  = {
-  'Model 3': ['煥新版 2024-2026','2021-2023','2018-2020'],
-  'Model Y':  ['煥新版 2025-2026','2021+']
-};
-
-// ─── 狀態 ───────────────────────────────────────────────
-var S = {
-  model: null, gen: null,
-  svcNames: [],          // 已選的大項名稱陣列
-  svcSubs: {},           // { 大項名稱: [細項名稱, ...] }
-  catalog: {},           // 從後端載入的 CATALOG
-  date: null,            // 已選的 Date 物件
-  slot: null,            // 已選的起始時 '09:00'
-  booked: [],            // [{ start:'09:00', end:'12:00' }, ...]
-  vy: null, vm: null     // 月曆目前顯示的年 / 月
-};
-
-// ─── 工具 ───────────────────────────────────────────────
-function twNow() {
-  var ms = Date.now() + (8*60 - new Date().getTimezoneOffset()) * 60000;
-  return new Date(ms);
-}
-function toTWISO(d) {
-  function p(n){ return String(n).padStart(2,'0'); }
-  return d.getFullYear()+'-'+p(d.getMonth()+1)+'-'+p(d.getDate())+
-    'T'+p(d.getHours())+':'+p(d.getMinutes())+':00+08:00';
-}
-function fmtDate(d){ return (d.getMonth()+1)+'/'+d.getDate()+' ('+WD[d.getDay()]+')'; }
-function fmtISO(d){
-  var y=d.getFullYear(), m=String(d.getMonth()+1).padStart(2,'0'), dd=String(d.getDate()).padStart(2,'0');
-  return y+'-'+m+'-'+dd;
-}
-function fmtMins(m){
-  var h=Math.floor(m/60), r=m%60;
-  return h&&r? h+'小時'+r+'分' : h? h+'小時' : r+'分';
-}
-function sameDay(a,b){
-  return a.getFullYear()===b.getFullYear()&&a.getMonth()===b.getMonth()&&a.getDate()===b.getDate();
-}
-function isWkend(d){ var w=d.getDay(); return w===0||w===6; }
-
-// ─── 載入服務目錄 ───────────────────────────────────────
-fetch(API+'?action=catalog')
-  .then(function(r){ return r.json(); })
-  .then(function(data){
-    if (!data.success) { console.error('catalog 載入失敗', data); return; }
-    S.catalog = data.catalog;
-    buildSvcUI();
-  })
-  .catch(function(e){ console.error('catalog fetch 錯誤', e); });
-
-function buildSvcUI() {
-  var grp = document.getElementById('svc-grp');
-  grp.innerHTML = '';
-
-  Object.keys(S.catalog).forEach(function(cat) {
-    var section = document.createElement('div');
-    section.style.marginBottom = '8px';
-
-    // 標題列
-    var title = document.createElement('div');
-    title.className = 'svc-title';
-    title.innerHTML =
-      '<span class="name">'+cat+'</span>'+
-      '<span class="badge" id="badge-'+cat+'" style="display:none"></span>'+
-      '<span class="arr">▾</span>';
-    section.appendChild(title);
-
-    // 細項區
-    var items = document.createElement('div');
-    items.className = 'svc-items';
-    section.appendChild(items);
-
-    // 展開 / 收合
-    title.addEventListener('click', function(){
-      title.classList.toggle('open');
-      items.classList.toggle('open');
-    });
-
-    // 細項 chip
-    Object.keys(S.catalog[cat]).forEach(function(sub) {
-      var mins = S.catalog[cat][sub];
-      var chip = document.createElement('div');
-      chip.className = 'svc-chip';
-      chip.innerHTML =
-        '<span class="cb"></span>'+
-        '<span>'+sub+'</span>'+
-        '<span class="dur">約 '+fmtMins(mins)+'</span>';
-
-      chip.addEventListener('click', function(){
-        chip.classList.toggle('on');
-        if (!S.svcSubs[cat]) S.svcSubs[cat] = [];
-        var arr = S.svcSubs[cat];
-        var idx = arr.indexOf(sub);
-        if (chip.classList.contains('on')) {
-          if (idx < 0) arr.push(sub);
-          if (S.svcNames.indexOf(cat) < 0) S.svcNames.push(cat);
-        } else {
-          if (idx >= 0) arr.splice(idx,1);
-          if (!arr.length) {
-            var ci = S.svcNames.indexOf(cat);
-            if (ci >= 0) S.svcNames.splice(ci,1);
-          }
-        }
-        updateBadge(cat);
-        S.slot = null;
-        loadSlots();
-        refreshSummary();
-      });
-      items.appendChild(chip);
-    });
-
-    grp.appendChild(section);
-  });
+  );
 }
 
-function updateBadge(cat) {
-  var el = document.getElementById('badge-'+cat);
-  if (!el) return;
-  var n = (S.svcSubs[cat]||[]).length;
-  el.style.display = n ? 'inline-block' : 'none';
-  el.textContent = '已選 '+n+' 項';
-}
-
-// ─── 車型 ───────────────────────────────────────────────
-document.getElementById('model-grp').addEventListener('click', function(e){
-  var b = e.target.closest('[data-v]');
-  if (!b) return;
-  Array.from(this.querySelectorAll('.btn')).forEach(function(x){ x.classList.remove('on'); });
-  b.classList.add('on');
-  S.model = b.dataset.v;
-  S.gen   = null;
-  buildGenUI();
-  refreshSummary();
-});
-
-function buildGenUI() {
-  var grp = document.getElementById('gen-grp');
-  if (NEEDS_GEN[S.model]) {
-    var opts = GEN_OPTS[S.model];
-    grp.style.display = 'grid';
-    grp.style.gridTemplateColumns = 'repeat('+Math.min(opts.length,3)+',1fr)';
-    grp.innerHTML = '';
-    opts.forEach(function(g){
-      var b = document.createElement('button');
-      b.className = 'btn'; b.textContent = g;
-      b.addEventListener('click', function(){
-        Array.from(grp.querySelectorAll('.btn')).forEach(function(x){ x.classList.remove('on'); });
-        b.classList.add('on'); S.gen = g; refreshSummary();
-      });
-      grp.appendChild(b);
-    });
-  } else {
-    grp.style.display = 'none';
-    grp.innerHTML = '';
-  }
-}
-
-// ─── 月曆 ───────────────────────────────────────────────
-(function initCal(){
-  var now = twNow();
-  S.vy = now.getFullYear();
-  S.vm = now.getMonth();
-  renderCal();
-})();
-
-function renderCal() {
-  var lbl  = document.getElementById('m-lbl');
-  var wdEl = document.getElementById('cal-wd');
-  var grid = document.getElementById('cal-grid');
-  lbl.textContent = S.vy+' 年 '+(S.vm+1)+' 月';
-
-  wdEl.innerHTML = '';
-  WD.forEach(function(w){ var d=document.createElement('div'); d.textContent=w; wdEl.appendChild(d); });
-
-  grid.innerHTML = '';
-  var first   = new Date(S.vy, S.vm, 1);
-  var today   = twNow(); today.setHours(0,0,0,0);
-  var total   = new Date(S.vy, S.vm+1, 0).getDate();
-
-  for (var i=0; i<first.getDay(); i++) {
-    var e=document.createElement('div'); e.className='cal-day emp'; grid.appendChild(e);
-  }
-  for (var d=1; d<=total; d++) {
-    var dt   = new Date(S.vy, S.vm, d);
-    var cell = document.createElement('div');
-    cell.className = 'cal-day';
-    cell.textContent = d;
-    if (isWkend(dt)) cell.classList.add('wkend');
-    if (sameDay(dt,today)) cell.classList.add('today');
-    var past = dt < today;
-    if (past || isWkend(dt)) {
-      cell.classList.add('dis');
-    } else {
-      (function(date){
-        cell.addEventListener('click', function(){
-          S.date = date; S.slot = null;
-          renderCal(); loadSlots(); refreshSummary();
-        });
-      })(dt);
-    }
-    if (S.date && sameDay(dt, S.date)) cell.classList.add('sel');
-    grid.appendChild(cell);
-  }
-}
-
-document.getElementById('prev-m').addEventListener('click', function(){
-  S.vm--; if(S.vm<0){ S.vm=11; S.vy--; } renderCal();
-});
-document.getElementById('next-m').addEventListener('click', function(){
-  S.vm++; if(S.vm>11){ S.vm=0; S.vy++; } renderCal();
-});
-
-// ─── 時段 ───────────────────────────────────────────────
-function loadSlots() {
-  var grp      = document.getElementById('slot-grp');
-  var noteSvc  = document.getElementById('note-svc');
-  var noteLoad = document.getElementById('note-loading');
-
-  grp.style.display = 'none';
-  noteSvc.style.display  = 'none';
-  noteLoad.style.display = 'none';
-
-  if (!S.date) return;
-  if (!S.svcNames.length) { noteSvc.style.display='block'; return; }
-
-  noteLoad.style.display = 'block';
-  fetch(API+'?action=availability&date='+fmtISO(S.date))
-    .then(function(r){ return r.json(); })
-    .then(function(data){
-      noteLoad.style.display = 'none';
-      if (!data.success) return;
-      S.booked = data.booked_ranges || [];
-      renderSlots();
-    })
-    .catch(function(){ noteLoad.style.display='none'; });
-}
-
-function renderSlots() {
-  var grp   = document.getElementById('slot-grp');
-  var total = totalMins();
-  var need  = Math.max(1, Math.ceil(total/60));
-  var now   = twNow();
-
-  grp.innerHTML = '';
-  grp.style.display = 'grid';
-
-  for (var h=OPEN; h<CLOSE; h++) {
-    var startD = new Date(S.date); startD.setHours(h,0,0,0);
-    var endD   = new Date(S.date); endD.setHours(h+need,0,0,0);
-    var past   = startD < now;
-    var over   = h+need > CLOSE;
-    var clash  = !past && !over && S.booked.some(function(r){
-      var rs=new Date(S.date); var rp=r.start.split(':'); rs.setHours(+rp[0],+rp[1],0,0);
-      var re=new Date(S.date); var ep=r.end.split(':');   re.setHours(+ep[0],+ep[1],0,0);
-      return startD < re && rs < endD;
-    });
-    var dis = past || over || clash;
-
-    var btn = document.createElement('button');
-    btn.className = 'btn'+(dis?' dis':'')+(S.slot===h+':00'&&!dis?' on':'');
-    btn.disabled  = dis;
-    btn.innerHTML = h+':00'+(need>1&&!dis?'<span class="sub">至'+(h+need)+':00</span>':'');
-    if (!dis) {
-      (function(hour){
-        btn.addEventListener('click', function(){
-          S.slot = hour+':00'; renderSlots(); refreshSummary();
-        });
-      })(h);
-    }
-    grp.appendChild(btn);
-  }
-}
-
-function totalMins() {
-  var t = 0;
-  S.svcNames.forEach(function(cat){
-    (S.svcSubs[cat]||[]).forEach(function(sub){
-      t += (S.catalog[cat]&&S.catalog[cat][sub]) || 0;
-    });
-  });
-  return t;
-}
-
-// ─── 摘要 / 送出 ────────────────────────────────────────
-document.getElementById('inp-name').addEventListener('input', refreshSummary);
-document.getElementById('inp-phone').addEventListener('input', refreshSummary);
-
-function getLabels() {
-  var out = [];
-  S.svcNames.forEach(function(cat){
-    (S.svcSubs[cat]||[]).forEach(function(sub){
-      out.push(cat===sub ? cat : cat+'-'+sub);
-    });
-  });
-  return out;
-}
-
-function refreshSummary() {
-  var name    = document.getElementById('inp-name').value.trim();
-  var phone   = document.getElementById('inp-phone').value.trim();
-  var modelOK = S.model && (!NEEDS_GEN[S.model] || S.gen);
-  var svcOK   = S.svcNames.length > 0 && S.svcNames.every(function(c){
-    return S.svcSubs[c] && S.svcSubs[c].length > 0;
-  });
-  var mins    = totalMins();
-  var need    = Math.max(1,Math.ceil(mins/60));
-
-  var el  = document.getElementById('summary');
-  var btn = document.getElementById('confirm-btn');
-
-  if (modelOK && svcOK && S.date && S.slot && name && phone) {
-    var startH = parseInt(S.slot);
-    el.innerHTML =
-      '姓名：'+name+'　電話：'+phone+'<br>'+
-      '車型：'+S.model+(S.gen?'（'+S.gen+'）':'')+'<br>'+
-      '服務：'+getLabels().join('、')+'（共約 '+fmtMins(mins)+'）<br>'+
-      '時間：'+fmtDate(S.date)+' '+S.slot+' 至 '+(startH+need)+':00';
-    btn.disabled = false;
-  } else {
-    var miss = [];
-    if (!name)  miss.push('姓名');
-    if (!phone) miss.push('電話');
-    if (!S.model) miss.push('車型');
-    else if (!modelOK) miss.push('版本');
-    if (!svcOK) miss.push(S.svcNames.length?'服務細項':'服務項目');
-    if (!S.date) miss.push('日期');
-    else if (!S.slot) miss.push('時段');
-    el.textContent = '請填寫：'+miss.join('、');
-    btn.disabled = true;
-  }
-}
-
-document.getElementById('confirm-btn').addEventListener('click', function(){
-  var btn    = this;
-  var result = document.getElementById('result');
-  btn.disabled = true; btn.textContent = '送出中…';
-  result.innerHTML = '';
-
-  var startH = parseInt(S.slot);
-  var startD = new Date(S.date.getFullYear(), S.date.getMonth(), S.date.getDate(), startH, 0, 0);
-
-  var payload = {
-    customer_name:  document.getElementById('inp-name').value.trim(),
-    customer_phone: document.getElementById('inp-phone').value.trim(),
-    vehicle_model:  S.model,
-    vehicle_gen:    S.gen,
-    service_names:  S.svcNames,
-    sub_services:   S.svcSubs,
-    start_time:     toTWISO(startD)
-  };
-
-  fetch(API, {
-    method:'POST', headers:{'Content-Type':'text/plain'},
-    body: JSON.stringify(payload)
-  })
-  .then(function(r){ return r.json(); })
-  .then(function(d){
-    btn.textContent = '確認預約';
-    if (d.success) {
-      result.innerHTML = '<div class="msg ok">預約已送出，我們將以電話確認</div>';
-      btn.style.display = 'none';
-    } else {
-      result.innerHTML = '<div class="msg err">'+(d.error||'預約失敗，請重試')+'</div>';
-      btn.disabled = false;
-      loadSlots();
-    }
-  })
-  .catch(function(){
-    btn.textContent = '確認預約'; btn.disabled = false;
-    result.innerHTML = '<div class="msg err">連線失敗，請重試</div>';
-  });
-});
-
-// ─── 查詢預約 ────────────────────────────────────────────
-document.getElementById('lookup-btn').addEventListener('click', function(){
-  var btn    = this;
-  var phone  = document.getElementById('lookup-phone').value.trim();
-  var box    = document.getElementById('lookup-result');
-  if (!phone) { box.innerHTML='<div class="msg err">請輸入手機號碼</div>'; return; }
-  btn.disabled=true; btn.textContent='查詢中…'; box.innerHTML='';
-
-  fetch(API+'?action=lookup&phone='+encodeURIComponent(phone))
-  .then(function(r){ return r.json(); })
-  .then(function(d){
-    btn.disabled=false; btn.textContent='查詢預約';
-    if (!d.success||!d.bookings.length){
-      box.innerHTML='<div class="msg err">'+(d.error||'查無預約記錄')+'</div>'; return;
-    }
-    box.innerHTML = d.bookings.map(function(b){
-      var s = new Date(b.start_time), e = new Date(b.end_time);
-      var sh = String(s.getHours()).padStart(2,'0')+':'+String(s.getMinutes()).padStart(2,'0');
-      var eh = String(e.getHours()).padStart(2,'0')+':'+String(e.getMinutes()).padStart(2,'0');
-      return '<div class="summary" style="margin-bottom:8px">'+
-        '姓名：'+b.customer_name+'　電話：'+b.customer_phone+'<br>'+
-        '車型：'+b.vehicle_model+(b.vehicle_gen?'（'+b.vehicle_gen+'）':'')+'<br>'+
-        '服務：'+b.services+'<br>'+
-        '時間：'+fmtDate(s)+' '+sh+' 至 '+eh+
-        '<br><button class="cancel-btn" data-id="'+b.id+'">取消此預約</button>'+
-        '</div>';
-    }).join('');
-
-    box.querySelectorAll('.cancel-btn').forEach(function(cb){
-      cb.addEventListener('click', function(){
-        var id = cb.dataset.id;
-        if (!confirm('確定要取消這筆預約嗎？')) return;
-        cb.disabled=true; cb.textContent='取消中…';
-        fetch(API,{
-          method:'POST', headers:{'Content-Type':'text/plain'},
-          body: JSON.stringify({ action:'cancel', id:id, phone:phone })
-        })
-        .then(function(r){ return r.json(); })
-        .then(function(d){
-          if (d.success) cb.closest('.summary').innerHTML='<div class="msg ok">已取消</div>';
-          else { cb.disabled=false; cb.textContent='取消此預約'; alert(d.error||'取消失敗'); }
-        })
-        .catch(function(){ cb.disabled=false; cb.textContent='取消此預約'; alert('連線失敗'); });
-      });
-    });
-  })
-  .catch(function(){
-    btn.disabled=false; btn.textContent='查詢預約';
-    box.innerHTML='<div class="msg err">連線失敗，請重試</div>';
-  });
-});
+ReactDOM.createRoot(document.getElementById("root")).render(<App />);
 </script>
 </body>
 </html>
