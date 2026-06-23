@@ -161,6 +161,7 @@
   .order-action-bar{display:flex;gap:8px;margin-top:10px;padding-top:10px;border-top:1px solid var(--line);}
   .btn-modify{padding:7px 16px;background:#eef1fb;color:#3d4f9e;border:1px solid #d0d8f5;border-radius:7px;font-size:13px;cursor:pointer;}
   .btn-cancel-order{padding:7px 16px;background:var(--danger-tint);color:var(--danger);border:1px solid #eacfca;border-radius:7px;font-size:13px;cursor:pointer;}
+  .order-note-box{margin-top:8px;padding:8px 12px;background:#fffbf3;border:1px solid #e8d9b5;border-radius:6px;font-size:12px;color:#7a6030;}
   /* 訂單編輯模式 */
   .edit-line{display:flex;gap:8px;align-items:center;font-size:13px;padding:7px 0;border-bottom:1px solid var(--line);}
   .edit-line:last-child{border-bottom:none;}
@@ -361,10 +362,34 @@ function App() {
   const logoutTimer = useRef(null);
 
   // 歷史訂單查詢
-  const [hisOrders, setHisOrders]     = useState(null);
-  const [hisLoading, setHisLoading]   = useState(false);
-  const [hisError, setHisError]       = useState("");
-  const [hisExpanded, setHisExpanded] = useState({});
+  const [hisOrders, setHisOrders]       = useState(null);
+  const [hisLoading, setHisLoading]     = useState(false);
+  const [hisError, setHisError]         = useState("");
+  const [hisExpanded, setHisExpanded]   = useState({});
+  const [hisDateFrom, setHisDateFrom]   = useState("");
+  const [hisDateTo, setHisDateTo]       = useState("");
+  const [hisKeyword, setHisKeyword]     = useState(""); // 品名/品號搜尋
+
+  // 訂單前端篩選（不需要重新呼叫 GAS）
+  const filteredHisOrders = useMemo(() => {
+    if (!hisOrders) return [];
+    return hisOrders.filter(o => {
+      const dateStr = String(o.time||"").substring(0,10);
+      if (hisDateFrom && dateStr < hisDateFrom) return false;
+      if (hisDateTo   && dateStr > hisDateTo)   return false;
+      if (hisKeyword) {
+        const kw = hisKeyword.toLowerCase();
+        // 搜尋訂單編號、品名、品號
+        const inId   = o.orderId.toLowerCase().includes(kw);
+        const inLine = o.lines.some(l =>
+          String(l.code||"").toLowerCase().includes(kw) ||
+          String(l.name||"").toLowerCase().includes(kw)
+        );
+        if (!inId && !inLine) return false;
+      }
+      return true;
+    });
+  }, [hisOrders, hisDateFrom, hisDateTo, hisKeyword]);
 
   // 訂單編輯狀態
   const [editingOrderId, setEditingOrderId] = useState(null); // 正在編輯哪筆
@@ -405,6 +430,26 @@ function App() {
     return () => { events.forEach(e => window.removeEventListener(e, h)); [idleTimer,logoutTimer].forEach(r=>{if(r.current)clearTimeout(r.current);}); };
   }, [stage]);
 
+  // 登入後若商品為空（快取失效），自動重新抓取
+  useEffect(() => {
+    if (stage === "shop" && customer && products.length === 0) {
+      callGAS("getProducts", { branchCode: customer.code })
+        .then(d => {
+          setProducts(d.products);
+          localStorage.setItem(LS_PRODUCTS, JSON.stringify(d.products));
+        })
+        .catch(() => {}); // 靜默失敗，不打擾使用者
+    }
+  }, [stage, customer]);
+
+  // 客戶顯示名稱（公司名稱，過濾掉統編格式）
+  const customerDisplayName = useMemo(() => {
+    if (!customer) return "";
+    const name = customer.name || customer.companyName || "";
+    if (/^\d+$/.test(name)) return customer.branchName || name;
+    return name;
+  }, [customer]);
+
   // 兩層分類：優先用 catTree，降級用商品的 category 欄位
   const treeParents = useMemo(() => Object.keys(catTree), [catTree]);
   const hasCatTree  = treeParents.length > 0;
@@ -425,6 +470,13 @@ function App() {
   function countByParent(parent) { return products.filter(p=>p.category===parent).length; }
   function countByChild(parent,child) { return products.filter(p=>p.category===parent&&p.subCategory===child).length; }
   function toggleParent(p) { setOpenParents(prev=>({...prev,[p]:!prev[p]})); }
+
+  // 進入 history stage 時自動載入
+  useEffect(() => {
+    if (stage === "history" && customer && hisOrders === null && !hisLoading) {
+      queryHistory();
+    }
+  }, [stage]);
 
   // 歷史訂單查詢
   async function queryHistory() {
@@ -621,44 +673,79 @@ function App() {
   if (stage==="history") return (
     <div>
       <div className="app-header">
-        <span className="who"><b>{customer.name||customer.companyName||""}</b>（{customer.code||customer.branchCode||""}）{customer.branchName||""}</span>
-        <button className="ghost-btn" style={{marginLeft:"auto"}} onClick={()=>setStage("shop")}>返回選購</button>
+        <span className="who">
+          <b>{customerDisplayName}</b>
+          <span style={{color:"var(--ink-soft)",fontWeight:400}}>（{customer.code||customer.branchCode||""}）{customer.branchName||""}</span>
+        </span>
+        <button style={{marginLeft:"auto",padding:"7px 14px",background:"var(--brand-tint)",border:"1px solid #c2dbd5",borderRadius:8,fontSize:13,cursor:"pointer",color:"var(--brand-dark)"}}
+          onClick={()=>setStage("shop")}>← 返回選購</button>
         <button className="logout-link" style={{marginLeft:8}} onClick={doLogout}>登出</button>
       </div>
       <div className="history-wrap">
-        <h2>歷史訂單查詢</h2>
-        <div style={{display:"flex",gap:8,marginBottom:20}}>
-          <button className="submit-btn" style={{width:"auto",padding:"11px 24px"}} disabled={hisLoading} onClick={queryHistory}>
-            {hisLoading?"查詢中…":"查詢我的訂單"}
+        <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:16}}>
+          <h2 style={{margin:0}}>我的訂單</h2>
+          <button onClick={queryHistory} disabled={hisLoading}
+            style={{padding:"7px 16px",background:hisLoading?"#c7cdcb":"var(--brand)",color:"#fff",border:"none",borderRadius:8,fontSize:13,cursor:hisLoading?"not-allowed":"pointer"}}>
+            {hisLoading?"載入中…":"🔄 重新整理"}
           </button>
-          {hisOrders!==null && <span style={{alignSelf:"center",fontSize:13,color:"var(--ink-soft)"}}>共 {hisOrders.length} 筆</span>}
         </div>
+        {/* 篩選列 */}
+        <div style={{display:"flex",gap:8,marginBottom:14,flexWrap:"wrap",alignItems:"center",background:"#fff",border:"1px solid var(--line)",borderRadius:10,padding:"12px 14px"}}>
+          <input placeholder="🔍 搜尋品名、品號、訂單編號…" value={hisKeyword} onChange={e=>setHisKeyword(e.target.value)}
+            style={{flex:1,minWidth:160,padding:"8px 12px",border:"1px solid var(--line)",borderRadius:8,fontSize:13}}/>
+          <div style={{display:"flex",alignItems:"center",gap:6,flexShrink:0,flexWrap:"wrap"}}>
+            <span style={{fontSize:12,color:"var(--ink-soft)",whiteSpace:"nowrap"}}>日期</span>
+            <input type="date" value={hisDateFrom} onChange={e=>setHisDateFrom(e.target.value)}
+              style={{padding:"7px 9px",border:"1px solid var(--line)",borderRadius:7,fontSize:13}}/>
+            <span style={{fontSize:12,color:"var(--ink-soft)"}}>—</span>
+            <input type="date" value={hisDateTo} onChange={e=>setHisDateTo(e.target.value)}
+              style={{padding:"7px 9px",border:"1px solid var(--line)",borderRadius:7,fontSize:13}}/>
+          </div>
+          {(hisKeyword||hisDateFrom||hisDateTo)&&(
+            <button onClick={()=>{setHisKeyword("");setHisDateFrom("");setHisDateTo("");}}
+              style={{padding:"7px 12px",background:"#fff",border:"1px solid var(--line)",borderRadius:7,fontSize:13,cursor:"pointer",color:"var(--ink-soft)"}}>清除</button>
+          )}
+        </div>
+        {/* 結果摘要 */}
+        {hisOrders!==null&&(
+          <div style={{fontSize:13,color:"var(--ink-soft)",marginBottom:10}}>
+            {(hisKeyword||hisDateFrom||hisDateTo)
+              ? `篩選結果：${filteredHisOrders.length} 筆（共 ${hisOrders.length} 筆）`
+              : `共 ${hisOrders.length} 筆訂單`}
+          </div>
+        )}
         {hisError&&<div className="login-error">{hisError}</div>}
-        {hisOrders!==null && hisOrders.length===0 && <p style={{color:"var(--ink-soft)",fontSize:14}}>目前沒有歷史訂單記錄。</p>}
-        {(hisOrders||[]).map(o=>{
+        {hisLoading&&<p style={{color:"var(--ink-soft)",fontSize:14,textAlign:"center",padding:"40px 0"}}>載入中…</p>}
+        {hisOrders!==null&&filteredHisOrders.length===0&&!hisLoading&&(
+          <div style={{textAlign:"center",padding:"48px 20px",color:"var(--ink-soft)"}}>
+            <div style={{fontSize:32,marginBottom:8}}>📭</div>
+            <div style={{fontSize:14}}>{hisOrders.length===0?"目前沒有訂單記錄":"找不到符合條件的訂單"}</div>
+          </div>
+        )}
+        {filteredHisOrders.map(o=>{
           const ostatus   = o.orderStatus||"未確認";
           const canEdit   = ostatus==="未確認";
           const isEditing = editingOrderId===o.orderId;
           const editTotal = editLines.reduce((s,l)=>s+l.amount,0);
+          const isExp = hisExpanded[o.orderId]||isEditing;
+          const matchedCodes = hisKeyword
+            ? new Set(o.lines.filter(l=>String(l.code||"").toLowerCase().includes(hisKeyword.toLowerCase())||String(l.name||"").toLowerCase().includes(hisKeyword.toLowerCase())).map(l=>l.code))
+            : null;
           return (
           <div key={o.orderId} className="history-card">
-            {/* 訂單列頭 */}
             <div className="history-head" onClick={()=>{ if(!isEditing) setHisExpanded(p=>({...p,[o.orderId]:!p[o.orderId]})); }}>
               <div className="history-meta">
                 <div className="history-id">{o.orderId}</div>
-                <div className="history-info">{formatTime(o.time)}</div>
+                <div className="history-info" style={{fontSize:12,color:"var(--ink-soft)"}}>{formatTime(o.time)}</div>
               </div>
               <span className={orderBadgeClass(ostatus)}>{ostatus}</span>
-              {o.needsReview&&<span className="order-badge unconfirmed">待複核</span>}
+              {o.needsReview&&<span className="order-badge unconfirmed" style={{fontSize:10}}>待複核</span>}
               <div className="history-total">${o.total.toLocaleString()}</div>
-              {!isEditing && <span className={"history-chevron"+(hisExpanded[o.orderId]?" open":"")}>▶</span>}
+              {!isEditing&&<span className={"history-chevron"+(isExp?" open":"")}>▶</span>}
             </div>
-
-            {/* 展開內容 */}
-            {(hisExpanded[o.orderId]||isEditing)&&(
+            {isExp&&(
               <div className="history-body">
-                {isEditing ? (
-                  /* ── 編輯模式 ── */
+                {isEditing?(
                   <React.Fragment>
                     {editLines.map(l=>(
                       <div key={l.code} className="edit-line">
@@ -667,31 +754,29 @@ function App() {
                         <input type="number" className="edit-qty" min="1" value={l.qty}
                           onChange={e=>updateEditQty(l.code, Math.max(1,Number(e.target.value)||1))}/>
                         <span className="lamt">${l.amount.toLocaleString()}</span>
-                        <button className="btn-rm" onClick={()=>removeEditLine(l.code)} title="刪除此品項">✕</button>
+                        <button className="btn-rm" onClick={()=>removeEditLine(l.code)}>✕</button>
                       </div>
                     ))}
-                    {/* 新增品項 */}
                     <div className="add-item-bar">
                       <select value={addItemCode} onChange={e=>setAddItemCode(e.target.value)}>
-                        <option value="">選擇要新增的商品…</option>
+                        <option value="">新增商品…</option>
                         {products.filter(p=>!p.inactive).map(p=><option key={p.code} value={p.code}>{p.code} {p.name} ${p.unitPrice}</option>)}
                       </select>
-                      <input type="number" min="1" value={addItemQty} onChange={e=>setAddItemQty(Math.max(1,Number(e.target.value)||1))}/>
+                      <input type="number" min="1" value={addItemQty} onChange={e=>setAddItemQty(Math.max(1,Number(e.target.value)||1))} style={{width:60}}/>
                       <button className="btn-modify" onClick={addEditItem}>加入</button>
                     </div>
                     <div className="history-foot" style={{flexDirection:"column",alignItems:"flex-end",gap:8}}>
-                      <div>合計 ${editTotal.toLocaleString()}</div>
+                      <div style={{fontWeight:700}}>合計 ${editTotal.toLocaleString()}</div>
                       <div style={{display:"flex",gap:8}}>
-                        <button className="ghost-btn" style={{padding:"8px 16px",fontSize:13}} onClick={()=>setEditingOrderId(null)}>取消編輯</button>
-                        <button className="submit-btn" style={{width:"auto",padding:"8px 20px",fontSize:13}} disabled={editSaving} onClick={saveEditOrder}>{editSaving?"儲存中…":"確認修改"}</button>
+                        <button className="ghost-btn" style={{padding:"8px 16px",fontSize:13,marginTop:0}} onClick={()=>setEditingOrderId(null)}>取消</button>
+                        <button className="submit-btn" style={{width:"auto",padding:"8px 24px",fontSize:13,marginTop:0}} disabled={editSaving} onClick={saveEditOrder}>{editSaving?"儲存中…":"確認修改"}</button>
                       </div>
                     </div>
                   </React.Fragment>
-                ) : (
-                  /* ── 查看模式 ── */
+                ):(
                   <React.Fragment>
                     {o.lines.map((l,i)=>(
-                      <div key={i} className="history-line">
+                      <div key={i} className="history-line" style={matchedCodes&&matchedCodes.has(l.code)?{background:"#fffbea",borderRadius:4}:{}}>
                         <span className="lcode">{l.code}</span>
                         <span className="lname">{l.name}</span>
                         <span className="lqty">{l.qty}{l.giftQty>0&&`+贈${l.giftQty}`}</span>
@@ -699,6 +784,7 @@ function App() {
                       </div>
                     ))}
                     <div className="history-foot">合計 ${o.total.toLocaleString()}</div>
+                    {o.note&&<div className="order-note-box">📝 {o.note}</div>}
                     {canEdit&&(
                       <div className="order-action-bar">
                         <button className="btn-modify" onClick={()=>openModifyConfirm(o.orderId)}>✏ 修改訂單</button>
@@ -711,41 +797,42 @@ function App() {
             )}
           </div>
         );})}
-
-        {/* 確認視窗 */}
-        {confirmModal&&(
-          <div className="confirm-modal-mask" onClick={()=>setConfirmModal(null)}>
-            <div className="confirm-modal" onClick={e=>e.stopPropagation()}>
-              {confirmModal.type==="modify"?(
-                <React.Fragment>
-                  <h4>修改訂單</h4>
-                  <p>進入修改模式後，可以調整數量、刪除品項或新增商品。確認要修改訂單 <b>{confirmModal.orderId}</b> 嗎？</p>
-                  <div className="confirm-modal-btns">
-                    <button className="ghost-btn" style={{padding:"8px 14px",fontSize:13}} onClick={()=>setConfirmModal(null)}>取消</button>
-                    <button className="submit-btn" style={{width:"auto",padding:"8px 20px",fontSize:13}} onClick={()=>startEditOrder(confirmModal.orderId)}>進入編輯</button>
-                  </div>
-                </React.Fragment>
-              ):(
-                <React.Fragment>
-                  <h4>取消訂單</h4>
-                  <p>確定要取消訂單 <b>{confirmModal.orderId}</b>？此動作無法復原，訂單資料將被刪除。</p>
-                  <div className="confirm-modal-btns">
-                    <button className="ghost-btn" style={{padding:"8px 14px",fontSize:13}} onClick={()=>setConfirmModal(null)}>返回</button>
-                    <button style={{padding:"8px 20px",fontSize:13,background:"var(--danger)",color:"#fff",border:"none",borderRadius:8,cursor:"pointer"}} onClick={()=>doCancelOrder(confirmModal.orderId)}>確認取消訂單</button>
-                  </div>
-                </React.Fragment>
-              )}
-            </div>
-          </div>
-        )}
       </div>
+      {confirmModal&&(
+        <div className="confirm-modal-mask" onClick={()=>setConfirmModal(null)}>
+          <div className="confirm-modal" onClick={e=>e.stopPropagation()}>
+            {confirmModal.type==="modify"?(
+              <React.Fragment>
+                <h4>修改訂單</h4>
+                <p>進入修改模式後，可調整數量、刪除或新增品項。確認修改訂單 <b>{confirmModal.orderId}</b>？</p>
+                <div className="confirm-modal-btns">
+                  <button className="ghost-btn" style={{padding:"8px 14px",fontSize:13,marginTop:0}} onClick={()=>setConfirmModal(null)}>取消</button>
+                  <button className="submit-btn" style={{width:"auto",padding:"8px 20px",fontSize:13,marginTop:0}} onClick={()=>startEditOrder(confirmModal.orderId)}>進入編輯</button>
+                </div>
+              </React.Fragment>
+            ):(
+              <React.Fragment>
+                <h4>取消訂單</h4>
+                <p>確定要取消訂單 <b>{confirmModal.orderId}</b>？此動作無法復原。</p>
+                <div className="confirm-modal-btns">
+                  <button className="ghost-btn" style={{padding:"8px 14px",fontSize:13,marginTop:0}} onClick={()=>setConfirmModal(null)}>返回</button>
+                  <button style={{padding:"8px 20px",fontSize:13,background:"var(--danger)",color:"#fff",border:"none",borderRadius:8,cursor:"pointer"}} onClick={()=>doCancelOrder(confirmModal.orderId)}>確認取消</button>
+                </div>
+              </React.Fragment>
+            )}
+          </div>
+        </div>
+      )}
     </div>
   );
 
   return (
     <div>
       <div className="app-header">
-        <span className="who"><b>{customer.name||customer.companyName||""}</b>（{customer.code||customer.branchCode||""}）{customer.branchName||""}</span>
+        <span className="who">
+          <b>{customerDisplayName}</b>
+          <span style={{color:"var(--ink-soft)",fontWeight:400}}>（{customer.code||customer.branchCode||""}）{customer.branchName||""}</span>
+        </span>
         <div className="search-box"><input placeholder="搜尋品名或產品編號…" value={search} onChange={e=>setSearch(e.target.value)}/></div>
         <select value={sortBy} onChange={e=>setSortBy(e.target.value)}
           style={{padding:"7px 10px",border:"1px solid var(--line)",borderRadius:8,fontSize:13,background:"#fff"}}>
@@ -754,7 +841,9 @@ function App() {
           <option value="price_asc">價格↑</option>
           <option value="price_desc">價格↓</option>
         </select>
-        <button className="cart-pill" onClick={()=>setDrawerOpen(true)}>🛒 {cartCount>0?`購物車 (${cartCount})`:"購物車"}</button>
+        <button style={{padding:"7px 14px",background:"none",border:"1px solid var(--line)",borderRadius:8,fontSize:13,cursor:"pointer",color:"var(--ink-soft)",whiteSpace:"nowrap"}}
+          onClick={()=>{ setStage("history"); }}>📋 我的訂單</button>
+        <button className="cart-pill" onClick={()=>setDrawerOpen(true)}>🛒 {cartCount>0?`(${cartCount})`:"購物車"}</button>
         <button className="logout-link" onClick={doLogout}>登出</button>
       </div>
       <div className="layout">
