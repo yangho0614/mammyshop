@@ -152,6 +152,33 @@
   .history-line .lqty{color:var(--ink-soft);white-space:nowrap;font-size:12px;}
   .history-line .lamt{font-weight:600;white-space:nowrap;}
   .history-foot{display:flex;justify-content:flex-end;padding-top:8px;font-size:14px;font-weight:700;border-top:1px solid var(--line);margin-top:4px;}
+  /* 訂單狀態 badge */
+  .order-badge{display:inline-block;font-size:11px;padding:3px 9px;border-radius:10px;font-weight:600;white-space:nowrap;}
+  .order-badge.unconfirmed{background:var(--warn-tint);color:var(--warn);}
+  .order-badge.preparing{background:#eef1fb;color:#3d4f9e;}
+  .order-badge.shipped{background:var(--brand-tint);color:var(--brand-dark);}
+  /* 訂單操作按鈕列 */
+  .order-action-bar{display:flex;gap:8px;margin-top:10px;padding-top:10px;border-top:1px solid var(--line);}
+  .btn-modify{padding:7px 16px;background:#eef1fb;color:#3d4f9e;border:1px solid #d0d8f5;border-radius:7px;font-size:13px;cursor:pointer;}
+  .btn-cancel-order{padding:7px 16px;background:var(--danger-tint);color:var(--danger);border:1px solid #eacfca;border-radius:7px;font-size:13px;cursor:pointer;}
+  /* 訂單編輯模式 */
+  .edit-line{display:flex;gap:8px;align-items:center;font-size:13px;padding:7px 0;border-bottom:1px solid var(--line);}
+  .edit-line:last-child{border-bottom:none;}
+  .edit-line .lcode{color:var(--ink-soft);font-size:11px;font-family:monospace;white-space:nowrap;min-width:52px;}
+  .edit-line .lname{flex:1;min-width:0;}
+  .edit-line .edit-qty{width:52px;text-align:center;padding:5px 4px;border:1px solid var(--line);border-radius:6px;font-size:13px;}
+  .edit-line .lamt{white-space:nowrap;font-weight:600;min-width:60px;text-align:right;}
+  .edit-line .btn-rm{background:none;border:none;color:var(--danger);font-size:16px;cursor:pointer;padding:0 4px;flex-shrink:0;}
+  /* 新增品項選擇器 */
+  .add-item-bar{display:flex;gap:8px;margin-top:10px;flex-wrap:wrap;align-items:center;}
+  .add-item-bar select{flex:1;min-width:160px;padding:8px 10px;border:1px solid var(--line);border-radius:7px;font-size:13px;background:#fff;}
+  .add-item-bar input{width:60px;padding:8px 6px;border:1px solid var(--line);border-radius:7px;font-size:13px;text-align:center;}
+  /* 確認視窗 */
+  .confirm-modal-mask{position:fixed;inset:0;background:rgba(20,30,28,.5);z-index:55;display:flex;align-items:center;justify-content:center;padding:20px;}
+  .confirm-modal{background:#fff;border-radius:var(--radius);padding:24px;width:100%;max-width:340px;box-shadow:0 8px 32px rgba(0,0,0,.15);}
+  .confirm-modal h4{margin:0 0 10px;font-size:16px;}
+  .confirm-modal p{margin:0 0 18px;font-size:13px;color:var(--ink-soft);line-height:1.6;}
+  .confirm-modal-btns{display:flex;gap:8px;justify-content:flex-end;}
   .idle-banner{position:fixed;bottom:16px;left:50%;transform:translateX(-50%);background:#1c2b2d;color:#fff;font-size:13px;padding:10px 20px;border-radius:8px;z-index:50;box-shadow:0 4px 16px rgba(0,0,0,.2);}
   @media(max-width:760px){
     .sidebar{position:static;width:100%;height:auto;border-right:none;border-bottom:1px solid var(--line);display:flex;overflow-x:auto;padding:10px 12px;gap:4px;}
@@ -191,6 +218,20 @@ async function callGAS(action, payload) {
   return data;
 }
 // Google Drive 圖片網址正規化：統一轉成 thumbnail 格式避免 uc?export=view 被封鎖
+// UTC 或 GAS 時間字串統一轉台灣時間格式
+function formatTime(t) {
+  if (!t) return "";
+  try {
+    const s = String(t);
+    // GAS 寫入格式 "2026-06-23 17:29:39"，不含 T，直接顯示
+    if (!s.includes("T") && !s.includes("Z")) return s;
+    // ISO UTC 格式，轉台灣時間
+    const d = new Date(s);
+    if (isNaN(d)) return s;
+    return d.toLocaleString("zh-TW", {timeZone:"Asia/Taipei", year:"numeric", month:"2-digit", day:"2-digit", hour:"2-digit", minute:"2-digit", second:"2-digit", hour12:false});
+  } catch(e) { return String(t); }
+}
+
 function fixImgUrl(url) {
   if (!url) return url;
   // 已經是 thumbnail 格式就不動
@@ -320,10 +361,18 @@ function App() {
   const logoutTimer = useRef(null);
 
   // 歷史訂單查詢
-  const [hisOrders, setHisOrders]   = useState(null);  // null=未查詢
-  const [hisLoading, setHisLoading] = useState(false);
-  const [hisError, setHisError]     = useState("");
+  const [hisOrders, setHisOrders]     = useState(null);
+  const [hisLoading, setHisLoading]   = useState(false);
+  const [hisError, setHisError]       = useState("");
   const [hisExpanded, setHisExpanded] = useState({});
+
+  // 訂單編輯狀態
+  const [editingOrderId, setEditingOrderId] = useState(null); // 正在編輯哪筆
+  const [editLines, setEditLines]           = useState([]);   // 編輯中的明細
+  const [addItemCode, setAddItemCode]       = useState("");   // 新增品項品號
+  const [addItemQty, setAddItemQty]         = useState(1);
+  const [confirmModal, setConfirmModal]     = useState(null); // { type:"modify"|"cancel", orderId }
+  const [editSaving, setEditSaving]         = useState(false);
 
   // 載入分類 tree（登入後）
   async function loadCatTree() {
@@ -373,10 +422,100 @@ function App() {
   // 歷史訂單查詢
   async function queryHistory() {
     if (!customer?.taxId) return;
-    setHisLoading(true); setHisError(""); setHisOrders(null); setHisExpanded({});
+    setHisLoading(true); setHisError(""); setHisOrders(null); setHisExpanded({}); setEditingOrderId(null);
     try { const d = await callGAS("getOrdersByTaxId",{taxId:customer.taxId}); setHisOrders(d.orders); }
     catch(e) { setHisError("查詢失敗："+e.message); }
     finally { setHisLoading(false); }
+  }
+
+  // 訂單狀態 badge 樣式
+  function orderBadgeClass(s) {
+    if (s==="未確認") return "order-badge unconfirmed";
+    if (s==="準備中") return "order-badge preparing";
+    if (s==="已出貨") return "order-badge shipped";
+    return "order-badge unconfirmed";
+  }
+
+  // 開啟編輯（先彈確認視窗）
+  function openModifyConfirm(orderId) { setConfirmModal({type:"modify", orderId}); }
+  function openCancelConfirm(orderId) { setConfirmModal({type:"cancel", orderId}); }
+
+  // 確認後進入編輯
+  function startEditOrder(orderId) {
+    const o = hisOrders.find(x=>x.orderId===orderId);
+    if (!o) return;
+    // 複製明細，加上 unitPrice 供重算用
+    setEditLines(o.lines.map(l=>({
+      code:l.code, name:l.name, qty:Number(l.qty),
+      giftQty:Number(l.giftQty||0), unitPrice:Number(l.unitPrice),
+      activity:l.activity||"", needsReview:l.lineStatus==="待複核",
+      amount:Number(l.amount),
+    })));
+    setAddItemCode(""); setAddItemQty(1);
+    setEditingOrderId(orderId);
+    setHisExpanded(p=>({...p,[orderId]:true}));
+    setConfirmModal(null);
+  }
+
+  // 編輯中更新數量（自動重算金額）
+  function updateEditQty(code, qty) {
+    setEditLines(prev=>prev.map(l=>{
+      if (l.code!==code) return l;
+      const rule = parseActivity(l.activity);
+      let amount = qty * l.unitPrice;
+      let giftQty = 0;
+      if (rule && rule.type==="autoGift" && qty>0) giftQty = Math.floor(qty/rule.buy)*rule.free;
+      if (rule && rule.type==="autoBox" && qty>0) { const boxes=Math.ceil(qty/(Number(products.find(p=>p.code===code)?.boxQty)||1)); amount=boxes*rule.boxPrice; }
+      return {...l, qty, giftQty, amount};
+    }));
+  }
+
+  // 刪除品項
+  function removeEditLine(code) { setEditLines(prev=>prev.filter(l=>l.code!==code)); }
+
+  // 新增品項
+  function addEditItem() {
+    if (!addItemCode) return;
+    const p = products.find(x=>x.code===addItemCode);
+    if (!p) { alert("找不到品號 "+addItemCode); return; }
+    if (editLines.find(l=>l.code===addItemCode)) { updateEditQty(addItemCode, (editLines.find(l=>l.code===addItemCode).qty||0)+addItemQty); return; }
+    const rule = parseActivity(p.activity);
+    let amount = addItemQty * p.unitPrice;
+    let giftQty = 0;
+    if (rule && rule.type==="autoGift" && addItemQty>0) giftQty = Math.floor(addItemQty/rule.buy)*rule.free;
+    if (rule && rule.type==="autoBox" && addItemQty>0) { const boxes=Math.ceil(addItemQty/(Number(p.boxQty)||1)); amount=boxes*rule.boxPrice; }
+    setEditLines(prev=>[...prev,{code:p.code,name:p.name,qty:addItemQty,giftQty,unitPrice:p.unitPrice,activity:p.activity||"",needsReview:rule?.type==="needReview",amount}]);
+    setAddItemCode(""); setAddItemQty(1);
+  }
+
+  // 儲存修改
+  async function saveEditOrder() {
+    if (editLines.length===0) { alert("訂單不能沒有品項，請至少保留一項"); return; }
+    setEditSaving(true);
+    try {
+      await callGAS("updateOrderLines",{
+        orderId: editingOrderId,
+        taxId: customer.taxId,
+        lines: editLines.map(l=>({...l, needsReview: l.needsReview||false})),
+      });
+      // 更新本地
+      setHisOrders(prev=>prev.map(o=>{
+        if (o.orderId!==editingOrderId) return o;
+        const total = editLines.reduce((s,l)=>s+l.amount,0);
+        return {...o, lines:editLines.map(l=>({...l,lineStatus:l.needsReview?"待複核":"正常"})), total, needsReview:editLines.some(l=>l.needsReview)};
+      }));
+      setEditingOrderId(null);
+    } catch(e) { alert("儲存失敗："+e.message); }
+    finally { setEditSaving(false); }
+  }
+
+  // 取消訂單
+  async function doCancelOrder(orderId) {
+    setConfirmModal(null);
+    try {
+      await callGAS("cancelOrder",{orderId, taxId:customer.taxId});
+      setHisOrders(prev=>prev.filter(o=>o.orderId!==orderId));
+    } catch(e) { alert("取消失敗："+e.message); }
   }
   const cartLines  = useMemo(() => Object.entries(cart).filter(([,q])=>q>0).map(([code,qty])=>{ const p=products.find(x=>x.code===code); return {product:p,qty,...computeLine(p,qty)}; }), [cart,products]);
   const cartCount  = cartLines.reduce((s,l)=>s+l.qty, 0);
@@ -482,33 +621,109 @@ function App() {
         </div>
         {hisError&&<div className="login-error">{hisError}</div>}
         {hisOrders!==null && hisOrders.length===0 && <p style={{color:"var(--ink-soft)",fontSize:14}}>目前沒有歷史訂單記錄。</p>}
-        {(hisOrders||[]).map(o=>(
+        {(hisOrders||[]).map(o=>{
+          const ostatus   = o.orderStatus||"未確認";
+          const canEdit   = ostatus==="未確認";
+          const isEditing = editingOrderId===o.orderId;
+          const editTotal = editLines.reduce((s,l)=>s+l.amount,0);
+          return (
           <div key={o.orderId} className="history-card">
-            <div className="history-head" onClick={()=>setHisExpanded(p=>({...p,[o.orderId]:!p[o.orderId]}))}>
+            {/* 訂單列頭 */}
+            <div className="history-head" onClick={()=>{ if(!isEditing) setHisExpanded(p=>({...p,[o.orderId]:!p[o.orderId]})); }}>
               <div className="history-meta">
                 <div className="history-id">{o.orderId}</div>
-                <div className="history-info">{o.time}　{o.branchCode}</div>
+                <div className="history-info">{formatTime(o.time)}</div>
               </div>
-              <span className={"history-badge "+(o.orderStatus==="已處理"?"done":"pending")}>{o.orderStatus||"未匯出"}</span>
-              {o.needsReview&&<span className="history-badge pending">待複核</span>}
+              <span className={orderBadgeClass(ostatus)}>{ostatus}</span>
+              {o.needsReview&&<span className="order-badge unconfirmed">待複核</span>}
               <div className="history-total">${o.total.toLocaleString()}</div>
-              <span className={"history-chevron"+(hisExpanded[o.orderId]?" open":"")}>▶</span>
+              {!isEditing && <span className={"history-chevron"+(hisExpanded[o.orderId]?" open":"")}>▶</span>}
             </div>
-            {hisExpanded[o.orderId]&&(
+
+            {/* 展開內容 */}
+            {(hisExpanded[o.orderId]||isEditing)&&(
               <div className="history-body">
-                {o.lines.map((l,i)=>(
-                  <div key={i} className="history-line">
-                    <span className="lcode">{l.code}</span>
-                    <span className="lname">{l.name}</span>
-                    <span className="lqty">{l.qty}{l.giftQty>0&&`+贈${l.giftQty}`}</span>
-                    <span className="lamt">${Number(l.amount).toLocaleString()}</span>
-                  </div>
-                ))}
-                <div className="history-foot">合計 ${o.total.toLocaleString()}</div>
+                {isEditing ? (
+                  /* ── 編輯模式 ── */
+                  <React.Fragment>
+                    {editLines.map(l=>(
+                      <div key={l.code} className="edit-line">
+                        <span className="lcode">{l.code}</span>
+                        <span className="lname">{l.name}</span>
+                        <input type="number" className="edit-qty" min="1" value={l.qty}
+                          onChange={e=>updateEditQty(l.code, Math.max(1,Number(e.target.value)||1))}/>
+                        <span className="lamt">${l.amount.toLocaleString()}</span>
+                        <button className="btn-rm" onClick={()=>removeEditLine(l.code)} title="刪除此品項">✕</button>
+                      </div>
+                    ))}
+                    {/* 新增品項 */}
+                    <div className="add-item-bar">
+                      <select value={addItemCode} onChange={e=>setAddItemCode(e.target.value)}>
+                        <option value="">選擇要新增的商品…</option>
+                        {products.filter(p=>!p.inactive).map(p=><option key={p.code} value={p.code}>{p.code} {p.name} ${p.unitPrice}</option>)}
+                      </select>
+                      <input type="number" min="1" value={addItemQty} onChange={e=>setAddItemQty(Math.max(1,Number(e.target.value)||1))}/>
+                      <button className="btn-modify" onClick={addEditItem}>加入</button>
+                    </div>
+                    <div className="history-foot" style={{flexDirection:"column",alignItems:"flex-end",gap:8}}>
+                      <div>合計 ${editTotal.toLocaleString()}</div>
+                      <div style={{display:"flex",gap:8}}>
+                        <button className="ghost-btn" style={{padding:"8px 16px",fontSize:13}} onClick={()=>setEditingOrderId(null)}>取消編輯</button>
+                        <button className="submit-btn" style={{width:"auto",padding:"8px 20px",fontSize:13}} disabled={editSaving} onClick={saveEditOrder}>{editSaving?"儲存中…":"確認修改"}</button>
+                      </div>
+                    </div>
+                  </React.Fragment>
+                ) : (
+                  /* ── 查看模式 ── */
+                  <React.Fragment>
+                    {o.lines.map((l,i)=>(
+                      <div key={i} className="history-line">
+                        <span className="lcode">{l.code}</span>
+                        <span className="lname">{l.name}</span>
+                        <span className="lqty">{l.qty}{l.giftQty>0&&`+贈${l.giftQty}`}</span>
+                        <span className="lamt">${Number(l.amount).toLocaleString()}</span>
+                      </div>
+                    ))}
+                    <div className="history-foot">合計 ${o.total.toLocaleString()}</div>
+                    {canEdit&&(
+                      <div className="order-action-bar">
+                        <button className="btn-modify" onClick={()=>openModifyConfirm(o.orderId)}>✏ 修改訂單</button>
+                        <button className="btn-cancel-order" onClick={()=>openCancelConfirm(o.orderId)}>✕ 取消訂單</button>
+                      </div>
+                    )}
+                  </React.Fragment>
+                )}
               </div>
             )}
           </div>
-        ))}
+        );})}
+
+        {/* 確認視窗 */}
+        {confirmModal&&(
+          <div className="confirm-modal-mask" onClick={()=>setConfirmModal(null)}>
+            <div className="confirm-modal" onClick={e=>e.stopPropagation()}>
+              {confirmModal.type==="modify"?(
+                <React.Fragment>
+                  <h4>修改訂單</h4>
+                  <p>進入修改模式後，可以調整數量、刪除品項或新增商品。確認要修改訂單 <b>{confirmModal.orderId}</b> 嗎？</p>
+                  <div className="confirm-modal-btns">
+                    <button className="ghost-btn" style={{padding:"8px 14px",fontSize:13}} onClick={()=>setConfirmModal(null)}>取消</button>
+                    <button className="submit-btn" style={{width:"auto",padding:"8px 20px",fontSize:13}} onClick={()=>startEditOrder(confirmModal.orderId)}>進入編輯</button>
+                  </div>
+                </React.Fragment>
+              ):(
+                <React.Fragment>
+                  <h4>取消訂單</h4>
+                  <p>確定要取消訂單 <b>{confirmModal.orderId}</b>？此動作無法復原，訂單資料將被刪除。</p>
+                  <div className="confirm-modal-btns">
+                    <button className="ghost-btn" style={{padding:"8px 14px",fontSize:13}} onClick={()=>setConfirmModal(null)}>返回</button>
+                    <button style={{padding:"8px 20px",fontSize:13,background:"var(--danger)",color:"#fff",border:"none",borderRadius:8,cursor:"pointer"}} onClick={()=>doCancelOrder(confirmModal.orderId)}>確認取消訂單</button>
+                  </div>
+                </React.Fragment>
+              )}
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );

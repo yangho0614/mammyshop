@@ -133,6 +133,25 @@ function fixImgUrl(url) {
   return url;
 }
 
+// 訂單客戶名稱顯示：若 customerName 已含括號則直接用，否則補上分店代號
+function formatOrderName(customerName, branchCode) {
+  if (!customerName) return branchCode || "";
+  if (customerName.includes("（") || customerName.includes("(")) return customerName;
+  return customerName + (branchCode ? "（" + branchCode + "）" : "");
+}
+
+// UTC 時間字串轉台灣時間顯示格式
+function formatTime(t) {
+  if (!t) return "";
+  try {
+    // GAS 寫入的格式 "2026-06-23 09:29:39" 不需轉換
+    if (!String(t).includes("T")) return String(t).replace(".000Z","");
+    // ISO 格式轉台灣時間
+    const d = new Date(t);
+    return d.toLocaleString("zh-TW", {timeZone:"Asia/Taipei", year:"numeric", month:"2-digit", day:"2-digit", hour:"2-digit", minute:"2-digit", second:"2-digit", hour12:false});
+  } catch(e) { return String(t); }
+}
+
 async function callGAS(action, payload) {
   const res = await fetch(GAS_URL, { method:"POST", headers:{"Content-Type":"text/plain;charset=utf-8"}, body:JSON.stringify(Object.assign({action}, payload||{})) });
   const data = await res.json();
@@ -257,13 +276,21 @@ function Admin() {
     } catch(e) { alert("刪除失敗："+e.message); }
   }
 
-  // ── 訂單展開 & 狀態確認 ──
+  // ── 訂單展開 & 狀態切換 ──
   const [expandedOrders, setExpandedOrders] = useState({});
   function toggleOrderExpand(id) { setExpandedOrders(p=>({...p,[id]:!p[id]})); }
-  async function confirmOrder(orderId) {
+
+  const ORDER_STATUSES = ["未確認","準備中","已出貨"];
+  function statusStyle(s) {
+    if (s==="未確認") return {background:"var(--warn-tint)",color:"var(--warn)"};
+    if (s==="準備中") return {background:"#eef1fb",color:"#3d4f9e"};
+    if (s==="已出貨") return {background:"var(--brand-tint)",color:"var(--brand-dark)"};
+    return {background:"#f4f6f5",color:"var(--ink-soft)"};
+  }
+  async function changeOrderStatus(orderId, newStatus) {
     try {
-      await callGAS("updateOrderStatus",{orderId, status:"已處理"});
-      setOrders(prev=>prev.map(o=>o.orderId===orderId?{...o,orderStatus:"已處理"}:o));
+      await callGAS("updateOrderStatus",{orderId, status:newStatus});
+      setOrders(prev=>prev.map(o=>o.orderId===orderId?{...o,orderStatus:newStatus}:o));
     } catch(e) { alert("更新失敗："+e.message); }
   }
 
@@ -450,27 +477,30 @@ function Admin() {
                   <thead><tr>
                     <th style={{width:36}}><input type="checkbox" checked={allChecked} onChange={toggleAll}/></th>
                     <th style={{width:20}}></th>
-                    <th>訂單編號</th><th>客戶</th><th>分店</th><th>時間</th><th>金額</th><th>處理狀態</th><th>品項狀態</th><th></th>
+                    <th>訂單編號</th><th>客戶</th><th>時間</th><th>金額</th><th>訂單狀態</th><th></th>
                   </tr></thead>
                   <tbody>
-                    {filteredOrders.map(o=>(
+                    {filteredOrders.map(o=>{
+                      const ostatus = o.orderStatus||"未確認";
+                      const sstyle  = statusStyle(ostatus);
+                      return (
                       <React.Fragment key={o.orderId}>
                         <tr style={checkedOrders[o.orderId]?{background:"#f0f7f5",cursor:"pointer"}:{cursor:"pointer"}}
                           onClick={()=>toggleOrderExpand(o.orderId)}>
                           <td onClick={e=>e.stopPropagation()}><input type="checkbox" checked={!!checkedOrders[o.orderId]} onChange={()=>toggleCheck(o.orderId)}/></td>
                           <td style={{color:"var(--ink-soft)",fontSize:11}}>{expandedOrders[o.orderId]?"▼":"▶"}</td>
                           <td style={{fontFamily:"monospace",fontSize:12}}>{o.orderId}</td>
-                          <td>{o.customerName}</td>
-                          <td style={{fontSize:12,color:"var(--ink-soft)"}}>{o.branchCode}</td>
-                          <td style={{fontSize:12}}>{o.time}</td>
+                          <td style={{fontSize:13}}>{formatOrderName(o.customerName, o.branchCode)}</td>
+                          <td style={{fontSize:12}}>{formatTime(o.time)}</td>
                           <td style={{fontWeight:600}}>${o.total.toLocaleString()}</td>
-                          <td>
-                            {(o.orderStatus==="已處理")
-                              ? <span className="pill-status ok">已處理</span>
-                              : <button className="btn-save" style={{fontSize:11,padding:"3px 10px"}}
-                                  onClick={e=>{e.stopPropagation();confirmOrder(o.orderId);}}>確認已處理</button>}
+                          <td onClick={e=>e.stopPropagation()}>
+                            <select value={ostatus}
+                              onChange={e=>changeOrderStatus(o.orderId, e.target.value)}
+                              style={{padding:"4px 8px",borderRadius:6,border:"1px solid var(--line)",fontSize:12,cursor:"pointer",
+                                background:sstyle.background,color:sstyle.color,fontWeight:600}}>
+                              {ORDER_STATUSES.map(s=><option key={s} value={s}>{s}</option>)}
+                            </select>
                           </td>
-                          <td>{o.needsReview?<span className="pill-status review">待複核</span>:<span className="pill-status ok">正常</span>}</td>
                           <td onClick={e=>e.stopPropagation()}><button className="download-btn" style={{fontSize:11,padding:"4px 10px"}} onClick={()=>exportExcel(o)}>下載</button></td>
                         </tr>
                         {expandedOrders[o.orderId]&&(
@@ -509,7 +539,8 @@ function Admin() {
                           </tr>
                         )}
                       </React.Fragment>
-                    ))}
+                      );
+                    })}
                   </tbody>
                 </table>
               </div>
