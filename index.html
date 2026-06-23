@@ -123,6 +123,17 @@ async function callGAS(action, payload) {
   if (!data.ok) throw new Error(data.error || "後端回應失敗");
   return data;
 }
+// Google Drive 圖片網址正規化：統一轉成 thumbnail 格式避免 uc?export=view 被封鎖
+function fixImgUrl(url) {
+  if (!url) return url;
+  // 已經是 thumbnail 格式就不動
+  if (url.includes('thumbnail')) return url;
+  // uc?export=view&id=XXX → thumbnail?id=XXX&sz=w400
+  var m = url.match(/[?&]id=([^&]+)/);
+  if (m) return 'https://drive.google.com/thumbnail?id=' + m[1] + '&sz=w400';
+  return url;
+}
+
 function parseActivity(a) {
   if (!a) return null; a = a.trim();
   const bm = a.match(/成箱\$?(\d+)/); if (bm) return {type:"autoBox", boxPrice:Number(bm[1]), label:`整箱 $${bm[1]}`};
@@ -284,7 +295,7 @@ function App() {
         <div className="main">
           <h2>{activeCat}　共 {filtered.length} 項商品</h2>
           <div className="grid">
-            {filtered.map(p=>{const rule=parseActivity(p.activity);const qty=cart[p.code]||0;const calc=computeLine(p,qty);const imgs=p.images||[];return(
+            {filtered.map(p=>{const rule=parseActivity(p.activity);const qty=cart[p.code]||0;const calc=computeLine(p,qty);const imgs=(p.images||[]).map(fixImgUrl);return(
               <div key={p.code} className={"card"+(p.discontinued?" disabled":"")}>
                 <div className="card-img-wrap" onClick={()=>imgs.length>0&&openLightbox(imgs,0,p.name)} style={imgs.length===0?{cursor:"default"}:{}}>
                   {imgs.length>0?<img src={imgs[0]} alt={p.name} loading="lazy"/>:<div className="card-img-placeholder">📦</div>}

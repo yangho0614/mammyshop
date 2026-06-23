@@ -90,8 +90,11 @@
 
   /* 圖片縮圖 */
   .img-thumb-row{display:flex;gap:6px;flex-wrap:wrap;align-items:center;}
-  .img-thumb-sm{width:48px;height:48px;border-radius:5px;overflow:hidden;border:1px solid var(--line);cursor:pointer;flex-shrink:0;}
-  .img-thumb-sm img{width:100%;height:100%;object-fit:cover;}
+  .img-thumb-sm{position:relative;width:72px;height:72px;border-radius:5px;overflow:hidden;border:1px solid var(--line);flex-shrink:0;}
+  .img-thumb-sm img{width:100%;height:100%;object-fit:cover;cursor:pointer;display:block;}
+  .img-thumb-sm .del-img{position:absolute;top:2px;right:2px;width:18px;height:18px;background:rgba(163,64,47,.88);color:#fff;border:none;border-radius:50%;font-size:11px;line-height:1;cursor:pointer;display:flex;align-items:center;justify-content:center;padding:0;opacity:0;transition:opacity .15s;}
+  .img-thumb-sm:hover .del-img{opacity:1;}
+  .img-thumb-add{width:72px;height:72px;border:2px dashed var(--line);border-radius:5px;display:flex;align-items:center;justify-content:center;color:#bbb;font-size:20px;cursor:pointer;flex-shrink:0;}
   .img-thumb-add{width:48px;height:48px;border:2px dashed var(--line);border-radius:5px;display:flex;align-items:center;justify-content:center;color:#bbb;font-size:20px;cursor:pointer;flex-shrink:0;}
   .img-thumb-add:hover{border-color:var(--brand);color:var(--brand);}
 
@@ -116,6 +119,15 @@ const { useState, useMemo, useEffect, useRef } = React;
 const GAS_URL = "https://script.google.com/macros/s/AKfycby48Nyzb4q5265opAIWwRGTdBFlnYnsa-0lS9w0EIGAaRVCNBYqvd9Wc5Hip2DySgEiwQ/exec";
 const ADMIN_PASSWORD = "0000"; // ← 修改此處變更後台密碼
 const LS_MASTER = "admin_master"; // 後台快取商品主檔，供圖片管理用
+
+// Google Drive 圖片網址正規化
+function fixImgUrl(url) {
+  if (!url) return url;
+  if (url.includes('thumbnail')) return url;
+  var m = url.match(/[?&]id=([^&]+)/);
+  if (m) return 'https://drive.google.com/thumbnail?id=' + m[1] + '&sz=w400';
+  return url;
+}
 
 async function callGAS(action, payload) {
   const res = await fetch(GAS_URL, { method:"POST", headers:{"Content-Type":"text/plain;charset=utf-8"}, body:JSON.stringify(Object.assign({action}, payload||{})) });
@@ -432,7 +444,7 @@ function Admin() {
                   <tbody>
                     {filteredMaster.map(row=>{
                       const isE = editCode===row.code;
-                      const imgs = row.images||[];
+                      const imgs = (row.images||[]).map(fixImgUrl);
                       return (
                         <tr key={row.code} className={isE?"editing":""}>
                           <td style={{fontFamily:"monospace",fontSize:12,whiteSpace:"nowrap"}}>{row.code}</td>
@@ -443,12 +455,12 @@ function Admin() {
                           <td style={{textAlign:"center"}}>{isE?<input type="checkbox" checked={!!editDraft.discontinued} onChange={e=>setEditDraft(p=>({...p,discontinued:e.target.checked}))} style={{width:15,height:15}}/>:<span onClick={()=>startEdit(row)} style={{cursor:"pointer"}}>{row.discontinued?"✅":"—"}</span>}</td>
                           <td>
                             <div className="img-thumb-row">
-                              {imgs.slice(0,3).map((url,i)=>(
-                                <div key={i} className="img-thumb-sm" onClick={()=>openLb(imgs,i,row.name)}>
-                                  <img src={url} alt="" loading="lazy"/>
+                              {imgs.map((url,i)=>(
+                                <div key={i} className="img-thumb-sm">
+                                  <img src={url} alt="" loading="lazy" onClick={()=>openLb(imgs,i,row.name)}/>
+                                  <button className="del-img" title="刪除此圖" onClick={e=>{e.stopPropagation();handleDelImg(row.code,url);}}>✕</button>
                                 </div>
                               ))}
-                              {imgs.length>3&&<span style={{fontSize:11,color:"var(--ink-soft)"}}>+{imgs.length-3}</span>}
                               <div className="img-thumb-add" title="上傳圖片" onClick={()=>{setUploading(row.code);fileRef.current&&fileRef.current.click();}}>＋</div>
                             </div>
                           </td>
