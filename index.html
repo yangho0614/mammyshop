@@ -507,6 +507,97 @@
   .pill-status.ok{background:var(--brand-tint); color:var(--brand-dark);}
   .pill-status.review{background:var(--warn-tint); color:var(--warn);}
 
+  /* ---------- 後台密碼彈窗 ---------- */
+  .modal-mask{
+    position:fixed; inset:0;
+    background:rgba(20,30,28,.45);
+    z-index:50;
+    display:flex; align-items:center; justify-content:center;
+    padding:20px;
+  }
+  .modal-card{
+    background:#fff;
+    border-radius:var(--radius);
+    padding:28px 28px 24px;
+    width:100%; max-width:340px;
+    box-shadow:0 8px 32px rgba(0,0,0,.12);
+  }
+  .modal-card h3{margin:0 0 6px; font-size:17px;}
+  .modal-card p{margin:0 0 18px; font-size:13px; color:var(--ink-soft);}
+  .modal-input{
+    width:100%;
+    padding:11px 13px;
+    border:1px solid var(--line);
+    border-radius:8px;
+    font-size:16px;
+    letter-spacing:.12em;
+    margin-bottom:10px;
+  }
+  .modal-input:focus{outline:none; border-color:var(--brand);}
+
+  /* ---------- 後台篩選列 ---------- */
+  .admin-filters{
+    display:flex;
+    flex-wrap:wrap;
+    gap:10px;
+    margin-bottom:16px;
+    align-items:center;
+  }
+  .admin-filters input, .admin-filters select{
+    padding:8px 11px;
+    border:1px solid var(--line);
+    border-radius:8px;
+    font-size:13px;
+    background:#fff;
+    min-width:0;
+  }
+  .admin-filters input{ flex:1; min-width:140px; }
+  .admin-filters select{ flex:0 0 auto; }
+  .filter-date-wrap{
+    display:flex; align-items:center; gap:6px; flex:0 0 auto;
+  }
+  .filter-date-wrap span{ font-size:12px; color:var(--ink-soft); }
+  .filter-date-wrap input[type="date"]{ padding:7px 9px; font-size:13px; }
+
+  /* ---------- 批次匯出列 ---------- */
+  .batch-bar{
+    display:flex; align-items:center; gap:12px;
+    background:var(--brand-tint);
+    border:1px solid #c2dbd5;
+    border-radius:8px;
+    padding:10px 14px;
+    margin-bottom:14px;
+    font-size:13px;
+    color:var(--brand-dark);
+  }
+  .batch-bar button{
+    background:var(--brand); color:#fff;
+    border:none; border-radius:6px;
+    padding:7px 16px; font-size:13px; cursor:pointer;
+    margin-left:auto;
+  }
+  .batch-bar button:disabled{background:#c7cdcb; cursor:not-allowed;}
+
+  /* ---------- checkbox ---------- */
+  .admin-table input[type="checkbox"]{
+    width:15px; height:15px; cursor:pointer; accent-color:var(--brand);
+  }
+
+  /* ---------- 後台統計卡片 ---------- */
+  .admin-stats{
+    display:flex; gap:12px; flex-wrap:wrap; margin-bottom:20px;
+  }
+  .stat-card{
+    flex:1; min-width:120px;
+    background:#fff;
+    border:1px solid var(--line);
+    border-radius:8px;
+    padding:14px 16px;
+  }
+  .stat-card .label{ font-size:11px; color:var(--ink-soft); margin-bottom:4px; }
+  .stat-card .value{ font-size:22px; font-weight:700; color:var(--ink); }
+  .stat-card .value.warn{ color:var(--warn); }
+
   @media (max-width:760px){
     .sidebar{
       position:static;
@@ -619,12 +710,27 @@ function App() {
   const [search, setSearch] = useState("");
   const [activeCat, setActiveCat] = useState("全部");
   const [drawerOpen, setDrawerOpen] = useState(false);
-  const [orders, setOrders] = useState([]); // 從GAS載入的歷史訂單
+  const [orders, setOrders] = useState([]);
   const [lastOrder, setLastOrder] = useState(null);
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(false);
   const [pageError, setPageError] = useState("");
   const [submitting, setSubmitting] = useState(false);
+
+  // 後台密碼（session 內只輸入一次）
+  const ADMIN_PASSWORD = "0000"; // ← 修改此處變更後台密碼
+  const [adminAuthed, setAdminAuthed] = useState(() => sessionStorage.getItem("adminAuthed") === "1");
+  const [adminPwInput, setAdminPwInput] = useState("");
+  const [adminPwError, setAdminPwError] = useState("");
+
+  // 後台篩選
+  const [filterCustomer, setFilterCustomer] = useState("");
+  const [filterStatus, setFilterStatus] = useState("all");
+  const [filterDateFrom, setFilterDateFrom] = useState("");
+  const [filterDateTo, setFilterDateTo] = useState("");
+
+  // 批次勾選
+  const [checkedOrders, setCheckedOrders] = useState({});
 
   const categories = useMemo(() => {
     const set = new Set(products.map(p => p.category));
@@ -721,6 +827,94 @@ function App() {
     setPendingCompany(null);
     setSelectedBranchCode("");
     setProducts([]);
+  }
+
+  // --- 後台密碼驗證 ---
+  function handleAdminLogin() {
+    if (adminPwInput === ADMIN_PASSWORD) {
+      sessionStorage.setItem("adminAuthed", "1");
+      setAdminAuthed(true);
+      setAdminPwError("");
+      loadOrders();
+    } else {
+      setAdminPwError("密碼錯誤，請重新輸入");
+      setAdminPwInput("");
+    }
+  }
+
+  function handleAdminLogout() {
+    sessionStorage.removeItem("adminAuthed");
+    setAdminAuthed(false);
+    setAdminPwInput("");
+    setAdminPwError("");
+    setOrders([]);
+    setCheckedOrders({});
+    resetLogin();
+  }
+
+  // --- 後台篩選 ---
+  const filteredOrders = useMemo(() => {
+    return orders.filter(o => {
+      if (filterCustomer && !o.customerName.includes(filterCustomer) && !o.branchCode.includes(filterCustomer)) return false;
+      if (filterStatus === "ok" && o.needsReview) return false;
+      if (filterStatus === "review" && !o.needsReview) return false;
+      if (filterDateFrom && o.time < filterDateFrom) return false;
+      if (filterDateTo && o.time > filterDateTo + " 99") return false;
+      return true;
+    });
+  }, [orders, filterCustomer, filterStatus, filterDateFrom, filterDateTo]);
+
+  const adminStats = useMemo(() => {
+    const total = filteredOrders.reduce((s, o) => s + o.total, 0);
+    const reviewCount = filteredOrders.filter(o => o.needsReview).length;
+    return { count: filteredOrders.length, total, reviewCount };
+  }, [filteredOrders]);
+
+  // --- 批次勾選 ---
+  const checkedList = filteredOrders.filter(o => checkedOrders[o.orderId]);
+  const allChecked = filteredOrders.length > 0 && checkedList.length === filteredOrders.length;
+
+  function toggleCheck(orderId) {
+    setCheckedOrders(prev => ({ ...prev, [orderId]: !prev[orderId] }));
+  }
+  function toggleAll() {
+    if (allChecked) {
+      setCheckedOrders({});
+    } else {
+      const next = {};
+      filteredOrders.forEach(o => { next[o.orderId] = true; });
+      setCheckedOrders(next);
+    }
+  }
+
+  // --- 批次匯出 Excel ---
+  function exportBatch() {
+    const targets = checkedList.length > 0 ? checkedList : filteredOrders;
+    const rows = [];
+    targets.forEach(o => {
+      o.lines.forEach(l => {
+        rows.push({
+          "訂單編號": o.orderId,
+          "客戶代號": o.branchCode,
+          "客戶名稱": o.customerName,
+          "下單時間": o.time,
+          "產品編號": l.code,
+          "品名": l.name,
+          "訂購數量": l.qty,
+          "贈品數量": l.giftQty || 0,
+          "單價": l.unitPrice,
+          "金額": l.amount,
+          "促銷規則": l.activity || "",
+          "狀態": l.status,
+        });
+      });
+    });
+    const ws = XLSX.utils.json_to_sheet(rows);
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, "訂單明細");
+    const now = new Date();
+    const dateStr = `${now.getFullYear()}${String(now.getMonth()+1).padStart(2,"0")}${String(now.getDate()).padStart(2,"0")}`;
+    XLSX.writeFile(wb, `訂單匯出_${dateStr}.xlsx`);
   }
 
   async function submitOrder() {
@@ -860,7 +1054,7 @@ function App() {
           )}
 
           {loginStep === "input" && (
-            <button className="cust-btn" style={{marginTop:24, background:"#f4f6f5"}} onClick={() => { setStage("admin"); loadOrders(); }}>
+            <button className="cust-btn" style={{marginTop:24, background:"#f4f6f5"}} onClick={() => { setStage("admin"); setAdminPwInput(""); setAdminPwError(""); }}>
               內部後台（查看所有訂單）
             </button>
           )}
@@ -873,38 +1067,135 @@ function App() {
   if (stage === "admin") {
     return (
       <div>
+        {/* 密碼彈窗 */}
+        {!adminAuthed && (
+          <div className="modal-mask">
+            <div className="modal-card">
+              <h3>🔒 內部後台</h3>
+              <p>請輸入後台密碼才能繼續</p>
+              <input
+                className="modal-input"
+                type="password"
+                placeholder="密碼"
+                value={adminPwInput}
+                autoFocus
+                onChange={e => { setAdminPwInput(e.target.value); setAdminPwError(""); }}
+                onKeyDown={e => { if (e.key === "Enter") handleAdminLogin(); }}
+              />
+              {adminPwError && <div className="login-error">{adminPwError}</div>}
+              <button className="submit-btn" onClick={handleAdminLogin}>進入後台</button>
+              <button className="ghost-btn" style={{width:"100%", marginTop:8}} onClick={resetLogin}>取消，返回登入</button>
+            </div>
+          </div>
+        )}
+
         <div className="app-header">
           <span className="who"><b>內部後台</b></span>
-          <button className="logout-link" style={{marginLeft:"auto"}} onClick={resetLogin}>返回登入</button>
+          <button className="logout-link" style={{marginLeft:12}} onClick={loadOrders}>重新整理</button>
+          <button className="logout-link" style={{marginLeft:"auto"}} onClick={handleAdminLogout}>登出</button>
         </div>
+
         <div className="admin-wrap">
-          <h2 style={{fontSize:16}}>歷史訂單（{orders.length} 筆）</h2>
+          {/* 統計卡片 */}
+          <div className="admin-stats">
+            <div className="stat-card">
+              <div className="label">篩選後訂單數</div>
+              <div className="value">{adminStats.count}</div>
+            </div>
+            <div className="stat-card">
+              <div className="label">篩選後合計金額</div>
+              <div className="value">${adminStats.total.toLocaleString()}</div>
+            </div>
+            <div className="stat-card">
+              <div className="label">待複核訂單</div>
+              <div className={"value" + (adminStats.reviewCount > 0 ? " warn" : "")}>{adminStats.reviewCount}</div>
+            </div>
+          </div>
+
+          {/* 篩選列 */}
+          <div className="admin-filters">
+            <input
+              placeholder="搜尋客戶名稱或分店代號…"
+              value={filterCustomer}
+              onChange={e => setFilterCustomer(e.target.value)}
+            />
+            <select value={filterStatus} onChange={e => setFilterStatus(e.target.value)}>
+              <option value="all">全部狀態</option>
+              <option value="ok">可匯出</option>
+              <option value="review">含待複核</option>
+            </select>
+            <div className="filter-date-wrap">
+              <span>從</span>
+              <input type="date" value={filterDateFrom} onChange={e => setFilterDateFrom(e.target.value)} />
+              <span>到</span>
+              <input type="date" value={filterDateTo} onChange={e => setFilterDateTo(e.target.value)} />
+              {(filterDateFrom || filterDateTo) && (
+                <button className="ghost-btn" style={{padding:"5px 10px", fontSize:12}} onClick={() => { setFilterDateFrom(""); setFilterDateTo(""); }}>清除</button>
+              )}
+            </div>
+          </div>
+
+          {/* 批次匯出列 */}
+          {filteredOrders.length > 0 && (
+            <div className="batch-bar">
+              <span>
+                {checkedList.length > 0
+                  ? `已勾選 ${checkedList.length} 筆`
+                  : `共 ${filteredOrders.length} 筆訂單`}
+              </span>
+              <button onClick={exportBatch}>
+                {checkedList.length > 0 ? `匯出已勾選（${checkedList.length}）` : "全部匯出 Excel"}
+              </button>
+            </div>
+          )}
+
           {pageError && <div className="login-error">{pageError}</div>}
+
           {loading ? (
             <p style={{color:"var(--ink-soft)", fontSize:14}}>載入中…</p>
-          ) : orders.length === 0 ? (
-            <p style={{color:"var(--ink-soft)", fontSize:14}}>目前尚無訂單，客戶下單後會顯示在這裡。</p>
+          ) : filteredOrders.length === 0 ? (
+            <p style={{color:"var(--ink-soft)", fontSize:14}}>
+              {orders.length === 0 ? "目前尚無訂單，客戶下單後會顯示在這裡。" : "目前篩選條件下沒有符合的訂單。"}
+            </p>
           ) : (
             <table className="admin-table">
               <thead>
                 <tr>
-                  <th>訂單編號</th><th>客戶</th><th>時間</th><th>品項數</th><th>金額</th><th>狀態</th><th></th>
+                  <th style={{width:36}}>
+                    <input type="checkbox" checked={allChecked} onChange={toggleAll} title="全選" />
+                  </th>
+                  <th>訂單編號</th>
+                  <th>客戶</th>
+                  <th>分店代號</th>
+                  <th>時間</th>
+                  <th>品項數</th>
+                  <th>金額</th>
+                  <th>狀態</th>
+                  <th></th>
                 </tr>
               </thead>
               <tbody>
-                {orders.map(o => (
-                  <tr key={o.orderId}>
-                    <td>{o.orderId}</td>
+                {filteredOrders.map(o => (
+                  <tr key={o.orderId} style={checkedOrders[o.orderId] ? {background:"#f0f7f5"} : {}}>
+                    <td>
+                      <input type="checkbox" checked={!!checkedOrders[o.orderId]} onChange={() => toggleCheck(o.orderId)} />
+                    </td>
+                    <td style={{fontFamily:"monospace", fontSize:12}}>{o.orderId}</td>
                     <td>{o.customerName}</td>
-                    <td>{o.time}</td>
+                    <td style={{fontSize:12, color:"var(--ink-soft)"}}>{o.branchCode}</td>
+                    <td style={{fontSize:12}}>{o.time}</td>
                     <td>{o.lines.length}</td>
                     <td>${o.total.toLocaleString()}</td>
                     <td>
                       {o.needsReview
-                        ? <span className="pill-status review">含待複核項目</span>
+                        ? <span className="pill-status review">含待複核</span>
                         : <span className="pill-status ok">可匯出</span>}
                     </td>
-                    <td><button className="download-btn" onClick={() => exportExcel(o)}>下載 Excel</button></td>
+                    <td>
+                      <button className="download-btn" style={{padding:"6px 12px", fontSize:12}} onClick={() => exportExcel(o)}>
+                        下載
+                      </button>
+                    </td>
                   </tr>
                 ))}
               </tbody>
