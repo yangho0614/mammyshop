@@ -7,1746 +7,351 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.production.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.production.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/7.23.5/babel.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <style>
-  :root{
-    --ink:#1c2b2d;
-    --ink-soft:#4a5a5c;
-    --line:#dde3e1;
-    --paper:#fafaf8;
-    --panel:#ffffff;
-    --brand:#2f6f5e;
-    --brand-dark:#1f4d40;
-    --brand-tint:#eaf3f0;
-    --warn:#b5762b;
-    --warn-tint:#fbf0e2;
-    --danger:#a3402f;
-    --danger-tint:#fbeae6;
-    --radius:10px;
-  }
+  :root{--ink:#1c2b2d;--ink-soft:#4a5a5c;--line:#dde3e1;--paper:#fafaf8;--panel:#ffffff;--brand:#2f6f5e;--brand-dark:#1f4d40;--brand-tint:#eaf3f0;--warn:#b5762b;--warn-tint:#fbf0e2;--danger:#a3402f;--danger-tint:#fbeae6;--radius:10px;}
   *{box-sizing:border-box;}
-  body{
-    margin:0;
-    font-family:"Noto Sans TC","PingFang TC","Microsoft JhengHei",sans-serif;
-    background:var(--paper);
-    color:var(--ink);
-  }
+  body{margin:0;font-family:"Noto Sans TC","PingFang TC","Microsoft JhengHei",sans-serif;background:var(--paper);color:var(--ink);}
   #root{min-height:100vh;}
-
-  /* ---------- 登入畫面 ---------- */
-  .login-wrap{
-    min-height:100vh;
-    display:flex;
-    align-items:center;
-    justify-content:center;
-    padding:24px;
-  }
-  .login-card{
-    width:100%;
-    max-width:380px;
-    background:var(--panel);
-    border:1px solid var(--line);
-    border-radius:var(--radius);
-    padding:32px 28px;
-  }
-  .login-card h1{
-    font-size:20px;
-    margin:0 0 4px;
-    letter-spacing:.02em;
-  }
-  .login-card p.sub{
-    color:var(--ink-soft);
-    font-size:13px;
-    margin:0 0 24px;
-  }
-  .cust-btn{
-    display:block;
-    width:100%;
-    text-align:left;
-    padding:14px 16px;
-    margin-bottom:8px;
-    border:1px solid var(--line);
-    background:#fff;
-    border-radius:8px;
-    font-size:15px;
-    cursor:pointer;
-    transition:border-color .15s, background .15s;
-  }
-  .cust-btn:hover{border-color:var(--brand); background:var(--brand-tint);}
-
-  .taxid-input{
-    width:100%;
-    padding:13px 14px;
-    border:1px solid var(--line);
-    border-radius:8px;
-    font-size:18px;
-    letter-spacing:.08em;
-    margin-bottom:10px;
-  }
-  .taxid-input:focus{
-    outline:none;
-    border-color:var(--brand);
-  }
-  .login-error{
-    font-size:13px;
-    color:var(--danger);
-    background:var(--danger-tint);
-    padding:9px 12px;
-    border-radius:6px;
-    margin-bottom:12px;
-    line-height:1.5;
-  }
-  .login-hint{
-    font-size:12px;
-    color:#9aa6a4;
-    margin-top:14px;
-    text-align:center;
-  }
-  .confirm-box{
-    border:1px solid var(--line);
-    background:var(--brand-tint);
-    border-radius:8px;
-    padding:14px 16px;
-    margin-bottom:16px;
-  }
-  .confirm-row{
-    display:flex;
-    justify-content:space-between;
-    font-size:14px;
-    padding:6px 0;
-  }
+  .login-wrap{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:24px;}
+  .login-card{width:100%;max-width:380px;background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);padding:32px 28px;}
+  .login-card h1{font-size:20px;margin:0 0 4px;letter-spacing:.02em;}
+  .login-card p.sub{color:var(--ink-soft);font-size:13px;margin:0 0 24px;}
+  .taxid-input{width:100%;padding:13px 14px;border:1px solid var(--line);border-radius:8px;font-size:18px;letter-spacing:.08em;margin-bottom:10px;}
+  .taxid-input:focus{outline:none;border-color:var(--brand);}
+  .login-error{font-size:13px;color:var(--danger);background:var(--danger-tint);padding:9px 12px;border-radius:6px;margin-bottom:12px;line-height:1.5;}
+  .confirm-box{border:1px solid var(--line);background:var(--brand-tint);border-radius:8px;padding:14px 16px;margin-bottom:16px;}
+  .confirm-row{display:flex;justify-content:space-between;font-size:14px;padding:6px 0;}
   .confirm-row span{color:var(--ink-soft);}
   .confirm-row b{color:var(--brand-dark);}
-  .branch-list{
-    margin-bottom:16px;
-    max-height:240px;
-    overflow-y:auto;
-  }
-  .branch-btn{
-    display:block;
-    width:100%;
-    text-align:left;
-    padding:12px 14px;
-    margin-bottom:6px;
-    border:1px solid var(--line);
-    background:#fff;
-    border-radius:8px;
-    font-size:14px;
-    cursor:pointer;
-  }
-  .branch-btn.active{
-    border-color:var(--brand);
-    background:var(--brand-tint);
-    font-weight:600;
-  }
-
-  /* ---------- 版面 ---------- */
-  .app-header{
-    position:sticky; top:0; z-index:20;
-    background:var(--panel);
-    border-bottom:1px solid var(--line);
-    padding:10px 16px;
-    display:flex;
-    align-items:center;
-    gap:12px;
-  }
-  .app-header .who{
-    font-size:13px;
-    color:var(--ink-soft);
-  }
+  .branch-list{margin-bottom:16px;max-height:240px;overflow-y:auto;}
+  .branch-btn{display:block;width:100%;text-align:left;padding:12px 14px;margin-bottom:6px;border:1px solid var(--line);background:#fff;border-radius:8px;font-size:14px;cursor:pointer;}
+  .branch-btn.active{border-color:var(--brand);background:var(--brand-tint);font-weight:600;}
+  .submit-btn{width:100%;padding:13px;background:var(--brand);color:#fff;border:none;border-radius:8px;font-size:15px;font-weight:600;cursor:pointer;margin-top:10px;}
+  .submit-btn:disabled{background:#c7cdcb;cursor:not-allowed;}
+  .ghost-btn{padding:11px 22px;background:#fff;border:1px solid var(--line);border-radius:8px;font-size:14px;cursor:pointer;margin-top:8px;}
+  .app-header{position:sticky;top:0;z-index:20;background:var(--panel);border-bottom:1px solid var(--line);padding:10px 16px;display:flex;align-items:center;gap:12px;}
+  .app-header .who{font-size:13px;color:var(--ink-soft);}
   .app-header .who b{color:var(--ink);}
-  .search-box{
-    flex:1;
-    max-width:420px;
-    position:relative;
-  }
-  .search-box input{
-    width:100%;
-    padding:8px 12px 8px 32px;
-    border:1px solid var(--line);
-    border-radius:8px;
-    font-size:14px;
-    background:#fff;
-  }
-  .search-box::before{
-    content:"";
-  }
-  .cart-pill{
-    margin-left:auto;
-    display:flex;
-    align-items:center;
-    gap:6px;
-    background:var(--brand);
-    color:#fff;
-    border:none;
-    border-radius:20px;
-    padding:8px 16px;
-    font-size:14px;
-    cursor:pointer;
-  }
-  .logout-link{
-    font-size:12px;
-    color:var(--ink-soft);
-    background:none;
-    border:none;
-    text-decoration:underline;
-    cursor:pointer;
-    padding:0;
-  }
-
-  .layout{
-    display:flex;
-    max-width:1200px;
-    margin:0 auto;
-  }
-  .sidebar{
-    width:180px;
-    flex-shrink:0;
-    padding:18px 12px;
-    border-right:1px solid var(--line);
-    position:sticky;
-    top:53px;
-    align-self:flex-start;
-    height:calc(100vh - 53px);
-    overflow-y:auto;
-  }
-  .sidebar button{
-    display:block;
-    width:100%;
-    text-align:left;
-    padding:9px 10px;
-    margin-bottom:2px;
-    border:none;
-    background:none;
-    border-radius:6px;
-    font-size:14px;
-    color:var(--ink-soft);
-    cursor:pointer;
-  }
-  .sidebar button.active{
-    background:var(--brand-tint);
-    color:var(--brand-dark);
-    font-weight:600;
-  }
-  .sidebar .count{
-    float:right;
-    color:#9aa6a4;
-    font-size:12px;
-  }
-
-  .main{
-    flex:1;
-    padding:18px 20px 80px;
-    min-width:0;
-  }
-  .main h2{
-    font-size:16px;
-    margin:0 0 14px;
-    color:var(--ink);
-  }
-  .grid{
-    display:grid;
-    grid-template-columns:repeat(auto-fill, minmax(220px,1fr));
-    gap:12px;
-  }
-  .card{
-    background:var(--panel);
-    border:1px solid var(--line);
-    border-radius:var(--radius);
-    padding:14px;
-    display:flex;
-    flex-direction:column;
-    gap:8px;
-  }
-  .card .code{
-    font-size:11px;
-    color:#9aa6a4;
-    letter-spacing:.03em;
-  }
-  .card .name{
-    font-size:14px;
-    line-height:1.4;
-    min-height:38px;
-  }
-  .card .price-row{
-    display:flex;
-    align-items:baseline;
-    gap:6px;
-  }
-  .card .unit-price{
-    font-size:18px;
-    font-weight:700;
-    color:var(--brand-dark);
-  }
-  .card .list-price{
-    font-size:12px;
-    color:#9aa6a4;
-    text-decoration:line-through;
-  }
-  .card .box-qty{
-    font-size:12px;
-    color:var(--ink-soft);
-  }
-  .tag{
-    display:inline-block;
-    font-size:11px;
-    padding:2px 8px;
-    border-radius:4px;
-    width:fit-content;
-  }
-  .tag.gift{background:var(--brand-tint); color:var(--brand-dark);}
-  .tag.box{background:#eef1fb; color:#3d4f9e;}
-  .tag.review{background:var(--warn-tint); color:var(--warn);}
-  .tag.stop{background:var(--danger-tint); color:var(--danger);}
-
-  .qty-row{
-    display:flex;
-    align-items:center;
-    gap:8px;
-    margin-top:auto;
-  }
-  .qty-row button{
-    width:30px; height:30px;
-    border:1px solid var(--line);
-    background:#fff;
-    border-radius:6px;
-    font-size:16px;
-    cursor:pointer;
-  }
-  .qty-row input{
-    width:48px;
-    text-align:center;
-    padding:6px 2px;
-    border:1px solid var(--line);
-    border-radius:6px;
-    font-size:14px;
-  }
-  .qty-row .added{
-    margin-left:auto;
-    font-size:12px;
-    color:var(--brand-dark);
-  }
+  .search-box{flex:1;max-width:420px;}
+  .search-box input{width:100%;padding:8px 12px;border:1px solid var(--line);border-radius:8px;font-size:14px;background:#fff;}
+  .cart-pill{margin-left:auto;display:flex;align-items:center;gap:6px;background:var(--brand);color:#fff;border:none;border-radius:20px;padding:8px 16px;font-size:14px;cursor:pointer;}
+  .logout-link{font-size:12px;color:var(--ink-soft);background:none;border:none;text-decoration:underline;cursor:pointer;padding:0;}
+  .layout{display:flex;max-width:1200px;margin:0 auto;}
+  .sidebar{width:180px;flex-shrink:0;padding:18px 12px;border-right:1px solid var(--line);position:sticky;top:53px;align-self:flex-start;height:calc(100vh - 53px);overflow-y:auto;}
+  .sidebar button{display:block;width:100%;text-align:left;padding:9px 10px;margin-bottom:2px;border:none;background:none;border-radius:6px;font-size:14px;color:var(--ink-soft);cursor:pointer;}
+  .sidebar button.active{background:var(--brand-tint);color:var(--brand-dark);font-weight:600;}
+  .sidebar .count{float:right;color:#9aa6a4;font-size:12px;}
+  .main{flex:1;padding:18px 20px 80px;min-width:0;}
+  .main h2{font-size:16px;margin:0 0 14px;color:var(--ink);}
+  .grid{display:grid;grid-template-columns:repeat(auto-fill, minmax(220px,1fr));gap:12px;}
+  .card{background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);padding:14px;display:flex;flex-direction:column;gap:8px;}
+  .card .code{font-size:11px;color:#9aa6a4;letter-spacing:.03em;}
+  .card .name{font-size:14px;line-height:1.4;min-height:38px;}
+  .card .price-row{display:flex;align-items:baseline;gap:6px;}
+  .card .unit-price{font-size:18px;font-weight:700;color:var(--brand-dark);}
+  .card .list-price{font-size:12px;color:#9aa6a4;text-decoration:line-through;}
+  .card .box-qty{font-size:12px;color:var(--ink-soft);}
+  .tag{display:inline-block;font-size:11px;padding:2px 8px;border-radius:4px;width:fit-content;}
+  .tag.gift{background:var(--brand-tint);color:var(--brand-dark);}
+  .tag.box{background:#eef1fb;color:#3d4f9e;}
+  .tag.review{background:var(--warn-tint);color:var(--warn);}
+  .tag.stop{background:var(--danger-tint);color:var(--danger);}
+  .qty-row{display:flex;align-items:center;gap:8px;margin-top:auto;}
+  .qty-row button{width:30px;height:30px;border:1px solid var(--line);background:#fff;border-radius:6px;font-size:16px;cursor:pointer;}
+  .qty-row input{width:48px;text-align:center;padding:6px 2px;border:1px solid var(--line);border-radius:6px;font-size:14px;}
+  .qty-row .added{margin-left:auto;font-size:12px;color:var(--brand-dark);}
   .card.disabled{opacity:.55;}
-  .card.disabled .qty-row button, .card.disabled .qty-row input{
-    pointer-events:none;
-    background:#f3f3f1;
-  }
-
-  /* ---------- 購物車面板 ---------- */
-  .drawer-mask{
-    position:fixed; inset:0;
-    background:rgba(20,30,28,.35);
-    z-index:30;
-  }
-  .drawer{
-    position:fixed;
-    top:0; right:0;
-    width:min(420px, 100vw);
-    height:100vh;
-    background:var(--panel);
-    z-index:31;
-    display:flex;
-    flex-direction:column;
-    box-shadow:-8px 0 24px rgba(0,0,0,.08);
-  }
-  .drawer-head{
-    padding:16px 18px;
-    border-bottom:1px solid var(--line);
-    display:flex;
-    align-items:center;
-    justify-content:space-between;
-  }
-  .drawer-head h3{margin:0; font-size:16px;}
-  .drawer-head button{
-    background:none; border:none; font-size:20px; cursor:pointer; color:var(--ink-soft);
-  }
-  .drawer-body{
-    flex:1;
-    overflow-y:auto;
-    padding:12px 18px;
-  }
-  .cart-line{
-    display:flex;
-    gap:10px;
-    padding:12px 0;
-    border-bottom:1px solid var(--line);
-  }
-  .cart-line .info{flex:1; min-width:0;}
-  .cart-line .name{font-size:13px; line-height:1.4;}
-  .cart-line .meta{font-size:12px; color:var(--ink-soft); margin-top:2px;}
-  .cart-line .remove{
-    background:none; border:none; color:var(--danger); font-size:12px; cursor:pointer; padding:0;
-    text-decoration:underline;
-  }
-  .cart-line .lineprice{font-size:13px; font-weight:600; white-space:nowrap;}
-
-  .drawer-foot{
-    border-top:1px solid var(--line);
-    padding:16px 18px;
-  }
-  .total-row{
-    display:flex;
-    justify-content:space-between;
-    font-size:15px;
-    margin-bottom:4px;
-  }
-  .total-row.grand{
-    font-size:18px;
-    font-weight:700;
-    margin-top:8px;
-  }
-  .review-note{
-    font-size:12px;
-    color:var(--warn);
-    background:var(--warn-tint);
-    padding:8px 10px;
-    border-radius:6px;
-    margin:10px 0;
-    line-height:1.5;
-  }
-  .submit-btn{
-    width:100%;
-    padding:13px;
-    background:var(--brand);
-    color:#fff;
-    border:none;
-    border-radius:8px;
-    font-size:15px;
-    font-weight:600;
-    cursor:pointer;
-    margin-top:10px;
-  }
-  .submit-btn:disabled{background:#c7cdcb; cursor:not-allowed;}
-  .empty-cart{
-    text-align:center;
-    color:var(--ink-soft);
-    padding:60px 20px;
-    font-size:14px;
-  }
-
-  /* ---------- 訂單完成畫面 ---------- */
-  .confirm-wrap{
-    max-width:560px;
-    margin:60px auto;
-    padding:0 20px;
-    text-align:center;
-  }
-  .confirm-wrap .badge{
-    width:56px;height:56px;
-    border-radius:50%;
-    background:var(--brand-tint);
-    color:var(--brand-dark);
-    display:flex;align-items:center;justify-content:center;
-    font-size:28px;
-    margin:0 auto 16px;
-  }
-  .confirm-wrap h2{margin:0 0 8px;}
-  .confirm-wrap p{color:var(--ink-soft); font-size:14px; line-height:1.7;}
-  .order-id{
-    display:inline-block;
-    background:var(--brand-tint);
-    color:var(--brand-dark);
-    padding:6px 14px;
-    border-radius:6px;
-    font-family:monospace;
-    font-size:13px;
-    margin:8px 0 20px;
-  }
-  .ghost-btn{
-    padding:11px 22px;
-    background:#fff;
-    border:1px solid var(--line);
-    border-radius:8px;
-    font-size:14px;
-    cursor:pointer;
-    margin-top:8px;
-  }
-
-  /* ---------- 後台(老闆)畫面 ---------- */
-  .admin-wrap{
-    max-width:1000px;
-    margin:0 auto;
-    padding:20px;
-  }
-  .admin-table{
-    width:100%;
-    border-collapse:collapse;
-    font-size:13px;
-    background:#fff;
-    border:1px solid var(--line);
-    border-radius:8px;
-    overflow:hidden;
-  }
-  .admin-table th{
-    text-align:left;
-    background:#f4f6f5;
-    padding:10px 12px;
-    border-bottom:1px solid var(--line);
-    font-weight:600;
-  }
-  .admin-table td{
-    padding:10px 12px;
-    border-bottom:1px solid var(--line);
-    vertical-align:top;
-  }
-  .download-btn{
-    background:var(--brand);
-    color:#fff;
-    border:none;
-    padding:8px 16px;
-    border-radius:6px;
-    font-size:13px;
-    cursor:pointer;
-  }
-  .pill-status{
-    display:inline-block;
-    font-size:11px;
-    padding:2px 8px;
-    border-radius:10px;
-  }
-  .pill-status.ok{background:var(--brand-tint); color:var(--brand-dark);}
-  .pill-status.review{background:var(--warn-tint); color:var(--warn);}
-
-  /* ---------- 後台 Tab 列 ---------- */
-  .admin-tabs{
-    display:flex; gap:4px; margin-bottom:20px;
-    border-bottom:2px solid var(--line); padding-bottom:0;
-  }
-  .admin-tab-btn{
-    padding:9px 18px; font-size:13px; border:none;
-    background:none; cursor:pointer; color:var(--ink-soft);
-    border-bottom:2px solid transparent; margin-bottom:-2px;
-    border-radius:0; transition:color .15s;
-  }
-  .admin-tab-btn.active{ color:var(--brand-dark); font-weight:700; border-bottom-color:var(--brand); }
-
-  /* ---------- 密碼彈窗 ---------- */
-  .modal-mask{
-    position:fixed; inset:0; background:rgba(20,30,28,.45);
-    z-index:50; display:flex; align-items:center; justify-content:center; padding:20px;
-  }
-  .modal-card{
-    background:#fff; border-radius:var(--radius);
-    padding:28px 28px 24px; width:100%; max-width:340px;
-    box-shadow:0 8px 32px rgba(0,0,0,.12);
-  }
-  .modal-card h3{margin:0 0 6px; font-size:17px;}
-  .modal-card p{margin:0 0 18px; font-size:13px; color:var(--ink-soft);}
-  .modal-input{
-    width:100%; padding:11px 13px;
-    border:1px solid var(--line); border-radius:8px;
-    font-size:16px; letter-spacing:.12em; margin-bottom:10px;
-  }
-  .modal-input:focus{outline:none; border-color:var(--brand);}
-
-  /* ---------- 後台篩選列 ---------- */
-  .admin-filters{
-    display:flex; flex-wrap:wrap; gap:10px; margin-bottom:16px; align-items:center;
-  }
-  .admin-filters input,.admin-filters select{
-    padding:8px 11px; border:1px solid var(--line);
-    border-radius:8px; font-size:13px; background:#fff; min-width:0;
-  }
-  .admin-filters input{flex:1; min-width:140px;}
-  .admin-filters select{flex:0 0 auto;}
-  .filter-date-wrap{display:flex; align-items:center; gap:6px; flex:0 0 auto;}
-  .filter-date-wrap span{font-size:12px; color:var(--ink-soft);}
-  .filter-date-wrap input[type="date"]{padding:7px 9px; font-size:13px;}
-
-  /* ---------- 批次匯出列 ---------- */
-  .batch-bar{
-    display:flex; align-items:center; gap:12px;
-    background:var(--brand-tint); border:1px solid #c2dbd5;
-    border-radius:8px; padding:10px 14px; margin-bottom:14px;
-    font-size:13px; color:var(--brand-dark);
-  }
-  .batch-bar button{
-    background:var(--brand); color:#fff; border:none;
-    border-radius:6px; padding:7px 16px; font-size:13px; cursor:pointer; margin-left:auto;
-  }
-  .admin-table input[type="checkbox"]{width:15px;height:15px;cursor:pointer;accent-color:var(--brand);}
-
-  /* ---------- 統計卡片 ---------- */
-  .admin-stats{display:flex; gap:12px; flex-wrap:wrap; margin-bottom:20px;}
-  .stat-card{flex:1; min-width:120px; background:#fff; border:1px solid var(--line); border-radius:8px; padding:14px 16px;}
-  .stat-card .label{font-size:11px; color:var(--ink-soft); margin-bottom:4px;}
-  .stat-card .value{font-size:22px; font-weight:700; color:var(--ink);}
-  .stat-card .value.warn{color:var(--warn);}
-
-  /* ---------- 商品管理行內編輯表格 ---------- */
-  .mgmt-table{
-    width:100%; border-collapse:collapse; font-size:13px;
-    background:#fff; border:1px solid var(--line); border-radius:8px; overflow:hidden;
-  }
-  .mgmt-table th{
-    text-align:left; background:#f4f6f5; padding:9px 10px;
-    border-bottom:1px solid var(--line); font-weight:600; white-space:nowrap;
-  }
-  .mgmt-table td{
-    padding:6px 8px; border-bottom:1px solid var(--line); vertical-align:middle;
-  }
-  .mgmt-table tr:last-child td{border-bottom:none;}
-  .mgmt-table tr.editing td{background:#f7fbfa;}
-  /* 行內 input / select */
-  .cell-input{
-    width:100%; padding:5px 7px; border:1px solid var(--brand);
-    border-radius:5px; font-size:13px; background:#fff;
-    box-shadow:0 0 0 2px rgba(47,111,94,.12);
-  }
-  .cell-text{
-    display:block; padding:4px 2px; cursor:pointer; min-height:22px;
-    border:1px solid transparent; border-radius:5px;
-  }
-  .cell-text:hover{background:#f0f7f5; border-color:var(--line);}
-  .cell-text.empty{color:#bbb; font-style:italic;}
-  /* 行操作按鈕 */
-  .row-actions{display:flex; gap:6px; white-space:nowrap;}
-  .btn-save{
-    background:var(--brand); color:#fff; border:none;
-    padding:5px 12px; border-radius:5px; font-size:12px; cursor:pointer;
-  }
-  .btn-cancel{
-    background:#fff; color:var(--ink-soft); border:1px solid var(--line);
-    padding:5px 10px; border-radius:5px; font-size:12px; cursor:pointer;
-  }
-  .btn-edit{
-    background:#f4f6f5; border:1px solid var(--line); color:var(--ink-soft);
-    padding:5px 10px; border-radius:5px; font-size:12px; cursor:pointer;
-  }
-  .btn-del{
-    background:var(--danger-tint); color:var(--danger); border:1px solid #eacfca;
-    padding:5px 10px; border-radius:5px; font-size:12px; cursor:pointer;
-  }
-  .btn-img{
-    background:#eef1fb; color:#3d4f9e; border:1px solid #d0d8f5;
-    padding:5px 10px; border-radius:5px; font-size:12px; cursor:pointer;
-  }
-  /* 新增列表單 */
-  .add-row-form{
-    background:var(--brand-tint); border:1px dashed #b0d0c8;
-    border-radius:8px; padding:14px 16px; margin-top:14px;
-    display:flex; flex-wrap:wrap; gap:10px; align-items:flex-end;
-  }
-  .add-row-form label{font-size:12px; color:var(--ink-soft); display:flex; flex-direction:column; gap:4px;}
-  .add-row-form input,.add-row-form select{
-    padding:7px 9px; border:1px solid var(--line); border-radius:6px; font-size:13px; background:#fff;
-  }
-  .add-row-form .wide{flex:2; min-width:160px;}
-  .add-row-form .narrow{flex:1; min-width:80px;}
-
-  /* ---------- 圖片縮圖（後台共用）---------- */
-  .img-thumb-row{display:flex; gap:6px; flex-wrap:wrap; align-items:center;}
-  .img-thumb-sm{
-    width:48px; height:48px; border-radius:5px; overflow:hidden;
-    border:1px solid var(--line); cursor:pointer; flex-shrink:0; position:relative;
-  }
-  .img-thumb-sm img{width:100%; height:100%; object-fit:cover;}
-  .img-thumb-add{
-    width:48px; height:48px; border:2px dashed var(--line); border-radius:5px;
-    display:flex; align-items:center; justify-content:center;
-    color:#bbb; font-size:20px; cursor:pointer; flex-shrink:0;
-  }
-  .img-thumb-add:hover{border-color:var(--brand); color:var(--brand);}
-
-  /* ---------- 上傳遮罩 ---------- */
-  .uploading-mask{
-    position:fixed; inset:0; z-index:70;
-    background:rgba(20,30,28,.5);
-    display:flex; align-items:center; justify-content:center;
-    color:#fff; font-size:16px; flex-direction:column; gap:10px;
-  }
-
-  /* ---------- 燈箱 ---------- */
-  .lightbox-mask{
-    position:fixed; inset:0; z-index:60; background:rgba(0,0,0,.82);
-    display:flex; align-items:center; justify-content:center; padding:20px;
-  }
-  .lightbox-inner{position:relative; max-width:90vw; max-height:90vh; display:flex; align-items:center; gap:12px;}
-  .lightbox-inner img{max-width:80vw; max-height:82vh; object-fit:contain; border-radius:6px;}
-  .lightbox-btn{
-    background:rgba(255,255,255,.15); border:none; color:#fff; font-size:28px;
-    width:44px; height:44px; border-radius:50%; cursor:pointer; flex-shrink:0;
-    display:flex; align-items:center; justify-content:center;
-  }
-  .lightbox-btn:hover{background:rgba(255,255,255,.28);}
-  .lightbox-close{position:absolute; top:-44px; right:0; background:none; border:none; color:#fff; font-size:26px; cursor:pointer;}
-  .lightbox-dots{position:absolute; bottom:-32px; left:50%; transform:translateX(-50%); display:flex; gap:6px;}
-  .lightbox-dots span{width:7px; height:7px; border-radius:50%; background:rgba(255,255,255,.35); cursor:pointer;}
+  .card.disabled .qty-row button,.card.disabled .qty-row input{pointer-events:none;background:#f3f3f1;}
+  .card-img-wrap{position:relative;width:100%;aspect-ratio:4/3;background:#f4f6f5;border-radius:6px;overflow:hidden;cursor:pointer;}
+  .card-img-wrap img{width:100%;height:100%;object-fit:contain;display:block;}
+  .card-img-placeholder{width:100%;height:100%;display:flex;align-items:center;justify-content:center;font-size:28px;color:#c8d0ce;}
+  .card-img-count{position:absolute;bottom:5px;right:7px;background:rgba(0,0,0,.45);color:#fff;font-size:10px;padding:2px 6px;border-radius:10px;}
+  .lightbox-mask{position:fixed;inset:0;z-index:60;background:rgba(0,0,0,.82);display:flex;align-items:center;justify-content:center;padding:20px;}
+  .lightbox-inner{position:relative;max-width:90vw;max-height:90vh;display:flex;align-items:center;gap:12px;}
+  .lightbox-inner img{max-width:80vw;max-height:82vh;object-fit:contain;border-radius:6px;}
+  .lightbox-btn{background:rgba(255,255,255,.15);border:none;color:#fff;font-size:28px;width:44px;height:44px;border-radius:50%;cursor:pointer;flex-shrink:0;display:flex;align-items:center;justify-content:center;}
+  .lightbox-close{position:absolute;top:-44px;right:0;background:none;border:none;color:#fff;font-size:26px;cursor:pointer;}
+  .lightbox-dots{position:absolute;bottom:-32px;left:50%;transform:translateX(-50%);display:flex;gap:6px;}
+  .lightbox-dots span{width:7px;height:7px;border-radius:50%;background:rgba(255,255,255,.35);cursor:pointer;}
   .lightbox-dots span.active{background:#fff;}
-
-  /* ---------- 商品卡片圖片 ---------- */
-  .card-img-wrap{
-    position:relative; width:100%; aspect-ratio:4/3;
-    background:#f4f6f5; border-radius:6px; overflow:hidden; cursor:pointer;
-  }
-  .card-img-wrap img{width:100%; height:100%; object-fit:contain; display:block;}
-  .card-img-placeholder{width:100%; height:100%; display:flex; align-items:center; justify-content:center; font-size:28px; color:#c8d0ce;}
-  .card-img-count{position:absolute; bottom:5px; right:7px; background:rgba(0,0,0,.45); color:#fff; font-size:10px; padding:2px 6px; border-radius:10px;}
-    .sidebar{
-      position:static;
-      width:100%;
-      height:auto;
-      border-right:none;
-      border-bottom:1px solid var(--line);
-      display:flex;
-      overflow-x:auto;
-      padding:10px 12px;
-      gap:4px;
-    }
-    .sidebar button{white-space:nowrap; width:auto;}
+  .drawer-mask{position:fixed;inset:0;background:rgba(20,30,28,.35);z-index:30;}
+  .drawer{position:fixed;top:0;right:0;width:min(420px,100vw);height:100vh;background:var(--panel);z-index:31;display:flex;flex-direction:column;box-shadow:-8px 0 24px rgba(0,0,0,.08);}
+  .drawer-head{padding:16px 18px;border-bottom:1px solid var(--line);display:flex;align-items:center;justify-content:space-between;}
+  .drawer-head h3{margin:0;font-size:16px;}
+  .drawer-head button{background:none;border:none;font-size:20px;cursor:pointer;color:var(--ink-soft);}
+  .drawer-body{flex:1;overflow-y:auto;padding:12px 18px;}
+  .cart-line{display:flex;gap:10px;padding:12px 0;border-bottom:1px solid var(--line);}
+  .cart-line .info{flex:1;min-width:0;}
+  .cart-line .name{font-size:13px;line-height:1.4;}
+  .cart-line .meta{font-size:12px;color:var(--ink-soft);margin-top:2px;}
+  .cart-line .remove{background:none;border:none;color:var(--danger);font-size:12px;cursor:pointer;padding:0;text-decoration:underline;}
+  .cart-line .lineprice{font-size:13px;font-weight:600;white-space:nowrap;}
+  .drawer-foot{border-top:1px solid var(--line);padding:16px 18px;}
+  .total-row{display:flex;justify-content:space-between;font-size:15px;margin-bottom:4px;}
+  .total-row.grand{font-size:18px;font-weight:700;margin-top:8px;}
+  .review-note{font-size:12px;color:var(--warn);background:var(--warn-tint);padding:8px 10px;border-radius:6px;margin:10px 0;line-height:1.5;}
+  .empty-cart{text-align:center;color:var(--ink-soft);padding:60px 20px;font-size:14px;}
+  .confirm-wrap{max-width:560px;margin:60px auto;padding:0 20px;text-align:center;}
+  .confirm-wrap .badge{width:56px;height:56px;border-radius:50%;background:var(--brand-tint);color:var(--brand-dark);display:flex;align-items:center;justify-content:center;font-size:28px;margin:0 auto 16px;}
+  .confirm-wrap h2{margin:0 0 8px;}
+  .confirm-wrap p{color:var(--ink-soft);font-size:14px;line-height:1.7;}
+  .order-id{display:inline-block;background:var(--brand-tint);color:var(--brand-dark);padding:6px 14px;border-radius:6px;font-family:monospace;font-size:13px;margin:8px 0 20px;}
+  .idle-banner{position:fixed;bottom:16px;left:50%;transform:translateX(-50%);background:#1c2b2d;color:#fff;font-size:13px;padding:10px 20px;border-radius:8px;z-index:50;box-shadow:0 4px 16px rgba(0,0,0,.2);}
+  @media(max-width:760px){
+    .sidebar{position:static;width:100%;height:auto;border-right:none;border-bottom:1px solid var(--line);display:flex;overflow-x:auto;padding:10px 12px;gap:4px;}
+    .sidebar button{white-space:nowrap;width:auto;}
     .sidebar .count{display:none;}
     .layout{flex-direction:column;}
     .drawer{width:100vw;}
     .app-header{flex-wrap:wrap;}
-    .search-box{order:3; max-width:100%; flex:1 1 100%;}
+    .search-box{order:3;max-width:100%;flex:1 1 100%;}
   }
 </style>
 </head>
 <body>
 <div id="root"></div>
 <script type="text/babel" data-presets="env,react">
-const { useState, useMemo, useEffect, useRef, useCallback } = React;
-const LS_CUSTOMER = "order_customer";
-const LS_PRODUCTS = "order_products";
-const IDLE_MINUTES = 30;
-const ADMIN_PASSWORD = "0000"; // ← 修改此處變更後台密碼
-
-// ---------------------------------------------------------------
-// 測試資料：來自實際上傳的客戶訂貨單(已抽取核心欄位)
-// 正式上線時，這個區塊會換成從後端/資料庫讀取
-// ---------------------------------------------------------------
-// ---------------------------------------------------------------
-// GAS 後端設定：所有客戶名單/商品/價格/訂單資料都改由後端的
-// Google試算表讀寫，這裡不再寫死任何測試資料
-// ---------------------------------------------------------------
+const { useState, useMemo, useEffect, useRef } = React;
 const GAS_URL = "https://script.google.com/macros/s/AKfycby48Nyzb4q5265opAIWwRGTdBFlnYnsa-0lS9w0EIGAaRVCNBYqvd9Wc5Hip2DySgEiwQ/exec";
+const LS_CUSTOMER = "order_customer";
+const LS_PRODUCTS  = "order_products";
+const IDLE_MINUTES = 30;
 
 async function callGAS(action, payload) {
-  const res = await fetch(GAS_URL, {
-    method: "POST",
-    headers: { "Content-Type": "text/plain;charset=utf-8" }, // 避免觸發瀏覽器的CORS預檢請求
-    body: JSON.stringify(Object.assign({ action: action }, payload)),
-  });
+  const res = await fetch(GAS_URL, { method:"POST", headers:{"Content-Type":"text/plain;charset=utf-8"}, body:JSON.stringify(Object.assign({action}, payload)) });
   const data = await res.json();
   if (!data.ok) throw new Error(data.error || "後端回應失敗");
   return data;
 }
-
-// ---------------------------------------------------------------
-// 促銷規則判斷：分三類
-// 1. autoGift  -> N+M 買贈，可全自動算贈品數量(不計價)
-// 2. autoBox   -> 成箱固定價，可全自動算金額
-// 3. needReview-> 規則模糊(促/合清價/合清直走/未達3000加運/洗衣精活動贈品/70U)，標註待人工複核
-// ---------------------------------------------------------------
-function parseActivity(activity) {
-  if (!activity) return null;
-  const a = activity.trim();
-
-  // 成箱固定價：例如 "成箱$1944"
-  const boxMatch = a.match(/成箱\$?(\d+)/);
-  if (boxMatch) {
-    return { type: "autoBox", boxPrice: Number(boxMatch[1]), label: `整箱 $${boxMatch[1]}` };
-  }
-
-  // 標準買贈：例如 "2+1" "4+2" "5+1" "7+3" "10+2" "11+1"
-  const giftMatch = a.match(/^(\d+)\+(\d+)$/);
-  if (giftMatch) {
-    return { type: "autoGift", buy: Number(giftMatch[1]), free: Number(giftMatch[2]), label: `買${giftMatch[1]}送${giftMatch[2]}` };
-  }
-
-  // 其餘一律視為需人工複核(促、合清價、合清直走、未達3000加運、洗衣精活動贈品、70U...)
-  return { type: "needReview", label: a };
+function parseActivity(a) {
+  if (!a) return null; a = a.trim();
+  const bm = a.match(/成箱\$?(\d+)/); if (bm) return {type:"autoBox", boxPrice:Number(bm[1]), label:`整箱 $${bm[1]}`};
+  const gm = a.match(/^(\d+)\+(\d+)$/); if (gm) return {type:"autoGift", buy:Number(gm[1]), free:Number(gm[2]), label:`買${gm[1]}送${gm[2]}`};
+  return {type:"needReview", label:a};
+}
+function computeLine(p, qty) {
+  const rule = parseActivity(p.activity);
+  let giftQty=0, amount=qty*p.unitPrice, flag=null;
+  if (rule && rule.type==="autoGift" && qty>0) { giftQty = Math.floor(qty/rule.buy)*rule.free; }
+  else if (rule && rule.type==="autoBox" && qty>0) { const boxes=Math.ceil(qty/(Number(p.boxQty)||1)); amount=boxes*rule.boxPrice; flag=`依整箱價，共 ${boxes} 箱`; }
+  else if (rule && rule.type==="needReview") { flag="review"; }
+  return {giftQty, amount, rule, flag};
 }
 
-function computeLine(product, qty) {
-  const rule = parseActivity(product.activity);
-  let payQty = qty;
-  let giftQty = 0;
-  let amount = qty * product.unitPrice;
-  let flag = null;
-
-  if (rule && rule.type === "autoGift" && qty > 0) {
-    const sets = Math.floor(qty / rule.buy);
-    giftQty = sets * rule.free;
-    // 贈品不計價，付費數量仍是 qty(贈品另外出貨，不影響應付金額)
-    amount = qty * product.unitPrice;
-  } else if (rule && rule.type === "autoBox" && qty > 0) {
-    const boxQty = Number(product.boxQty) || 1;
-    const boxes = Math.ceil(qty / boxQty);
-    amount = boxes * rule.boxPrice;
-    flag = `依整箱價計算，共 ${boxes} 箱`;
-  } else if (rule && rule.type === "needReview") {
-    flag = "review";
-  }
-
-  return { payQty, giftQty, amount, rule, flag };
-}
-
-// ---------------------------------------------------------------
-// 主程式
-// ---------------------------------------------------------------
 function App() {
-  // ---- 客戶端 state（從 localStorage 還原）----
-  const [stage, setStage] = useState(() => {
-    try { return JSON.parse(localStorage.getItem(LS_CUSTOMER)) ? "shop" : "login"; } catch { return "login"; }
-  });
-  const [customer, setCustomer] = useState(() => {
-    try { return JSON.parse(localStorage.getItem(LS_CUSTOMER)) || null; } catch { return null; }
-  });
-  const [products, setProducts] = useState(() => {
-    try { return JSON.parse(localStorage.getItem(LS_PRODUCTS)) || []; } catch { return []; }
-  });
+  const [stage,    setStage]    = useState(() => { try{return JSON.parse(localStorage.getItem(LS_CUSTOMER))?"shop":"login";}catch{return "login";} });
+  const [customer, setCustomer] = useState(() => { try{return JSON.parse(localStorage.getItem(LS_CUSTOMER))||null;}catch{return null;} });
+  const [products, setProducts] = useState(() => { try{return JSON.parse(localStorage.getItem(LS_PRODUCTS))||[];}catch{return [];} });
+  const [loginStep, setLoginStep] = useState("input");
   const [taxIdInput, setTaxIdInput] = useState("");
   const [loginError, setLoginError] = useState("");
-  const [loginStep, setLoginStep] = useState("input");
   const [pendingCompany, setPendingCompany] = useState(null);
   const [selectedBranchCode, setSelectedBranchCode] = useState("");
+  const [loading, setLoading] = useState(false);
   const [cart, setCart] = useState({});
   const [search, setSearch] = useState("");
   const [activeCat, setActiveCat] = useState("全部");
   const [drawerOpen, setDrawerOpen] = useState(false);
-  const [orders, setOrders] = useState([]);
   const [lastOrder, setLastOrder] = useState(null);
-  const [loading, setLoading] = useState(false);
   const [pageError, setPageError] = useState("");
   const [submitting, setSubmitting] = useState(false);
-
-  // ---- 閒置計時 ----
-  const idleTimer = useRef(null);
-
-  // ---- 後台密碼 ----
-  const [adminAuthed, setAdminAuthed] = useState(() => sessionStorage.getItem("adminAuthed") === "1");
-  const [adminPwInput, setAdminPwInput] = useState("");
-  const [adminPwError, setAdminPwError] = useState("");
-
-  // ---- 後台 Tab ----
-  const [adminTab, setAdminTab] = useState("orders"); // orders | master | prices
-
-  // ---- 後台訂單篩選 ----
-  const [filterCustomer, setFilterCustomer] = useState("");
-  const [filterStatus, setFilterStatus]   = useState("all");
-  const [filterDateFrom, setFilterDateFrom] = useState("");
-  const [filterDateTo, setFilterDateTo]   = useState("");
-  const [checkedOrders, setCheckedOrders] = useState({});
-
-  // ---- 商品主檔管理 ----
-  const [masterRows, setMasterRows]     = useState([]);    // 從 GAS 載入
-  const [masterLoading, setMasterLoading] = useState(false);
-  const [masterError, setMasterError]   = useState("");
-  const [editingCode, setEditingCode]   = useState(null);  // 哪一列正在編輯
-  const [editDraft, setEditDraft]       = useState({});    // 正在編輯的暫存值
-  const [masterSearch, setMasterSearch] = useState("");
-  const [showAddMaster, setShowAddMaster] = useState(false);
-  const [newMaster, setNewMaster] = useState({ code:"", name:"", category:"", listPrice:"", boxQty:"", discontinued:false });
-
-  // ---- 價格表管理 ----
-  const [priceRows, setPriceRows]       = useState([]);
-  const [priceCustomers, setPriceCustomers] = useState([]); // [{code, name}]
-  const [priceLoading, setPriceLoading] = useState(false);
-  const [priceError, setPriceError]     = useState("");
-  const [priceFilter, setPriceFilter]   = useState("");    // 客戶代號篩選
-  const [priceSearch, setPriceSearch]   = useState("");    // 品號/品名搜尋
-  const [editingPrice, setEditingPrice] = useState(null);  // {customerCode, productCode}
-  const [priceDraft, setPriceDraft]     = useState({});
-  const [showAddPrice, setShowAddPrice] = useState(false);
-  const [newPrice, setNewPrice] = useState({ customerCode:"", customerName:"", productCode:"", unitPrice:"", activity:"", note:"" });
-
-  // ---- 圖片 ----
-  const [uploadingProduct, setUploadingProduct] = useState(null);
   const [lightbox, setLightbox] = useState(null);
-  const fileInputRef = useRef(null);
+  const [idleWarning, setIdleWarning] = useState(false);
+  const idleTimer  = useRef(null);
+  const logoutTimer = useRef(null);
 
-  const categories = useMemo(() => {
-    const set = new Set(products.map(p => p.category));
-    return ["全部", ...set];
-  }, [products]);
-
-  const filtered = useMemo(() => {
-    return products.filter(p => {
-      const inCat = activeCat === "全部" || p.category === activeCat;
-      const inSearch = !search || p.name.includes(search) || p.code.includes(search);
-      return inCat && inSearch;
-    });
-  }, [products, activeCat, search]);
-
-  const cartLines = useMemo(() => {
-    return Object.entries(cart)
-      .filter(([_, qty]) => qty > 0)
-      .map(([code, qty]) => {
-        const product = products.find(p => p.code === code);
-        const calc = computeLine(product, qty);
-        return { product, qty, ...calc };
-      });
-  }, [cart, products]);
-
-  const cartCount = cartLines.reduce((s, l) => s + l.qty, 0);
-  const cartTotal = cartLines.reduce((s, l) => s + l.amount, 0);
-  const hasReviewItem = cartLines.some(l => l.flag === "review");
-
-  // ======================================================
-  // 閒置計時
-  // ======================================================
+  function doLogout() {
+    localStorage.removeItem(LS_CUSTOMER); localStorage.removeItem(LS_PRODUCTS);
+    [idleTimer, logoutTimer].forEach(r => { if(r.current) clearTimeout(r.current); });
+    setStage("login"); setCustomer(null); setCart({}); setTaxIdInput(""); setLoginError("");
+    setLoginStep("input"); setPendingCompany(null); setSelectedBranchCode(""); setProducts([]); setIdleWarning(false);
+  }
   function resetIdleTimer() {
-    if (idleTimer.current) clearTimeout(idleTimer.current);
-    idleTimer.current = setTimeout(() => {
-      doResetLogin();
-      alert(`您已閒置超過 ${IDLE_MINUTES} 分鐘，已自動登出。`);
-    }, IDLE_MINUTES * 60 * 1000);
+    [idleTimer, logoutTimer].forEach(r => { if(r.current) clearTimeout(r.current); });
+    setIdleWarning(false);
+    idleTimer.current  = setTimeout(() => setIdleWarning(true), (IDLE_MINUTES-2)*60*1000);
+    logoutTimer.current = setTimeout(() => doLogout(), IDLE_MINUTES*60*1000);
   }
   useEffect(() => {
     if (stage !== "shop") return;
     const events = ["mousedown","keydown","touchstart","scroll"];
     const h = () => resetIdleTimer();
-    events.forEach(e => window.addEventListener(e, h, { passive:true }));
+    events.forEach(e => window.addEventListener(e, h, {passive:true}));
     resetIdleTimer();
-    return () => { events.forEach(e => window.removeEventListener(e, h)); if (idleTimer.current) clearTimeout(idleTimer.current); };
+    return () => { events.forEach(e => window.removeEventListener(e, h)); [idleTimer,logoutTimer].forEach(r=>{if(r.current)clearTimeout(r.current);}); };
   }, [stage]);
 
-  // ======================================================
-  // 登入 / 登出
-  // ======================================================
-  function doResetLogin() {
-    localStorage.removeItem(LS_CUSTOMER);
-    localStorage.removeItem(LS_PRODUCTS);
-    if (idleTimer.current) clearTimeout(idleTimer.current);
-    setStage("login"); setCustomer(null); setCart({});
-    setTaxIdInput(""); setLoginError(""); setLoginStep("input");
-    setPendingCompany(null); setSelectedBranchCode(""); setProducts([]);
-  }
-
-  // ======================================================
-  // 後台密碼
-  // ======================================================
-  function handleAdminLogin() {
-    if (adminPwInput === ADMIN_PASSWORD) {
-      sessionStorage.setItem("adminAuthed","1");
-      setAdminAuthed(true); setAdminPwError("");
-      loadOrders();
-    } else {
-      setAdminPwError("密碼錯誤，請重新輸入"); setAdminPwInput("");
-    }
-  }
-  function handleAdminLogout() {
-    sessionStorage.removeItem("adminAuthed");
-    setAdminAuthed(false); setOrders([]); setCheckedOrders({});
-    doResetLogin();
-  }
-
-  // ======================================================
-  // 後台：訂單
-  // ======================================================
-  const filteredOrders = useMemo(() => orders.filter(o => {
-    if (filterCustomer && !o.customerName.includes(filterCustomer) && !o.branchCode.includes(filterCustomer)) return false;
-    if (filterStatus === "ok" && o.needsReview) return false;
-    if (filterStatus === "review" && !o.needsReview) return false;
-    if (filterDateFrom && o.time < filterDateFrom) return false;
-    if (filterDateTo && o.time > filterDateTo + " 99") return false;
-    return true;
-  }), [orders, filterCustomer, filterStatus, filterDateFrom, filterDateTo]);
-
-  const adminStats = useMemo(() => ({
-    count: filteredOrders.length,
-    total: filteredOrders.reduce((s,o) => s + o.total, 0),
-    reviewCount: filteredOrders.filter(o => o.needsReview).length,
-  }), [filteredOrders]);
-
-  const checkedList = filteredOrders.filter(o => checkedOrders[o.orderId]);
-  const allChecked  = filteredOrders.length > 0 && checkedList.length === filteredOrders.length;
-  function toggleCheck(id) { setCheckedOrders(p => ({...p,[id]:!p[id]})); }
-  function toggleAll() {
-    if (allChecked) { setCheckedOrders({}); }
-    else { const n={}; filteredOrders.forEach(o=>{n[o.orderId]=true;}); setCheckedOrders(n); }
-  }
-  function exportBatch() {
-    const targets = checkedList.length > 0 ? checkedList : filteredOrders;
-    const rows = [];
-    targets.forEach(o => o.lines.forEach(l => rows.push({
-      "訂單編號":o.orderId,"客戶代號":o.branchCode,"客戶名稱":o.customerName,"下單時間":o.time,
-      "產品編號":l.code,"品名":l.name,"訂購數量":l.qty,"贈品數量":l.giftQty||0,
-      "單價":l.unitPrice,"金額":l.amount,"促銷規則":l.activity||"","狀態":l.status,
-    })));
-    const ws = XLSX.utils.json_to_sheet(rows);
-    const wb = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(wb, ws, "訂單明細");
-    const d = new Date(); const ds = `${d.getFullYear()}${String(d.getMonth()+1).padStart(2,"0")}${String(d.getDate()).padStart(2,"0")}`;
-    XLSX.writeFile(wb, `訂單匯出_${ds}.xlsx`);
-  }
-
-  // ======================================================
-  // 後台：商品主檔 CRUD
-  // ======================================================
-  async function loadMaster() {
-    setMasterLoading(true); setMasterError("");
-    try { const d = await callGAS("listMaster",{}); setMasterRows(d.rows); }
-    catch(e) { setMasterError("載入失敗："+e.message); }
-    finally { setMasterLoading(false); }
-  }
-  useEffect(() => { if (adminTab === "master" && adminAuthed && masterRows.length === 0) loadMaster(); }, [adminTab, adminAuthed]);
-
-  const filteredMaster = useMemo(() =>
-    masterRows.filter(r => !masterSearch || r.name.includes(masterSearch) || r.code.includes(masterSearch) || (r.category||"").includes(masterSearch)),
-  [masterRows, masterSearch]);
-
-  function startEdit(row) {
-    setEditingCode(row.code);
-    setEditDraft({ name:row.name, category:row.category, listPrice:row.listPrice, boxQty:row.boxQty, discontinued:row.discontinued });
-  }
-  function cancelEdit() { setEditingCode(null); setEditDraft({}); }
-
-  async function saveEdit(row) {
-    try {
-      await callGAS("saveMasterRow", { row:{ ...row, ...editDraft } });
-      setMasterRows(prev => prev.map(r => r.code === row.code ? {...r,...editDraft} : r));
-      setEditingCode(null); setEditDraft({});
-    } catch(e) { alert("儲存失敗："+e.message); }
-  }
-
-  async function deleteMasterRow(code) {
-    if (!confirm(`確定刪除品號 ${code}？此動作無法復原。`)) return;
-    try {
-      await callGAS("deleteMasterRow", { code });
-      setMasterRows(prev => prev.filter(r => r.code !== code));
-    } catch(e) { alert("刪除失敗："+e.message); }
-  }
-
-  async function addMasterRow() {
-    if (!newMaster.code || !newMaster.name) { alert("品號與品名為必填"); return; }
-    try {
-      await callGAS("saveMasterRow", { row: newMaster });
-      setMasterRows(prev => [...prev, { ...newMaster, images:[] }]);
-      setNewMaster({ code:"", name:"", category:"", listPrice:"", boxQty:"", discontinued:false });
-      setShowAddMaster(false);
-    } catch(e) { alert("新增失敗："+e.message); }
-  }
-
-  // ======================================================
-  // 後台：客戶價格表 CRUD
-  // ======================================================
-  async function loadPrices(custCode) {
-    setPriceLoading(true); setPriceError("");
-    try {
-      const d = await callGAS("listPrices", { customerCode: custCode || null });
-      setPriceRows(d.rows); setPriceCustomers(d.customers);
-      if (!priceFilter && d.customers.length > 0) setPriceFilter(d.customers[0].code);
-    } catch(e) { setPriceError("載入失敗："+e.message); }
-    finally { setPriceLoading(false); }
-  }
-  useEffect(() => { if (adminTab === "prices" && adminAuthed && priceRows.length === 0) loadPrices(null); }, [adminTab, adminAuthed]);
-
-  const filteredPrices = useMemo(() =>
-    priceRows.filter(r => {
-      if (priceFilter && r.customerCode !== priceFilter) return false;
-      if (priceSearch && !r.productCode.includes(priceSearch)) return false;
-      return true;
-    }),
-  [priceRows, priceFilter, priceSearch]);
-
-  function startEditPrice(row) {
-    setEditingPrice({ customerCode:row.customerCode, productCode:row.productCode });
-    setPriceDraft({ unitPrice:row.unitPrice, activity:row.activity, note:row.note });
-  }
-  function cancelEditPrice() { setEditingPrice(null); setPriceDraft({}); }
-
-  async function saveEditPrice(row) {
-    try {
-      await callGAS("savePriceRow", { row:{ ...row, ...priceDraft } });
-      setPriceRows(prev => prev.map(r => r.customerCode===row.customerCode && r.productCode===row.productCode ? {...r,...priceDraft} : r));
-      setEditingPrice(null); setPriceDraft({});
-    } catch(e) { alert("儲存失敗："+e.message); }
-  }
-
-  async function deletePriceRow(row) {
-    if (!confirm(`確定刪除 ${row.customerCode} × ${row.productCode} 的價格資料？`)) return;
-    try {
-      await callGAS("deletePriceRow", { customerCode:row.customerCode, productCode:row.productCode });
-      setPriceRows(prev => prev.filter(r => !(r.customerCode===row.customerCode && r.productCode===row.productCode)));
-    } catch(e) { alert("刪除失敗："+e.message); }
-  }
-
-  async function addPriceRow() {
-    if (!newPrice.customerCode || !newPrice.productCode || !newPrice.unitPrice) { alert("客戶代號、品號、單價為必填"); return; }
-    try {
-      await callGAS("savePriceRow", { row: newPrice });
-      setPriceRows(prev => [...prev, { ...newPrice }]);
-      setNewPrice({ customerCode:"", customerName:"", productCode:"", unitPrice:"", activity:"", note:"" });
-      setShowAddPrice(false);
-    } catch(e) { alert("新增失敗："+e.message); }
-  }
-
-  // ======================================================
-  // 圖片上傳 / 刪除
-  // ======================================================
-  async function handleImageUpload(productCode, file) {
-    setUploadingProduct(productCode);
-    try {
-      const reader = new FileReader();
-      const b64 = await new Promise((res,rej) => { reader.onload=e=>res(e.target.result.split(",")[1]); reader.onerror=rej; reader.readAsDataURL(file); });
-      const d = await callGAS("uploadImage", { productCode, fileName:file.name, base64Data:b64, mimeType:file.type||"image/jpeg" });
-      const updater = prev => {
-        const next = prev.map(p => p.code !== productCode ? p : {...p, images:[...(p.images||[]), d.imageUrl]});
-        localStorage.setItem(LS_PRODUCTS, JSON.stringify(next));
-        return next;
-      };
-      setProducts(updater);
-      setMasterRows(prev => prev.map(r => r.code !== productCode ? r : {...r, images:[...(r.images||[]), d.imageUrl]}));
-    } catch(e) { alert("上傳失敗："+e.message); }
-    finally { setUploadingProduct(null); }
-  }
-
-  async function handleImageDelete(productCode, imageUrl) {
-    if (!confirm("確定刪除此張圖片？")) return;
-    setUploadingProduct(productCode);
-    try {
-      await callGAS("deleteImage", { productCode, imageUrl });
-      const updater = prev => {
-        const next = prev.map(p => p.code!==productCode ? p : {...p, images:(p.images||[]).filter(u=>u!==imageUrl)});
-        localStorage.setItem(LS_PRODUCTS, JSON.stringify(next));
-        return next;
-      };
-      setProducts(updater);
-      setMasterRows(prev => prev.map(r => r.code!==productCode ? r : {...r, images:(r.images||[]).filter(u=>u!==imageUrl)}));
-    } catch(e) { alert("刪除失敗："+e.message); }
-    finally { setUploadingProduct(null); }
-  }
-
-  // 燈箱
-  function openLightbox(images, index, name) { setLightbox({images,index,productName:name}); }
-  function closeLightbox() { setLightbox(null); }
-  function lightboxPrev() { setLightbox(lb=>({...lb, index:(lb.index-1+lb.images.length)%lb.images.length})); }
-  function lightboxNext() { setLightbox(lb=>({...lb, index:(lb.index+1)%lb.images.length})); }
-
-  function setQty(code, qty) {
-    setCart(prev => ({ ...prev, [code]: Math.max(0, qty) }));
-  }
+  const categories = useMemo(() => ["全部", ...new Set(products.map(p=>p.category))], [products]);
+  const filtered   = useMemo(() => products.filter(p => (activeCat==="全部"||p.category===activeCat) && (!search||p.name.includes(search)||p.code.includes(search))), [products,activeCat,search]);
+  const cartLines  = useMemo(() => Object.entries(cart).filter(([,q])=>q>0).map(([code,qty])=>{ const p=products.find(x=>x.code===code); return {product:p,qty,...computeLine(p,qty)}; }), [cart,products]);
+  const cartCount  = cartLines.reduce((s,l)=>s+l.qty, 0);
+  const cartTotal  = cartLines.reduce((s,l)=>s+l.amount, 0);
+  const hasReview  = cartLines.some(l=>l.flag==="review");
+  function setQty(code, qty) { setCart(p=>({...p,[code]:Math.max(0,qty)})); }
 
   async function handleTaxIdSubmit() {
-    const id = taxIdInput.trim();
-    if (!id) {
-      setLoginError("請輸入統一編號");
-      return;
-    }
-    setLoginError("");
-    setLoading(true);
-    try {
-      const data = await callGAS("lookupTaxId", { taxId: id });
-      const found = { companyName: data.companyName, branches: data.branches };
-      setPendingCompany(found);
-      if (found.branches.length > 1) {
-        setLoginStep("chooseBranch");
-      } else {
-        setSelectedBranchCode(found.branches[0].code);
-        setLoginStep("confirm");
-      }
-    } catch (err) {
-      setLoginError(err.message || "查無此統一編號對應的客戶資料，請確認輸入是否正確，或聯繫業務人員");
-    } finally {
-      setLoading(false);
-    }
-  }
-
-  async function handleConfirmLogin() {
-    const branch = pendingCompany.branches.find(b => b.code === selectedBranchCode) || pendingCompany.branches[0];
-    const newCustomer = { name: pendingCompany.companyName, branchName: branch.name, code: branch.code, taxId: taxIdInput.trim() };
-    setLoading(true); setPageError("");
-    try {
-      const data = await callGAS("getProducts", { branchCode: branch.code });
-      localStorage.setItem(LS_CUSTOMER, JSON.stringify(newCustomer));
-      localStorage.setItem(LS_PRODUCTS, JSON.stringify(data.products));
-      setProducts(data.products); setCustomer(newCustomer); setStage("shop");
-      resetIdleTimer();
-    } catch (err) { setLoginError("商品資料載入失敗：" + err.message); }
+    const id = taxIdInput.trim(); if (!id) { setLoginError("請輸入統一編號"); return; }
+    setLoginError(""); setLoading(true);
+    try { const d = await callGAS("lookupTaxId",{taxId:id}); setPendingCompany(d); if(d.branches.length>1) setLoginStep("chooseBranch"); else { setSelectedBranchCode(d.branches[0].code); setLoginStep("confirm"); } }
+    catch(e) { setLoginError(e.message||"查無此統一編號，請確認或聯繫業務人員"); }
     finally { setLoading(false); }
   }
-
-  function backToTaxIdInput() { setLoginStep("input"); setPendingCompany(null); setSelectedBranchCode(""); setLoginError(""); }
-  function resetLogin() { doResetLogin(); }
+  async function handleConfirmLogin() {
+    const branch = pendingCompany.branches.find(b=>b.code===selectedBranchCode)||pendingCompany.branches[0];
+    const nc = {name:pendingCompany.companyName, branchName:branch.name, code:branch.code, taxId:taxIdInput.trim()};
+    setLoading(true); setPageError("");
+    try { const d = await callGAS("getProducts",{branchCode:branch.code}); localStorage.setItem(LS_CUSTOMER,JSON.stringify(nc)); localStorage.setItem(LS_PRODUCTS,JSON.stringify(d.products)); setCustomer(nc); setProducts(d.products); setStage("shop"); }
+    catch(e) { setLoginError("商品資料載入失敗："+e.message); }
+    finally { setLoading(false); }
+  }
+  function backToInput() { setLoginStep("input"); setPendingCompany(null); setSelectedBranchCode(""); setLoginError(""); }
 
   async function submitOrder() {
-    setSubmitting(true);
-    setPageError("");
+    setSubmitting(true); setPageError("");
     try {
-      const payload = {
-        taxId: customer.taxId,
-        customerName: customer.name,
-        branchCode: customer.code,
-        lines: cartLines.map(l => ({
-          code: l.product.code,
-          name: l.product.name,
-          qty: l.qty,
-          giftQty: l.giftQty || 0,
-          unitPrice: l.product.unitPrice,
-          amount: l.amount,
-          activity: l.product.activity || "",
-          needsReview: l.flag === "review",
-        })),
-      };
-      const data = await callGAS("submitOrder", { order: payload });
-      setLastOrder({
-        id: data.orderId,
-        customer: customer.name,
-        branchName: customer.branchName,
-        needsReview: hasReviewItem,
-      });
-      setCart({});
-      setDrawerOpen(false);
-      setStage("confirmed");
-    } catch (err) {
-      setPageError("訂單送出失敗：" + err.message + "，請稍後再試一次");
-    } finally {
-      setSubmitting(false);
-    }
+      const d = await callGAS("submitOrder",{order:{taxId:customer.taxId,customerName:customer.name,branchCode:customer.code,
+        lines:cartLines.map(l=>({code:l.product.code,name:l.product.name,qty:l.qty,giftQty:l.giftQty||0,unitPrice:l.product.unitPrice,amount:l.amount,activity:l.product.activity||"",needsReview:l.flag==="review"}))}});
+      setLastOrder({id:d.orderId,customer:customer.name,needsReview:hasReview}); setCart({}); setDrawerOpen(false); setStage("confirmed");
+    } catch(e) { setPageError("訂單送出失敗："+e.message+"，請稍後再試一次"); }
+    finally { setSubmitting(false); }
   }
 
-  async function loadOrders() {
-    setLoading(true);
-    setPageError("");
-    try {
-      const data = await callGAS("listOrders", {});
-      setOrders(data.orders);
-    } catch (err) {
-      setPageError("訂單清單載入失敗：" + err.message);
-    } finally {
-      setLoading(false);
-    }
-  }
+  function openLightbox(imgs,i,name){setLightbox({images:imgs,index:i,productName:name});}
+  function closeLightbox(){setLightbox(null);}
+  function lbPrev(){setLightbox(lb=>({...lb,index:(lb.index-1+lb.images.length)%lb.images.length}));}
+  function lbNext(){setLightbox(lb=>({...lb,index:(lb.index+1)%lb.images.length}));}
 
-  function exportExcel(order) {
-    const rows = order.lines.map(l => ({
-      "客戶代號": order.branchCode,
-      "客戶名稱": order.customerName,
-      "產品編號": l.code,
-      "品名": l.name,
-      "訂購數量": l.qty,
-      "贈品數量": l.giftQty || 0,
-      "單價": l.unitPrice,
-      "金額": l.amount,
-      "促銷規則": l.activity || "",
-      "狀態": l.status,
-    }));
-    const ws = XLSX.utils.json_to_sheet(rows);
-    const wb = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(wb, ws, "訂單明細");
-    XLSX.writeFile(wb, `${order.orderId}_${order.customerName}.xlsx`);
-  }
-
-  // ---------------- 登入畫面 ----------------
-  if (stage === "login") {
-    return (
-      <div className="login-wrap">
-        <div className="login-card">
-          <h1>業務訂購系統</h1>
-
-          {loginStep === "input" && (
-            <React.Fragment>
-              <p className="sub">請輸入統一編號，系統將自動帶出對應的客戶資料</p>
-              <input
-                className="taxid-input"
-                placeholder="請輸入統一編號"
-                value={taxIdInput}
-                maxLength={8}
-                inputMode="numeric"
-                pattern="[0-9]*"
-                autoComplete="off"
-                onChange={e => { setTaxIdInput(e.target.value.replace(/\D/g, "")); setLoginError(""); }}
-                onKeyDown={e => { if (e.key === "Enter") handleTaxIdSubmit(); }}
-              />
-              {loginError && <div className="login-error">{loginError}</div>}
-              <button className="submit-btn" disabled={loading} onClick={handleTaxIdSubmit}>
-                {loading ? "查詢中…" : "查詢"}
-              </button>
-            </React.Fragment>
-          )}
-
-          {loginStep === "confirm" && pendingCompany && (
-            <React.Fragment>
-              <p className="sub">請核對以下客戶資料是否正確</p>
-              <div className="confirm-box">
-                <div className="confirm-row"><span>統一編號</span><b>{taxIdInput}</b></div>
-                <div className="confirm-row"><span>客戶名稱</span><b>{pendingCompany.companyName}</b></div>
-                <div className="confirm-row"><span>出貨對象</span><b>{pendingCompany.branches[0].name}（{pendingCompany.branches[0].code}）</b></div>
-              </div>
-              {loginError && <div className="login-error">{loginError}</div>}
-              <button className="submit-btn" disabled={loading} onClick={handleConfirmLogin}>
-                {loading ? "登入中…" : "確認並登入"}
-              </button>
-              <button className="ghost-btn" style={{width:"100%", marginTop:8}} onClick={backToTaxIdInput}>重新輸入統編</button>
-            </React.Fragment>
-          )}
-
-          {loginStep === "chooseBranch" && pendingCompany && (
-            <React.Fragment>
-              <p className="sub">
-                統編 {taxIdInput}「{pendingCompany.companyName}」名下有多個分店，請選擇本次要代表哪一個分店下單
-              </p>
-              <div className="branch-list">
-                {pendingCompany.branches.map(b => (
-                  <button
-                    key={b.code}
-                    className={"branch-btn" + (selectedBranchCode === b.code ? " active" : "")}
-                    onClick={() => setSelectedBranchCode(b.code)}
-                  >
-                    {b.name} <span style={{color:"#9aa6a4", fontSize:12}}>（{b.code}）</span>
-                  </button>
-                ))}
-              </div>
-              {loginError && <div className="login-error">{loginError}</div>}
-              <button className="submit-btn" disabled={!selectedBranchCode || loading} onClick={handleConfirmLogin}>
-                {loading ? "登入中…" : "確認並登入"}
-              </button>
-              <button className="ghost-btn" style={{width:"100%", marginTop:8}} onClick={backToTaxIdInput}>重新輸入統編</button>
-            </React.Fragment>
-          )}
-
-          {loginStep === "input" && (
-            <button className="cust-btn" style={{marginTop:24, background:"#f4f6f5"}} onClick={() => { setStage("admin"); setAdminPwInput(""); setAdminPwError(""); }}>
-              內部後台（查看所有訂單）
-            </button>
-          )}
-        </div>
+  if (stage==="login") return (
+    <div className="login-wrap">
+      <div className="login-card">
+        <h1>業務訂購系統</h1>
+        {loginStep==="input" && (<React.Fragment>
+          <p className="sub">請輸入統一編號，系統將自動帶出對應的客戶資料</p>
+          <input className="taxid-input" placeholder="請輸入統一編號" value={taxIdInput} maxLength={8} inputMode="numeric" pattern="[0-9]*" autoComplete="off"
+            onChange={e=>{setTaxIdInput(e.target.value.replace(/\D/g,""));setLoginError("");}} onKeyDown={e=>{if(e.key==="Enter")handleTaxIdSubmit();}} />
+          {loginError && <div className="login-error">{loginError}</div>}
+          <button className="submit-btn" disabled={loading} onClick={handleTaxIdSubmit}>{loading?"查詢中…":"查詢"}</button>
+        </React.Fragment>)}
+        {loginStep==="confirm" && pendingCompany && (<React.Fragment>
+          <p className="sub">請核對以下客戶資料是否正確</p>
+          <div className="confirm-box">
+            <div className="confirm-row"><span>統一編號</span><b>{taxIdInput}</b></div>
+            <div className="confirm-row"><span>客戶名稱</span><b>{pendingCompany.companyName}</b></div>
+            <div className="confirm-row"><span>出貨分店</span><b>{pendingCompany.branches[0].name}（{pendingCompany.branches[0].code}）</b></div>
+          </div>
+          {loginError && <div className="login-error">{loginError}</div>}
+          <button className="submit-btn" disabled={loading} onClick={handleConfirmLogin}>{loading?"登入中…":"確認並登入"}</button>
+          <button className="ghost-btn" style={{width:"100%",marginTop:8}} onClick={backToInput}>重新輸入統編</button>
+        </React.Fragment>)}
+        {loginStep==="chooseBranch" && pendingCompany && (<React.Fragment>
+          <p className="sub">「{pendingCompany.companyName}」名下有多個分店，請選擇本次下單的分店</p>
+          <div className="branch-list">
+            {pendingCompany.branches.map(b=><button key={b.code} className={"branch-btn"+(selectedBranchCode===b.code?" active":"")} onClick={()=>setSelectedBranchCode(b.code)}>{b.name} <span style={{color:"#9aa6a4",fontSize:12}}>（{b.code}）</span></button>)}
+          </div>
+          {loginError && <div className="login-error">{loginError}</div>}
+          <button className="submit-btn" disabled={!selectedBranchCode||loading} onClick={handleConfirmLogin}>{loading?"登入中…":"確認並登入"}</button>
+          <button className="ghost-btn" style={{width:"100%",marginTop:8}} onClick={backToInput}>重新輸入統編</button>
+        </React.Fragment>)}
       </div>
-    );
-  }
+    </div>
+  );
 
-  // ================================================================
-  // 後台畫面
-  // ================================================================
-  if (stage === "admin") {
-    return (
+  if (stage==="confirmed" && lastOrder) return (
+    <div className="confirm-wrap">
+      <div className="badge">✓</div>
+      <h2>訂單已送出</h2>
+      <p>{lastOrder.customer} 您好，我們已收到您的訂單。{lastOrder.needsReview&&"其中含有特殊促銷條件的品項，將由業務人員複核後正式確認金額，"}如有問題會主動與您聯繫。</p>
+      <div className="order-id">訂單編號 {lastOrder.id}</div>
       <div>
-        {/* 密碼彈窗 */}
-        {!adminAuthed && (
-          <div className="modal-mask">
-            <div className="modal-card">
-              <h3>🔒 內部後台</h3>
-              <p>請輸入後台密碼才能繼續</p>
-              <input className="modal-input" type="password" placeholder="密碼" value={adminPwInput} autoFocus
-                onChange={e=>{setAdminPwInput(e.target.value);setAdminPwError("");}}
-                onKeyDown={e=>{if(e.key==="Enter")handleAdminLogin();}} />
-              {adminPwError && <div className="login-error">{adminPwError}</div>}
-              <button className="submit-btn" onClick={handleAdminLogin}>進入後台</button>
-              <button className="ghost-btn" style={{width:"100%",marginTop:8}} onClick={doResetLogin}>取消，返回登入</button>
-            </div>
-          </div>
-        )}
-
-        {/* 圖片上傳遮罩 */}
-        {uploadingProduct && (
-          <div className="uploading-mask"><div style={{fontSize:28}}>⏳</div><div>圖片處理中，請稍候…</div></div>
-        )}
-
-        {/* 燈箱 */}
-        {lightbox && (
-          <div className="lightbox-mask" onClick={closeLightbox}>
-            <div className="lightbox-inner" onClick={e=>e.stopPropagation()}>
-              <button className="lightbox-close" onClick={closeLightbox}>✕</button>
-              {lightbox.images.length>1 && <button className="lightbox-btn" onClick={lightboxPrev}>‹</button>}
-              <img src={lightbox.images[lightbox.index]} alt={lightbox.productName} />
-              {lightbox.images.length>1 && <button className="lightbox-btn" onClick={lightboxNext}>›</button>}
-              {lightbox.images.length>1 && <div className="lightbox-dots">{lightbox.images.map((_,i)=><span key={i} className={i===lightbox.index?"active":""} onClick={()=>setLightbox(lb=>({...lb,index:i}))} />)}</div>}
-            </div>
-          </div>
-        )}
-
-        {/* 隱藏 file input */}
-        <input type="file" accept="image/*" style={{display:"none"}} ref={fileInputRef}
-          onChange={e=>{const f=e.target.files[0];if(f&&uploadingProduct)handleImageUpload(uploadingProduct,f);e.target.value="";}} />
-
-        <div className="app-header">
-          <span className="who"><b>內部後台</b></span>
-          <button className="logout-link" style={{marginLeft:12}} onClick={()=>{
-            if(adminTab==="orders") loadOrders();
-            else if(adminTab==="master") loadMaster();
-            else if(adminTab==="prices") loadPrices(null);
-          }}>重新整理</button>
-          <button className="logout-link" style={{marginLeft:"auto"}} onClick={handleAdminLogout}>登出</button>
-        </div>
-
-        <div className="admin-wrap">
-          {/* Tab 切換 */}
-          <div className="admin-tabs">
-            {[["orders","📋 訂單管理"],["master","📦 商品主檔"],["prices","💰 客戶價格表"]].map(([key,label])=>(
-              <button key={key} className={"admin-tab-btn"+(adminTab===key?" active":"")} onClick={()=>setAdminTab(key)}>{label}</button>
-            ))}
-          </div>
-
-          {/* ===== 訂單管理 ===== */}
-          {adminTab==="orders" && (
-            <React.Fragment>
-              <div className="admin-stats">
-                <div className="stat-card"><div className="label">篩選後訂單數</div><div className="value">{adminStats.count}</div></div>
-                <div className="stat-card"><div className="label">合計金額</div><div className="value">${adminStats.total.toLocaleString()}</div></div>
-                <div className="stat-card"><div className="label">待複核</div><div className={"value"+(adminStats.reviewCount>0?" warn":"")}>{adminStats.reviewCount}</div></div>
-              </div>
-              <div className="admin-filters">
-                <input placeholder="搜尋客戶名稱或分店代號…" value={filterCustomer} onChange={e=>setFilterCustomer(e.target.value)} />
-                <select value={filterStatus} onChange={e=>setFilterStatus(e.target.value)}>
-                  <option value="all">全部狀態</option><option value="ok">可匯出</option><option value="review">含待複核</option>
-                </select>
-                <div className="filter-date-wrap">
-                  <span>從</span><input type="date" value={filterDateFrom} onChange={e=>setFilterDateFrom(e.target.value)} />
-                  <span>到</span><input type="date" value={filterDateTo} onChange={e=>setFilterDateTo(e.target.value)} />
-                  {(filterDateFrom||filterDateTo)&&<button className="ghost-btn" style={{padding:"5px 10px",fontSize:12}} onClick={()=>{setFilterDateFrom("");setFilterDateTo("");}}>清除</button>}
-                </div>
-              </div>
-              {filteredOrders.length>0&&(
-                <div className="batch-bar">
-                  <span>{checkedList.length>0?`已勾選 ${checkedList.length} 筆`:`共 ${filteredOrders.length} 筆`}</span>
-                  <button onClick={exportBatch}>{checkedList.length>0?`匯出已勾選（${checkedList.length}）`:"全部匯出 Excel"}</button>
-                </div>
-              )}
-              {pageError&&<div className="login-error">{pageError}</div>}
-              {loading?<p style={{color:"var(--ink-soft)",fontSize:14}}>載入中…</p>:filteredOrders.length===0?(
-                <p style={{color:"var(--ink-soft)",fontSize:14}}>{orders.length===0?"目前尚無訂單，客戶下單後會顯示在這裡。":"篩選條件下沒有符合的訂單。"}</p>
-              ):(
-                <table className="admin-table">
-                  <thead><tr>
-                    <th style={{width:36}}><input type="checkbox" checked={allChecked} onChange={toggleAll}/></th>
-                    <th>訂單編號</th><th>客戶</th><th>分店代號</th><th>時間</th><th>品項數</th><th>金額</th><th>狀態</th><th></th>
-                  </tr></thead>
-                  <tbody>
-                    {filteredOrders.map(o=>(
-                      <tr key={o.orderId} style={checkedOrders[o.orderId]?{background:"#f0f7f5"}:{}}>
-                        <td><input type="checkbox" checked={!!checkedOrders[o.orderId]} onChange={()=>toggleCheck(o.orderId)}/></td>
-                        <td style={{fontFamily:"monospace",fontSize:12}}>{o.orderId}</td>
-                        <td>{o.customerName}</td>
-                        <td style={{fontSize:12,color:"var(--ink-soft)"}}>{o.branchCode}</td>
-                        <td style={{fontSize:12}}>{o.time}</td>
-                        <td>{o.lines.length}</td>
-                        <td>${o.total.toLocaleString()}</td>
-                        <td>{o.needsReview?<span className="pill-status review">含待複核</span>:<span className="pill-status ok">可匯出</span>}</td>
-                        <td><button className="download-btn" style={{padding:"6px 12px",fontSize:12}} onClick={()=>exportExcel(o)}>下載</button></td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              )}
-            </React.Fragment>
-          )}
-
-          {/* ===== 商品主檔管理 ===== */}
-          {adminTab==="master" && (
-            <React.Fragment>
-              <div style={{display:"flex",gap:10,marginBottom:14,alignItems:"center",flexWrap:"wrap"}}>
-                <input placeholder="搜尋品號、品名、分類…" value={masterSearch} onChange={e=>setMasterSearch(e.target.value)}
-                  style={{flex:1,minWidth:160,padding:"8px 11px",border:"1px solid var(--line)",borderRadius:8,fontSize:13}} />
-                <button className="btn-save" onClick={()=>setShowAddMaster(v=>!v)} style={{padding:"8px 16px",fontSize:13}}>
-                  {showAddMaster?"取消新增":"＋ 新增商品"}
-                </button>
-                <span style={{fontSize:12,color:"var(--ink-soft)"}}>{filteredMaster.length} 項</span>
-              </div>
-
-              {/* 新增表單 */}
-              {showAddMaster && (
-                <div className="add-row-form">
-                  <label className="narrow">品號＊<input value={newMaster.code} onChange={e=>setNewMaster(p=>({...p,code:e.target.value}))} placeholder="如 021605"/></label>
-                  <label className="wide">品名＊<input value={newMaster.name} onChange={e=>setNewMaster(p=>({...p,name:e.target.value}))} placeholder="完整品名"/></label>
-                  <label className="narrow">分類<input value={newMaster.category} onChange={e=>setNewMaster(p=>({...p,category:e.target.value}))} placeholder="如 哺育系列"/></label>
-                  <label className="narrow">定價<input value={newMaster.listPrice} onChange={e=>setNewMaster(p=>({...p,listPrice:e.target.value}))} placeholder="100"/></label>
-                  <label className="narrow">箱入數<input value={newMaster.boxQty} onChange={e=>setNewMaster(p=>({...p,boxQty:e.target.value}))} placeholder="6"/></label>
-                  <label className="narrow" style={{flexDirection:"row",alignItems:"center",gap:6,paddingBottom:2}}>
-                    <input type="checkbox" checked={newMaster.discontinued} onChange={e=>setNewMaster(p=>({...p,discontinued:e.target.checked}))} style={{width:15,height:15}}/>停產
-                  </label>
-                  <button className="btn-save" style={{alignSelf:"flex-end",padding:"8px 20px"}} onClick={addMasterRow}>確認新增</button>
-                </div>
-              )}
-
-              {masterError&&<div className="login-error">{masterError}</div>}
-              {masterLoading?<p style={{color:"var(--ink-soft)",fontSize:14}}>載入中…</p>:(
-                <div style={{overflowX:"auto"}}>
-                  <table className="mgmt-table">
-                    <thead><tr>
-                      <th>品號</th><th>品名</th><th>分類</th><th>定價</th><th>箱入</th><th>停產</th><th>圖片</th><th style={{width:160}}>操作</th>
-                    </tr></thead>
-                    <tbody>
-                      {filteredMaster.map(row=>{
-                        const isEdit = editingCode === row.code;
-                        const imgs = row.images || [];
-                        return (
-                          <tr key={row.code} className={isEdit?"editing":""}>
-                            <td style={{fontFamily:"monospace",fontSize:12,whiteSpace:"nowrap"}}>{row.code}</td>
-                            <td style={{minWidth:180}}>
-                              {isEdit
-                                ? <input className="cell-input" value={editDraft.name||""} onChange={e=>setEditDraft(p=>({...p,name:e.target.value}))} />
-                                : <span className="cell-text" onClick={()=>startEdit(row)}>{row.name||<em className="empty">點擊編輯</em>}</span>}
-                            </td>
-                            <td style={{minWidth:100}}>
-                              {isEdit
-                                ? <input className="cell-input" value={editDraft.category||""} onChange={e=>setEditDraft(p=>({...p,category:e.target.value}))} />
-                                : <span className="cell-text" onClick={()=>startEdit(row)}>{row.category||<em className="empty">—</em>}</span>}
-                            </td>
-                            <td style={{minWidth:70}}>
-                              {isEdit
-                                ? <input className="cell-input" value={editDraft.listPrice||""} onChange={e=>setEditDraft(p=>({...p,listPrice:e.target.value}))} style={{width:70}} />
-                                : <span className="cell-text" onClick={()=>startEdit(row)}>{row.listPrice||<em className="empty">—</em>}</span>}
-                            </td>
-                            <td style={{minWidth:60}}>
-                              {isEdit
-                                ? <input className="cell-input" value={editDraft.boxQty||""} onChange={e=>setEditDraft(p=>({...p,boxQty:e.target.value}))} style={{width:60}} />
-                                : <span className="cell-text" onClick={()=>startEdit(row)}>{row.boxQty||<em className="empty">—</em>}</span>}
-                            </td>
-                            <td style={{textAlign:"center"}}>
-                              {isEdit
-                                ? <input type="checkbox" checked={!!editDraft.discontinued} onChange={e=>setEditDraft(p=>({...p,discontinued:e.target.checked}))} style={{width:15,height:15}} />
-                                : <span onClick={()=>startEdit(row)} style={{cursor:"pointer"}}>{row.discontinued?"✅ 是":"—"}</span>}
-                            </td>
-                            <td>
-                              <div className="img-thumb-row">
-                                {imgs.slice(0,3).map((url,i)=>(
-                                  <div key={i} className="img-thumb-sm" onClick={()=>openLightbox(imgs,i,row.name)}>
-                                    <img src={url} alt="" loading="lazy"/>
-                                  </div>
-                                ))}
-                                {imgs.length>3&&<span style={{fontSize:11,color:"var(--ink-soft)"}}>+{imgs.length-3}</span>}
-                                <div className="img-thumb-add" onClick={()=>{setUploadingProduct(row.code);fileInputRef.current&&fileInputRef.current.click();}} title="上傳圖片">＋</div>
-                              </div>
-                            </td>
-                            <td>
-                              <div className="row-actions">
-                                {isEdit
-                                  ? <React.Fragment>
-                                      <button className="btn-save" onClick={()=>saveEdit(row)}>儲存</button>
-                                      <button className="btn-cancel" onClick={cancelEdit}>取消</button>
-                                    </React.Fragment>
-                                  : <React.Fragment>
-                                      <button className="btn-edit" onClick={()=>startEdit(row)}>編輯</button>
-                                      <button className="btn-del" onClick={()=>deleteMasterRow(row.code)}>刪除</button>
-                                    </React.Fragment>
-                                }
-                              </div>
-                            </td>
-                          </tr>
-                        );
-                      })}
-                    </tbody>
-                  </table>
-                </div>
-              )}
-            </React.Fragment>
-          )}
-
-          {/* ===== 客戶價格表管理 ===== */}
-          {adminTab==="prices" && (
-            <React.Fragment>
-              <div style={{display:"flex",gap:10,marginBottom:14,alignItems:"center",flexWrap:"wrap"}}>
-                {/* 客戶下拉 */}
-                <select value={priceFilter} onChange={e=>setPriceFilter(e.target.value)}
-                  style={{padding:"8px 11px",border:"1px solid var(--line)",borderRadius:8,fontSize:13,background:"#fff"}}>
-                  <option value="">全部客戶</option>
-                  {priceCustomers.map(c=><option key={c.code} value={c.code}>{c.name}（{c.code}）</option>)}
-                </select>
-                <input placeholder="搜尋品號…" value={priceSearch} onChange={e=>setPriceSearch(e.target.value)}
-                  style={{flex:1,minWidth:120,padding:"8px 11px",border:"1px solid var(--line)",borderRadius:8,fontSize:13}} />
-                <button className="btn-save" onClick={()=>setShowAddPrice(v=>!v)} style={{padding:"8px 16px",fontSize:13}}>
-                  {showAddPrice?"取消新增":"＋ 新增價格"}
-                </button>
-                <span style={{fontSize:12,color:"var(--ink-soft)"}}>{filteredPrices.length} 筆</span>
-              </div>
-
-              {/* 新增價格表單 */}
-              {showAddPrice && (
-                <div className="add-row-form">
-                  <label className="narrow">客戶代號＊<input value={newPrice.customerCode} onChange={e=>setNewPrice(p=>({...p,customerCode:e.target.value}))} placeholder="如 J100300"/></label>
-                  <label className="narrow">客戶名稱<input value={newPrice.customerName} onChange={e=>setNewPrice(p=>({...p,customerName:e.target.value}))} placeholder="如 小太陽"/></label>
-                  <label className="narrow">品號＊<input value={newPrice.productCode} onChange={e=>setNewPrice(p=>({...p,productCode:e.target.value}))} placeholder="如 021605"/></label>
-                  <label className="narrow">單價＊<input value={newPrice.unitPrice} onChange={e=>setNewPrice(p=>({...p,unitPrice:e.target.value}))} placeholder="40"/></label>
-                  <label className="narrow">活動規則<input value={newPrice.activity} onChange={e=>setNewPrice(p=>({...p,activity:e.target.value}))} placeholder="2+1 或 成箱$1944"/></label>
-                  <label className="narrow">備註<input value={newPrice.note} onChange={e=>setNewPrice(p=>({...p,note:e.target.value}))} /></label>
-                  <button className="btn-save" style={{alignSelf:"flex-end",padding:"8px 20px"}} onClick={addPriceRow}>確認新增</button>
-                </div>
-              )}
-
-              {priceError&&<div className="login-error">{priceError}</div>}
-              {priceLoading?<p style={{color:"var(--ink-soft)",fontSize:14}}>載入中…</p>:(
-                <div style={{overflowX:"auto"}}>
-                  <table className="mgmt-table">
-                    <thead><tr>
-                      <th>客戶代號</th><th>客戶名稱</th><th>品號</th><th>單價</th><th>活動規則</th><th>備註</th><th style={{width:140}}>操作</th>
-                    </tr></thead>
-                    <tbody>
-                      {filteredPrices.map(row=>{
-                        const isEdit = editingPrice && editingPrice.customerCode===row.customerCode && editingPrice.productCode===row.productCode;
-                        return (
-                          <tr key={row.customerCode+"_"+row.productCode} className={isEdit?"editing":""}>
-                            <td style={{fontSize:12,whiteSpace:"nowrap"}}>{row.customerCode}</td>
-                            <td>{row.customerName}</td>
-                            <td style={{fontFamily:"monospace",fontSize:12}}>{row.productCode}</td>
-                            <td style={{minWidth:70}}>
-                              {isEdit
-                                ? <input className="cell-input" value={priceDraft.unitPrice||""} onChange={e=>setPriceDraft(p=>({...p,unitPrice:e.target.value}))} style={{width:80}} />
-                                : <span className="cell-text" onClick={()=>startEditPrice(row)}>{row.unitPrice}</span>}
-                            </td>
-                            <td style={{minWidth:120}}>
-                              {isEdit
-                                ? <input className="cell-input" value={priceDraft.activity||""} onChange={e=>setPriceDraft(p=>({...p,activity:e.target.value}))} />
-                                : <span className="cell-text" onClick={()=>startEditPrice(row)}>{row.activity||<em className="empty">—</em>}</span>}
-                            </td>
-                            <td style={{minWidth:80}}>
-                              {isEdit
-                                ? <input className="cell-input" value={priceDraft.note||""} onChange={e=>setPriceDraft(p=>({...p,note:e.target.value}))} />
-                                : <span className="cell-text" onClick={()=>startEditPrice(row)}>{row.note||<em className="empty">—</em>}</span>}
-                            </td>
-                            <td>
-                              <div className="row-actions">
-                                {isEdit
-                                  ? <React.Fragment>
-                                      <button className="btn-save" onClick={()=>saveEditPrice(row)}>儲存</button>
-                                      <button className="btn-cancel" onClick={cancelEditPrice}>取消</button>
-                                    </React.Fragment>
-                                  : <React.Fragment>
-                                      <button className="btn-edit" onClick={()=>startEditPrice(row)}>編輯</button>
-                                      <button className="btn-del" onClick={()=>deletePriceRow(row)}>刪除</button>
-                                    </React.Fragment>
-                                }
-                              </div>
-                            </td>
-                          </tr>
-                        );
-                      })}
-                    </tbody>
-                  </table>
-                </div>
-              )}
-            </React.Fragment>
-          )}
-
-        </div>
+        <button className="ghost-btn" onClick={()=>setStage("shop")}>返回繼續選購</button>
+        <button className="ghost-btn" style={{marginLeft:8}} onClick={doLogout}>登出</button>
       </div>
-    );
-  }
+    </div>
+  );
 
-  // ---------------- 訂單完成畫面 ----------------
-  if (stage === "confirmed" && lastOrder) {
-    return (
-      <div className="confirm-wrap">
-        <div className="badge">✓</div>
-        <h2>訂單已送出</h2>
-        <p>
-          {lastOrder.customer} 您好，我們已收到您的訂單。
-          {lastOrder.needsReview && "其中含有特殊促銷條件的品項，將由業務人員複核後正式確認金額，"}
-          如有問題會主動與您聯繫。
-        </p>
-        <div className="order-id">訂單編號 {lastOrder.id}</div>
-        <div>
-          <button className="ghost-btn" onClick={() => { setStage("shop"); }}>返回繼續選購</button>
-        </div>
-      </div>
-    );
-  }
-
-  // ---------------- 購物畫面 ----------------
   return (
     <div>
       <div className="app-header">
-        <span className="who">客戶：<b>{customer.name}</b>{customer.branchName !== customer.name && <span style={{color:"var(--ink-soft)"}}>（{customer.branchName}）</span>}</span>
-        <div className="search-box">
-          <input
-            placeholder="搜尋品名或產品編號…"
-            value={search}
-            onChange={e => setSearch(e.target.value)}
-          />
-        </div>
-        <button className="cart-pill" onClick={() => setDrawerOpen(true)}>
-          🛒 購物車 {cartCount > 0 && `(${cartCount})`}
-        </button>
-        <button className="logout-link" onClick={resetLogin}>登出</button>
+        <span className="who">客戶：<b>{customer.name}</b>{customer.branchName!==customer.name&&<span style={{color:"var(--ink-soft)"}}>（{customer.branchName}）</span>}</span>
+        <div className="search-box"><input placeholder="搜尋品名或產品編號…" value={search} onChange={e=>setSearch(e.target.value)}/></div>
+        <button className="cart-pill" onClick={()=>setDrawerOpen(true)}>🛒 購物車 {cartCount>0&&`(${cartCount})`}</button>
+        <button className="logout-link" onClick={doLogout}>登出</button>
       </div>
-
       <div className="layout">
         <div className="sidebar">
-          {categories.map(cat => {
-            const n = cat === "全部" ? products.length : products.filter(p => p.category === cat).length;
-            return (
-              <button key={cat} className={activeCat === cat ? "active" : ""} onClick={() => setActiveCat(cat)}>
-                {cat}<span className="count">{n}</span>
-              </button>
-            );
-          })}
+          {categories.map(cat=>{const n=cat==="全部"?products.length:products.filter(p=>p.category===cat).length;return(<button key={cat} className={activeCat===cat?"active":""} onClick={()=>setActiveCat(cat)}>{cat}<span className="count">{n}</span></button>);})}
         </div>
-
         <div className="main">
           <h2>{activeCat}　共 {filtered.length} 項商品</h2>
           <div className="grid">
-            {filtered.map(p => {
-              const rule = parseActivity(p.activity);
-              const qty = cart[p.code] || 0;
-              const calc = computeLine(p, qty);
-              return (
-                <div key={p.code} className={"card" + (p.discontinued ? " disabled" : "")}>
-                  <div className="code">{p.code}</div>
-                  <div className="name">{p.name}</div>
-                  <div className="price-row">
-                    <span className="unit-price">${p.unitPrice}</span>
-                    {p.listPrice && <span className="list-price">${p.listPrice}</span>}
-                  </div>
-                  <div className="box-qty">每箱 {p.boxQty} 入</div>
-
-                  {rule && rule.type === "autoGift" && <span className="tag gift">{rule.label}</span>}
-                  {rule && rule.type === "autoBox" && <span className="tag box">{rule.label}</span>}
-                  {rule && rule.type === "needReview" && <span className="tag review">⚠ {rule.label}・待複核</span>}
-                  {p.note === "停產" && <span className="tag stop">已停產</span>}
-
-                  <div className="qty-row">
-                    <button onClick={() => setQty(p.code, qty - 1)}>－</button>
-                    <input type="number" min="0" value={qty} onChange={e => setQty(p.code, Number(e.target.value) || 0)} />
-                    <button onClick={() => setQty(p.code, qty + 1)}>＋</button>
-                    {qty > 0 && calc.giftQty > 0 && <span className="added">送{calc.giftQty}</span>}
-                  </div>
+            {filtered.map(p=>{const rule=parseActivity(p.activity);const qty=cart[p.code]||0;const calc=computeLine(p,qty);const imgs=p.images||[];return(
+              <div key={p.code} className={"card"+(p.discontinued?" disabled":"")}>
+                <div className="card-img-wrap" onClick={()=>imgs.length>0&&openLightbox(imgs,0,p.name)} style={imgs.length===0?{cursor:"default"}:{}}>
+                  {imgs.length>0?<img src={imgs[0]} alt={p.name} loading="lazy"/>:<div className="card-img-placeholder">📦</div>}
+                  {imgs.length>1&&<div className="card-img-count">1/{imgs.length}</div>}
                 </div>
-              );
-            })}
+                <div className="code">{p.code}</div>
+                <div className="name">{p.name}</div>
+                <div className="price-row"><span className="unit-price">${p.unitPrice}</span>{p.listPrice&&<span className="list-price">${p.listPrice}</span>}</div>
+                <div className="box-qty">每箱 {p.boxQty} 入</div>
+                {rule&&rule.type==="autoGift"&&<span className="tag gift">{rule.label}</span>}
+                {rule&&rule.type==="autoBox"&&<span className="tag box">{rule.label}</span>}
+                {rule&&rule.type==="needReview"&&<span className="tag review">⚠ {rule.label}・待複核</span>}
+                {p.discontinued&&<span className="tag stop">已停產</span>}
+                <div className="qty-row">
+                  <button onClick={()=>setQty(p.code,qty-1)}>－</button>
+                  <input type="number" min="0" value={qty} onChange={e=>setQty(p.code,Number(e.target.value)||0)}/>
+                  <button onClick={()=>setQty(p.code,qty+1)}>＋</button>
+                  {qty>0&&calc.giftQty>0&&<span className="added">送{calc.giftQty}</span>}
+                </div>
+              </div>
+            );})}
           </div>
         </div>
       </div>
-
-      {drawerOpen && (
-        <React.Fragment>
-          <div className="drawer-mask" onClick={() => setDrawerOpen(false)} />
-          <div className="drawer">
-            <div className="drawer-head">
-              <h3>購物車</h3>
-              <button onClick={() => setDrawerOpen(false)}>✕</button>
-            </div>
-            <div className="drawer-body">
-              {cartLines.length === 0 ? (
-                <div className="empty-cart">購物車是空的，請先選購商品</div>
-              ) : cartLines.map(l => (
-                <div className="cart-line" key={l.product.code}>
-                  <div className="info">
-                    <div className="name">{l.product.name}</div>
-                    <div className="meta">
-                      {l.qty} 件 × ${l.product.unitPrice}
-                      {l.giftQty > 0 && `　送 ${l.giftQty} 件`}
-                      {l.flag && l.flag !== "review" && `　${l.flag}`}
-                      {l.flag === "review" && <span style={{color:"var(--warn)"}}>　⚠待業務複核</span>}
-                    </div>
-                    <button className="remove" onClick={() => setQty(l.product.code, 0)}>移除</button>
-                  </div>
-                  <div className="lineprice">${l.amount.toLocaleString()}</div>
+      {drawerOpen&&(<React.Fragment>
+        <div className="drawer-mask" onClick={()=>setDrawerOpen(false)}/>
+        <div className="drawer">
+          <div className="drawer-head"><h3>購物車</h3><button onClick={()=>setDrawerOpen(false)}>✕</button></div>
+          <div className="drawer-body">
+            {cartLines.length===0?<div className="empty-cart">購物車是空的，請先選購商品</div>:cartLines.map(l=>(
+              <div className="cart-line" key={l.product.code}>
+                <div className="info">
+                  <div className="name">{l.product.name}</div>
+                  <div className="meta">{l.qty} 件 × ${l.product.unitPrice}{l.giftQty>0&&`　送 ${l.giftQty} 件`}{l.flag&&l.flag!=="review"&&`　${l.flag}`}{l.flag==="review"&&<span style={{color:"var(--warn)"}}>　⚠待業務複核</span>}</div>
+                  <button className="remove" onClick={()=>setQty(l.product.code,0)}>移除</button>
                 </div>
-              ))}
-            </div>
-            <div className="drawer-foot">
-              <div className="total-row grand">
-                <span>合計</span>
-                <span>${cartTotal.toLocaleString()}</span>
+                <div className="lineprice">${l.amount.toLocaleString()}</div>
               </div>
-              {hasReviewItem && (
-                <div className="review-note">
-                  此訂單含有規則較特殊的促銷品項（例如：促銷活動、合清價等），系統試算金額僅供參考，正式金額將由業務人員複核後確認。
-                </div>
-              )}
-              {pageError && <div className="login-error">{pageError}</div>}
-              <button className="submit-btn" disabled={cartLines.length === 0 || submitting} onClick={submitOrder}>
-                {submitting ? "送出中…" : "送出訂單"}
-              </button>
-            </div>
+            ))}
           </div>
-        </React.Fragment>
+          <div className="drawer-foot">
+            <div className="total-row grand"><span>合計</span><span>${cartTotal.toLocaleString()}</span></div>
+            {hasReview&&<div className="review-note">此訂單含特殊促銷品項，系統試算金額僅供參考，正式金額將由業務人員複核後確認。</div>}
+            {pageError&&<div className="login-error">{pageError}</div>}
+            <button className="submit-btn" disabled={cartLines.length===0||submitting} onClick={submitOrder}>{submitting?"送出中…":"送出訂單"}</button>
+          </div>
+        </div>
+      </React.Fragment>)}
+      {idleWarning&&(
+        <div className="idle-banner">⚠ 即將自動登出，點此繼續使用
+          <button style={{marginLeft:12,background:"var(--brand)",color:"#fff",border:"none",borderRadius:6,padding:"4px 10px",cursor:"pointer"}} onClick={resetIdleTimer}>繼續使用</button>
+        </div>
+      )}
+      {lightbox&&(
+        <div className="lightbox-mask" onClick={closeLightbox}>
+          <div className="lightbox-inner" onClick={e=>e.stopPropagation()}>
+            <button className="lightbox-close" onClick={closeLightbox}>✕</button>
+            {lightbox.images.length>1&&<button className="lightbox-btn" onClick={lbPrev}>‹</button>}
+            <img src={lightbox.images[lightbox.index]} alt={lightbox.productName}/>
+            {lightbox.images.length>1&&<button className="lightbox-btn" onClick={lbNext}>›</button>}
+            {lightbox.images.length>1&&<div className="lightbox-dots">{lightbox.images.map((_,i)=><span key={i} className={i===lightbox.index?"active":""} onClick={()=>setLightbox(lb=>({...lb,index:i}))}/>)}</div>}
+          </div>
+        </div>
       )}
     </div>
   );
 }
-
 ReactDOM.createRoot(document.getElementById("root")).render(<App />);
 </script>
 </body>
