@@ -115,6 +115,43 @@
   .confirm-wrap h2{margin:0 0 8px;}
   .confirm-wrap p{color:var(--ink-soft);font-size:14px;line-height:1.7;}
   .order-id{display:inline-block;background:var(--brand-tint);color:var(--brand-dark);padding:6px 14px;border-radius:6px;font-family:monospace;font-size:13px;margin:8px 0 20px;}
+  /* 兩層分類側邊欄 */
+  .sidebar-all{display:block;width:100%;text-align:left;padding:9px 10px;border:none;background:none;border-radius:6px;font-size:14px;color:var(--ink-soft);cursor:pointer;font-weight:700;}
+  .sidebar-all.active{background:var(--brand-tint);color:var(--brand-dark);}
+  .sidebar-parent-btn{display:flex;width:100%;text-align:left;padding:8px 10px 6px;margin-top:2px;border:none;background:none;font-size:13px;font-weight:700;color:var(--ink);cursor:pointer;border-radius:6px;align-items:center;gap:4px;}
+  .sidebar-parent-btn:hover{background:#f0f4f3;}
+  .sidebar-parent-btn .arrow{font-size:10px;color:var(--ink-soft);transition:transform .15s;margin-left:auto;}
+  .sidebar-parent-btn .arrow.open{transform:rotate(90deg);}
+  .sidebar-children{padding-left:12px;}
+  .sidebar-child{display:block;width:100%;text-align:left;padding:6px 8px;border:none;background:none;border-radius:6px;font-size:13px;color:var(--ink-soft);cursor:pointer;}
+  .sidebar-child:hover{background:var(--brand-tint);}
+  .sidebar-child.active{background:var(--brand-tint);color:var(--brand-dark);font-weight:600;}
+  /* 歷史訂單查詢 */
+  .history-wrap{max-width:660px;margin:32px auto;padding:0 20px;}
+  .history-wrap h2{font-size:17px;margin:0 0 16px;}
+  .order-query-box{display:flex;gap:8px;margin-bottom:20px;}
+  .order-query-box input{flex:1;padding:11px 13px;border:1px solid var(--line);border-radius:8px;font-size:16px;letter-spacing:.06em;}
+  .order-query-box button{padding:11px 20px;background:var(--brand);color:#fff;border:none;border-radius:8px;font-size:14px;cursor:pointer;white-space:nowrap;}
+  .history-card{background:#fff;border:1px solid var(--line);border-radius:var(--radius);margin-bottom:10px;overflow:hidden;}
+  .history-head{display:flex;align-items:center;gap:10px;padding:12px 16px;cursor:pointer;user-select:none;}
+  .history-head:hover{background:#f7fbfa;}
+  .history-meta{flex:1;min-width:0;}
+  .history-id{font-family:monospace;font-size:12px;color:var(--ink-soft);}
+  .history-info{font-size:13px;margin-top:2px;}
+  .history-total{font-weight:700;font-size:14px;white-space:nowrap;}
+  .history-badge{font-size:11px;padding:2px 8px;border-radius:10px;white-space:nowrap;}
+  .history-badge.done{background:var(--brand-tint);color:var(--brand-dark);}
+  .history-badge.pending{background:var(--warn-tint);color:var(--warn);}
+  .history-chevron{color:var(--ink-soft);font-size:11px;transition:transform .2s;}
+  .history-chevron.open{transform:rotate(90deg);}
+  .history-body{border-top:1px solid var(--line);padding:10px 16px;}
+  .history-line{display:flex;gap:8px;align-items:baseline;font-size:13px;padding:5px 0;border-bottom:1px solid var(--line);}
+  .history-line:last-child{border-bottom:none;}
+  .history-line .lcode{color:var(--ink-soft);font-size:11px;font-family:monospace;white-space:nowrap;}
+  .history-line .lname{flex:1;min-width:0;}
+  .history-line .lqty{color:var(--ink-soft);white-space:nowrap;font-size:12px;}
+  .history-line .lamt{font-weight:600;white-space:nowrap;}
+  .history-foot{display:flex;justify-content:flex-end;padding-top:8px;font-size:14px;font-weight:700;border-top:1px solid var(--line);margin-top:4px;}
   .idle-banner{position:fixed;bottom:16px;left:50%;transform:translateX(-50%);background:#1c2b2d;color:#fff;font-size:13px;padding:10px 20px;border-radius:8px;z-index:50;box-shadow:0 4px 16px rgba(0,0,0,.2);}
   @media(max-width:760px){
     .sidebar{position:static;width:100%;height:auto;border-right:none;border-bottom:1px solid var(--line);display:flex;overflow-x:auto;padding:10px 12px;gap:4px;}
@@ -239,15 +276,35 @@ function App() {
   const [loading, setLoading] = useState(false);
   const [cart, setCart] = useState({});
   const [search, setSearch] = useState("");
-  const [activeCat, setActiveCat] = useState("全部");
+  // 兩層分類：activeCat = {parent:"哺育系列", child:"奶嘴"} 或 null（全部）
+  const [activeCat, setActiveCat] = useState(null);
+  const [openParents, setOpenParents] = useState({}); // 哪些大類展開
+  const [catTree, setCatTree] = useState(() => {
+    try { return JSON.parse(localStorage.getItem("cat_tree")) || {}; } catch { return {}; }
+  });
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [lastOrder, setLastOrder] = useState(null);
   const [pageError, setPageError] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [lightbox, setLightbox] = useState(null);
   const [idleWarning, setIdleWarning] = useState(false);
-  const idleTimer  = useRef(null);
+  const idleTimer   = useRef(null);
   const logoutTimer = useRef(null);
+
+  // 歷史訂單查詢
+  const [hisOrders, setHisOrders]   = useState(null);  // null=未查詢
+  const [hisLoading, setHisLoading] = useState(false);
+  const [hisError, setHisError]     = useState("");
+  const [hisExpanded, setHisExpanded] = useState({});
+
+  // 載入分類 tree（登入後）
+  async function loadCatTree() {
+    try {
+      const d = await callGAS("listCategories");
+      setCatTree(d.tree);
+      localStorage.setItem("cat_tree", JSON.stringify(d.tree));
+    } catch(e) {} // 失敗靜默，前台用商品 category 降級
+  }
 
   function doLogout() {
     localStorage.removeItem(LS_CUSTOMER); localStorage.removeItem(LS_PRODUCTS);
@@ -270,8 +327,29 @@ function App() {
     return () => { events.forEach(e => window.removeEventListener(e, h)); [idleTimer,logoutTimer].forEach(r=>{if(r.current)clearTimeout(r.current);}); };
   }, [stage]);
 
-  const categories = useMemo(() => ["全部", ...new Set(products.map(p=>p.category))], [products]);
-  const filtered   = useMemo(() => products.filter(p => (activeCat==="全部"||p.category===activeCat) && (!search||p.name.includes(search)||p.code.includes(search))), [products,activeCat,search]);
+  // 兩層分類：優先用 catTree，降級用商品的 category 欄位
+  const treeParents = useMemo(() => Object.keys(catTree), [catTree]);
+  const hasCatTree  = treeParents.length > 0;
+
+  const filtered = useMemo(() => products.filter(p => {
+    const matchSearch = !search || p.name.includes(search) || p.code.includes(search);
+    if (!activeCat) return matchSearch; // 全部
+    if (activeCat.child) return matchSearch && p.subCategory === activeCat.child && p.category === activeCat.parent;
+    return matchSearch && p.category === activeCat.parent; // 大類全選
+  }), [products, activeCat, search]);
+
+  function countByParent(parent) { return products.filter(p=>p.category===parent).length; }
+  function countByChild(parent,child) { return products.filter(p=>p.category===parent&&p.subCategory===child).length; }
+  function toggleParent(p) { setOpenParents(prev=>({...prev,[p]:!prev[p]})); }
+
+  // 歷史訂單查詢
+  async function queryHistory() {
+    if (!customer?.taxId) return;
+    setHisLoading(true); setHisError(""); setHisOrders(null); setHisExpanded({});
+    try { const d = await callGAS("getOrdersByTaxId",{taxId:customer.taxId}); setHisOrders(d.orders); }
+    catch(e) { setHisError("查詢失敗："+e.message); }
+    finally { setHisLoading(false); }
+  }
   const cartLines  = useMemo(() => Object.entries(cart).filter(([,q])=>q>0).map(([code,qty])=>{ const p=products.find(x=>x.code===code); return {product:p,qty,...computeLine(p,qty)}; }), [cart,products]);
   const cartCount  = cartLines.reduce((s,l)=>s+l.qty, 0);
   const cartTotal  = cartLines.reduce((s,l)=>s+l.amount, 0);
@@ -289,7 +367,7 @@ function App() {
     const branch = pendingCompany.branches.find(b=>b.code===selectedBranchCode)||pendingCompany.branches[0];
     const nc = {name:pendingCompany.companyName, branchName:branch.name, code:branch.code, taxId:taxIdInput.trim()};
     setLoading(true); setPageError("");
-    try { const d = await callGAS("getProducts",{branchCode:branch.code}); localStorage.setItem(LS_CUSTOMER,JSON.stringify(nc)); localStorage.setItem(LS_PRODUCTS,JSON.stringify(d.products)); setCustomer(nc); setProducts(d.products); setStage("shop"); }
+    try { const d = await callGAS("getProducts",{branchCode:branch.code}); localStorage.setItem(LS_CUSTOMER,JSON.stringify(nc)); localStorage.setItem(LS_PRODUCTS,JSON.stringify(d.products)); setCustomer(nc); setProducts(d.products); setStage("shop"); loadCatTree(); }
     catch(e) { setLoginError("商品資料載入失敗："+e.message); }
     finally { setLoading(false); }
   }
@@ -351,9 +429,58 @@ function App() {
       <h2>訂單已送出</h2>
       <p>{lastOrder.customer} 您好，我們已收到您的訂單。{lastOrder.needsReview&&"其中含有特殊促銷條件的品項，將由業務人員複核後正式確認金額，"}如有問題會主動與您聯繫。</p>
       <div className="order-id">訂單編號 {lastOrder.id}</div>
-      <div>
+      <div style={{display:"flex",gap:8,justifyContent:"center",flexWrap:"wrap"}}>
         <button className="ghost-btn" onClick={()=>setStage("shop")}>返回繼續選購</button>
-        <button className="ghost-btn" style={{marginLeft:8}} onClick={doLogout}>登出</button>
+        <button className="ghost-btn" onClick={()=>setStage("history")}>查詢歷史訂單</button>
+        <button className="ghost-btn" onClick={doLogout}>登出</button>
+      </div>
+    </div>
+  );
+
+  if (stage==="history") return (
+    <div>
+      <div className="app-header">
+        <span className="who">客戶：<b>{customer.name}</b></span>
+        <button className="ghost-btn" style={{marginLeft:"auto"}} onClick={()=>setStage("shop")}>返回選購</button>
+        <button className="logout-link" style={{marginLeft:8}} onClick={doLogout}>登出</button>
+      </div>
+      <div className="history-wrap">
+        <h2>歷史訂單查詢</h2>
+        <div style={{display:"flex",gap:8,marginBottom:20}}>
+          <button className="submit-btn" style={{width:"auto",padding:"11px 24px"}} disabled={hisLoading} onClick={queryHistory}>
+            {hisLoading?"查詢中…":"查詢我的訂單"}
+          </button>
+          {hisOrders!==null && <span style={{alignSelf:"center",fontSize:13,color:"var(--ink-soft)"}}>共 {hisOrders.length} 筆</span>}
+        </div>
+        {hisError&&<div className="login-error">{hisError}</div>}
+        {hisOrders!==null && hisOrders.length===0 && <p style={{color:"var(--ink-soft)",fontSize:14}}>目前沒有歷史訂單記錄。</p>}
+        {(hisOrders||[]).map(o=>(
+          <div key={o.orderId} className="history-card">
+            <div className="history-head" onClick={()=>setHisExpanded(p=>({...p,[o.orderId]:!p[o.orderId]}))}>
+              <div className="history-meta">
+                <div className="history-id">{o.orderId}</div>
+                <div className="history-info">{o.time}　{o.branchCode}</div>
+              </div>
+              <span className={"history-badge "+(o.orderStatus==="已處理"?"done":"pending")}>{o.orderStatus||"未匯出"}</span>
+              {o.needsReview&&<span className="history-badge pending">待複核</span>}
+              <div className="history-total">${o.total.toLocaleString()}</div>
+              <span className={"history-chevron"+(hisExpanded[o.orderId]?" open":"")}>▶</span>
+            </div>
+            {hisExpanded[o.orderId]&&(
+              <div className="history-body">
+                {o.lines.map((l,i)=>(
+                  <div key={i} className="history-line">
+                    <span className="lcode">{l.code}</span>
+                    <span className="lname">{l.name}</span>
+                    <span className="lqty">{l.qty}{l.giftQty>0&&`+贈${l.giftQty}`}</span>
+                    <span className="lamt">${Number(l.amount).toLocaleString()}</span>
+                  </div>
+                ))}
+                <div className="history-foot">合計 ${o.total.toLocaleString()}</div>
+              </div>
+            )}
+          </div>
+        ))}
       </div>
     </div>
   );
@@ -368,10 +495,42 @@ function App() {
       </div>
       <div className="layout">
         <div className="sidebar">
-          {categories.map(cat=>{const n=cat==="全部"?products.length:products.filter(p=>p.category===cat).length;return(<button key={cat} className={activeCat===cat?"active":""} onClick={()=>setActiveCat(cat)}>{cat}<span className="count">{n}</span></button>);})}
+          {/* 全部 */}
+          <button className={"sidebar-all"+(activeCat===null?" active":"")} onClick={()=>setActiveCat(null)}>
+            全部<span className="count">{products.length}</span>
+          </button>
+          {/* 有 catTree 用兩層，否則降級用商品 category */}
+          {hasCatTree ? treeParents.map(parent=>(
+            <div key={parent}>
+              <button className="sidebar-parent-btn" onClick={()=>toggleParent(parent)}>
+                {parent}
+                <span className="arrow">{openParents[parent]?"▼":"▶"}</span>
+              </button>
+              {openParents[parent]&&(
+                <div className="sidebar-children">
+                  <button className={"sidebar-child"+(activeCat&&activeCat.parent===parent&&!activeCat.child?" active":"")}
+                    onClick={()=>setActiveCat({parent,child:null})}>全部（{countByParent(parent)}）</button>
+                  {(catTree[parent]||[]).map(child=>(
+                    <button key={child} className={"sidebar-child"+(activeCat&&activeCat.parent===parent&&activeCat.child===child?" active":"")}
+                      onClick={()=>setActiveCat({parent,child})}>
+                      {child}<span className="count">{countByChild(parent,child)}</span>
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
+          )) : [...new Set(products.map(p=>p.category))].map(cat=>(
+            <button key={cat} className={"sidebar-child"+(activeCat&&activeCat.parent===cat&&!activeCat.child?" active":"")}
+              onClick={()=>setActiveCat({parent:cat,child:null})}>
+              {cat}<span className="count">{products.filter(p=>p.category===cat).length}</span>
+            </button>
+          ))}
+          <div style={{borderTop:"1px solid var(--line)",marginTop:12,paddingTop:12}}>
+            <button className="sidebar-child" onClick={()=>{ setStage("history"); queryHistory(); }}>📋 歷史訂單</button>
+          </div>
         </div>
         <div className="main">
-          <h2>{activeCat}　共 {filtered.length} 項商品</h2>
+          <h2>{activeCat ? (activeCat.child||activeCat.parent) : "全部"}　共 {filtered.length} 項商品</h2>
           <div className="grid">
             {filtered.map(p=>{const rule=parseActivity(p.activity);const qty=cart[p.code]||0;const calc=computeLine(p,qty);const imgs=(p.images||[]).map(fixImgUrl);return(
               <div key={p.code} className={"card"+(p.inactive?" disabled":"")}>

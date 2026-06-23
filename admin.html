@@ -14,6 +14,10 @@
   body{margin:0;font-family:"Noto Sans TC","PingFang TC","Microsoft JhengHei",sans-serif;background:var(--paper);color:var(--ink);}
   #root{min-height:100vh;}
 
+  /* Modal */
+  .modal-mask{position:fixed;inset:0;background:rgba(20,30,28,.45);z-index:50;display:flex;align-items:center;justify-content:center;padding:20px;}
+  .modal-card{background:#fff;border-radius:var(--radius);padding:24px;width:100%;box-shadow:0 8px 32px rgba(0,0,0,.12);}
+  .login-error{font-size:13px;color:var(--danger);background:var(--danger-tint);padding:9px 12px;border-radius:6px;margin-bottom:12px;line-height:1.5;}
   /* 密碼頁 */
   .pw-wrap{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:24px;}
   .pw-card{width:100%;max-width:360px;background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);padding:36px 28px;}
@@ -210,7 +214,60 @@ function Admin() {
   const [editCode,     setEditCode]     = useState(null);
   const [editDraft,    setEditDraft]    = useState({});
   const [showAddM,     setShowAddM]     = useState(false);
-  const [newM, setNewM] = useState({code:"",name:"",category:"",listPrice:"",boxQty:"",cost:"",inactive:false});
+  const [newM, setNewM] = useState({code:"",name:"",category:"",subCategory:"",listPrice:"",boxQty:"",cost:"",inactive:false});
+
+  // ── 分類管理 ──
+  const [catTree,     setCatTree]     = useState({});
+  const [catLoading,  setCatLoading]  = useState(false);
+  const [showCatMgr,  setShowCatMgr] = useState(false); // 分類管理 Modal
+  const [newParent,   setNewParent]   = useState("");
+  const [newChild,    setNewChild]    = useState("");
+  const [mCatFilter,  setMCatFilter]  = useState(""); // 商品主檔分類篩選
+
+  async function loadCategories() {
+    setCatLoading(true);
+    try { const d = await callGAS("listCategories"); setCatTree(d.tree); }
+    catch(e) { alert("分類載入失敗："+e.message); }
+    finally { setCatLoading(false); }
+  }
+  useEffect(() => { if (tab==="master" && authed && Object.keys(catTree).length===0) loadCategories(); }, [tab, authed]);
+
+  async function addCatItem() {
+    if (!newParent.trim()) { alert("大類別不可空白"); return; }
+    try {
+      await callGAS("saveCategory",{parent:newParent.trim(), child:newChild.trim()});
+      const tree = {...catTree};
+      if (!tree[newParent]) tree[newParent] = [];
+      if (newChild && !tree[newParent].includes(newChild)) tree[newParent] = [...tree[newParent], newChild];
+      setCatTree(tree); setNewChild("");
+    } catch(e) { alert("新增失敗："+e.message); }
+  }
+  async function delCatChild(parent, child) {
+    if (!confirm(`確定刪除子類別「${child}」？`)) return;
+    try {
+      await callGAS("deleteCategory",{parent, child});
+      setCatTree(prev=>({...prev,[parent]:prev[parent].filter(c=>c!==child)}));
+    } catch(e) { alert("刪除失敗："+e.message); }
+  }
+  async function delCatParent(parent) {
+    if (!confirm(`確定刪除大類別「${parent}」及其所有子類別？`)) return;
+    try {
+      await callGAS("deleteCategory",{parent, child:null});
+      const t={...catTree}; delete t[parent]; setCatTree(t);
+    } catch(e) { alert("刪除失敗："+e.message); }
+  }
+
+  // ── 訂單展開 & 狀態確認 ──
+  const [expandedOrders, setExpandedOrders] = useState({});
+  function toggleOrderExpand(id) { setExpandedOrders(p=>({...p,[id]:!p[id]})); }
+  async function confirmOrder(orderId) {
+    try {
+      await callGAS("updateOrderStatus",{orderId, status:"已處理"});
+      setOrders(prev=>prev.map(o=>o.orderId===orderId?{...o,orderStatus:"已處理"}:o));
+    } catch(e) { alert("更新失敗："+e.message); }
+  }
+
+  // filteredMaster 加入分類篩選
 
   async function loadMaster() {
     setMLoading(true); setMError("");
@@ -220,7 +277,10 @@ function Admin() {
   }
   useEffect(() => { if (tab==="master" && authed && masterRows.length===0) loadMaster(); }, [tab, authed]);
 
-  const filteredMaster = useMemo(() => masterRows.filter(r => !mSearch || r.name.includes(mSearch) || r.code.includes(mSearch) || (r.category||"").includes(mSearch)), [masterRows, mSearch]);
+  const filteredMaster = useMemo(() => masterRows.filter(r => {
+    if (mCatFilter && r.category !== mCatFilter) return false;
+    return !mSearch || r.name.includes(mSearch) || r.code.includes(mSearch) || (r.category||"").includes(mSearch);
+  }), [masterRows, mSearch, mCatFilter]);
 
   function startEdit(row) { setEditCode(row.code); setEditDraft({name:row.name, category:row.category, listPrice:row.listPrice, boxQty:row.boxQty, cost:row.cost||"", inactive:row.inactive}); }
   function cancelEdit() { setEditCode(null); setEditDraft({}); }
@@ -389,21 +449,66 @@ function Admin() {
                 <table className="admin-table">
                   <thead><tr>
                     <th style={{width:36}}><input type="checkbox" checked={allChecked} onChange={toggleAll}/></th>
-                    <th>訂單編號</th><th>客戶</th><th>分店代號</th><th>時間</th><th>品項數</th><th>金額</th><th>狀態</th><th></th>
+                    <th style={{width:20}}></th>
+                    <th>訂單編號</th><th>客戶</th><th>分店</th><th>時間</th><th>金額</th><th>處理狀態</th><th>品項狀態</th><th></th>
                   </tr></thead>
                   <tbody>
                     {filteredOrders.map(o=>(
-                      <tr key={o.orderId} style={checkedOrders[o.orderId]?{background:"#f0f7f5"}:{}}>
-                        <td><input type="checkbox" checked={!!checkedOrders[o.orderId]} onChange={()=>toggleCheck(o.orderId)}/></td>
-                        <td style={{fontFamily:"monospace",fontSize:12}}>{o.orderId}</td>
-                        <td>{o.customerName}</td>
-                        <td style={{fontSize:12,color:"var(--ink-soft)"}}>{o.branchCode}</td>
-                        <td style={{fontSize:12}}>{o.time}</td>
-                        <td>{o.lines.length}</td>
-                        <td>${o.total.toLocaleString()}</td>
-                        <td>{o.needsReview?<span className="pill-status review">含待複核</span>:<span className="pill-status ok">可匯出</span>}</td>
-                        <td><button className="download-btn" onClick={()=>exportExcel(o)}>下載</button></td>
-                      </tr>
+                      <React.Fragment key={o.orderId}>
+                        <tr style={checkedOrders[o.orderId]?{background:"#f0f7f5",cursor:"pointer"}:{cursor:"pointer"}}
+                          onClick={()=>toggleOrderExpand(o.orderId)}>
+                          <td onClick={e=>e.stopPropagation()}><input type="checkbox" checked={!!checkedOrders[o.orderId]} onChange={()=>toggleCheck(o.orderId)}/></td>
+                          <td style={{color:"var(--ink-soft)",fontSize:11}}>{expandedOrders[o.orderId]?"▼":"▶"}</td>
+                          <td style={{fontFamily:"monospace",fontSize:12}}>{o.orderId}</td>
+                          <td>{o.customerName}</td>
+                          <td style={{fontSize:12,color:"var(--ink-soft)"}}>{o.branchCode}</td>
+                          <td style={{fontSize:12}}>{o.time}</td>
+                          <td style={{fontWeight:600}}>${o.total.toLocaleString()}</td>
+                          <td>
+                            {(o.orderStatus==="已處理")
+                              ? <span className="pill-status ok">已處理</span>
+                              : <button className="btn-save" style={{fontSize:11,padding:"3px 10px"}}
+                                  onClick={e=>{e.stopPropagation();confirmOrder(o.orderId);}}>確認已處理</button>}
+                          </td>
+                          <td>{o.needsReview?<span className="pill-status review">待複核</span>:<span className="pill-status ok">正常</span>}</td>
+                          <td onClick={e=>e.stopPropagation()}><button className="download-btn" style={{fontSize:11,padding:"4px 10px"}} onClick={()=>exportExcel(o)}>下載</button></td>
+                        </tr>
+                        {expandedOrders[o.orderId]&&(
+                          <tr>
+                            <td colSpan={10} style={{padding:0,background:"#f8fbfa"}}>
+                              <table style={{width:"100%",borderCollapse:"collapse",fontSize:12}}>
+                                <thead><tr style={{background:"#eef3f1"}}>
+                                  <th style={{padding:"6px 12px",textAlign:"left",fontWeight:600}}>品號</th>
+                                  <th style={{padding:"6px 12px",textAlign:"left",fontWeight:600}}>品名</th>
+                                  <th style={{padding:"6px 12px",textAlign:"center",fontWeight:600}}>數量</th>
+                                  <th style={{padding:"6px 12px",textAlign:"center",fontWeight:600}}>贈品</th>
+                                  <th style={{padding:"6px 12px",textAlign:"right",fontWeight:600}}>單價</th>
+                                  <th style={{padding:"6px 12px",textAlign:"right",fontWeight:600}}>金額</th>
+                                  <th style={{padding:"6px 12px",textAlign:"left",fontWeight:600}}>狀態</th>
+                                </tr></thead>
+                                <tbody>
+                                  {o.lines.map((l,i)=>(
+                                    <tr key={i} style={{borderTop:"1px solid var(--line)"}}>
+                                      <td style={{padding:"6px 12px",fontFamily:"monospace",color:"var(--ink-soft)"}}>{l.code}</td>
+                                      <td style={{padding:"6px 12px"}}>{l.name}</td>
+                                      <td style={{padding:"6px 12px",textAlign:"center"}}>{l.qty}</td>
+                                      <td style={{padding:"6px 12px",textAlign:"center",color:"var(--brand)"}}>{l.giftQty||"—"}</td>
+                                      <td style={{padding:"6px 12px",textAlign:"right"}}>${l.unitPrice}</td>
+                                      <td style={{padding:"6px 12px",textAlign:"right",fontWeight:600}}>${Number(l.amount).toLocaleString()}</td>
+                                      <td style={{padding:"6px 12px"}}>{l.status==="待複核"?<span style={{color:"var(--warn)"}}>⚠ 待複核</span>:l.status}</td>
+                                    </tr>
+                                  ))}
+                                  <tr style={{borderTop:"2px solid var(--line)",background:"#f0f7f5"}}>
+                                    <td colSpan={5} style={{padding:"8px 12px",textAlign:"right",fontWeight:700}}>合計</td>
+                                    <td style={{padding:"8px 12px",textAlign:"right",fontWeight:700,fontSize:14}}>${o.total.toLocaleString()}</td>
+                                    <td></td>
+                                  </tr>
+                                </tbody>
+                              </table>
+                            </td>
+                          </tr>
+                        )}
+                      </React.Fragment>
                     ))}
                   </tbody>
                 </table>
@@ -416,8 +521,14 @@ function Admin() {
         {tab==="master" && (
           <React.Fragment>
             <div style={{display:"flex",gap:10,marginBottom:14,alignItems:"center",flexWrap:"wrap"}}>
-              <input placeholder="搜尋品號、品名、分類…" value={mSearch} onChange={e=>setMSearch(e.target.value)}
-                style={{flex:1,minWidth:160,padding:"8px 11px",border:"1px solid var(--line)",borderRadius:8,fontSize:13}}/>
+              <input placeholder="搜尋品號、品名…" value={mSearch} onChange={e=>setMSearch(e.target.value)}
+                style={{flex:1,minWidth:120,padding:"8px 11px",border:"1px solid var(--line)",borderRadius:8,fontSize:13}}/>
+              <select value={mCatFilter} onChange={e=>setMCatFilter(e.target.value)}
+                style={{padding:"8px 11px",border:"1px solid var(--line)",borderRadius:8,fontSize:13,background:"#fff",minWidth:100}}>
+                <option value="">全部分類</option>
+                {Object.keys(catTree).map(p=><option key={p} value={p}>{p}</option>)}
+              </select>
+              <button className="btn-edit" style={{padding:"8px 14px",fontSize:13}} onClick={()=>setShowCatMgr(true)}>⚙ 管理分類</button>
               <button className="btn-save" style={{padding:"8px 16px",fontSize:13}} onClick={()=>setShowAddM(v=>!v)}>
                 {showAddM?"取消新增":"＋ 新增商品"}
               </button>
@@ -427,21 +538,79 @@ function Admin() {
               <div className="add-form">
                 <label className="narrow">品號＊<input value={newM.code} onChange={e=>setNewM(p=>({...p,code:e.target.value}))} placeholder="021605"/></label>
                 <label className="wide">品名＊<input value={newM.name} onChange={e=>setNewM(p=>({...p,name:e.target.value}))} placeholder="完整品名"/></label>
-                <label className="narrow">分類<input value={newM.category} onChange={e=>setNewM(p=>({...p,category:e.target.value}))} placeholder="哺育系列"/></label>
+                <label className="narrow">大類別
+                  <select value={newM.category} onChange={e=>setNewM(p=>({...p,category:e.target.value,subCategory:""}))} style={{padding:"7px 9px",border:"1px solid var(--line)",borderRadius:6,fontSize:13,background:"#fff"}}>
+                    <option value="">選擇…</option>
+                    {Object.keys(catTree).map(p=><option key={p} value={p}>{p}</option>)}
+                  </select>
+                </label>
+                <label className="narrow">子類別
+                  <select value={newM.subCategory||""} onChange={e=>setNewM(p=>({...p,subCategory:e.target.value}))} style={{padding:"7px 9px",border:"1px solid var(--line)",borderRadius:6,fontSize:13,background:"#fff"}}>
+                    <option value="">選擇…</option>
+                    {(catTree[newM.category]||[]).map(c=><option key={c} value={c}>{c}</option>)}
+                  </select>
+                </label>
                 <label className="narrow">定價<input value={newM.listPrice} onChange={e=>setNewM(p=>({...p,listPrice:e.target.value}))} placeholder="100"/></label>
-                <label className="narrow">箱入數<input value={newM.boxQty} onChange={e=>setNewM(p=>({...p,boxQty:e.target.value}))} placeholder="6"/></label>
                 <label className="narrow">成本<input value={newM.cost||""} onChange={e=>setNewM(p=>({...p,cost:e.target.value}))} placeholder="50"/></label>
+                <label className="narrow">箱入數<input value={newM.boxQty} onChange={e=>setNewM(p=>({...p,boxQty:e.target.value}))} placeholder="6"/></label>
                 <label className="narrow" style={{flexDirection:"row",alignItems:"center",gap:6,paddingBottom:2}}>
                   <input type="checkbox" checked={!!newM.inactive} onChange={e=>setNewM(p=>({...p,inactive:e.target.checked}))} style={{width:15,height:15,accentColor:"var(--danger)"}}/>失效
                 </label>
                 <button className="btn-save" style={{alignSelf:"flex-end",padding:"8px 20px"}} onClick={addMaster}>確認新增</button>
               </div>
             )}
+
+            {/* 分類管理 Modal */}
+            {showCatMgr&&(
+              <div className="modal-mask" onClick={()=>setShowCatMgr(false)}>
+                <div className="modal-card" style={{maxWidth:480,maxHeight:"80vh",overflowY:"auto"}} onClick={e=>e.stopPropagation()}>
+                  <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:16}}>
+                    <h3 style={{margin:0,fontSize:16}}>⚙ 分類管理</h3>
+                    <button onClick={()=>setShowCatMgr(false)} style={{background:"none",border:"none",fontSize:20,cursor:"pointer",color:"var(--ink-soft)"}}>✕</button>
+                  </div>
+                  {catLoading?<p style={{fontSize:13,color:"var(--ink-soft)"}}>載入中…</p>:(
+                    <React.Fragment>
+                      {/* 新增 */}
+                      <div style={{display:"flex",gap:8,marginBottom:16,flexWrap:"wrap"}}>
+                        <input placeholder="大類別＊" value={newParent} onChange={e=>setNewParent(e.target.value)}
+                          style={{flex:1,minWidth:100,padding:"8px 10px",border:"1px solid var(--line)",borderRadius:7,fontSize:13}}/>
+                        <input placeholder="子類別（可選）" value={newChild} onChange={e=>setNewChild(e.target.value)}
+                          style={{flex:1,minWidth:100,padding:"8px 10px",border:"1px solid var(--line)",borderRadius:7,fontSize:13}}
+                          onKeyDown={e=>{if(e.key==="Enter")addCatItem();}}/>
+                        <button className="btn-save" onClick={addCatItem}>新增</button>
+                      </div>
+                      {/* 樹狀列表 */}
+                      {Object.keys(catTree).length===0?<p style={{fontSize:13,color:"var(--ink-soft)"}}>尚無分類，請新增。</p>:
+                        Object.keys(catTree).map(parent=>(
+                          <div key={parent} style={{marginBottom:10,border:"1px solid var(--line)",borderRadius:8,overflow:"hidden"}}>
+                            <div style={{display:"flex",alignItems:"center",padding:"9px 12px",background:"#f4f6f5",gap:8}}>
+                              <span style={{fontWeight:700,fontSize:13,flex:1}}>{parent}</span>
+                              <button className="btn-del" style={{fontSize:11,padding:"3px 8px"}} onClick={()=>delCatParent(parent)}>刪除大類</button>
+                            </div>
+                            <div style={{padding:"6px 12px"}}>
+                              {(catTree[parent]||[]).length===0?<span style={{fontSize:12,color:"var(--ink-soft)"}}>無子類別</span>:
+                                (catTree[parent]||[]).map(child=>(
+                                  <div key={child} style={{display:"flex",alignItems:"center",padding:"4px 0",borderBottom:"1px solid var(--line)"}}>
+                                    <span style={{flex:1,fontSize:13}}>　{child}</span>
+                                    <button className="btn-del" style={{fontSize:11,padding:"2px 8px"}} onClick={()=>delCatChild(parent,child)}>刪除</button>
+                                  </div>
+                                ))
+                              }
+                            </div>
+                          </div>
+                        ))
+                      }
+                    </React.Fragment>
+                  )}
+                </div>
+              </div>
+            )}
+
             {mError&&<div className="login-error">{mError}</div>}
             {mLoading?<p style={{color:"var(--ink-soft)",fontSize:14}}>載入中…</p>:(
               <div style={{overflowX:"auto"}}>
                 <table className="mgmt-table">
-                  <thead><tr><th>品號</th><th>品名</th><th>分類</th><th>定價</th><th>成本</th><th>箱入</th><th style={{textAlign:"center"}}>失效</th><th>圖片</th><th style={{width:160}}>操作</th></tr></thead>
+                  <thead><tr><th>品號</th><th>品名</th><th>大類別</th><th>定價</th><th>成本</th><th>箱入</th><th style={{textAlign:"center"}}>失效</th><th>圖片</th><th style={{width:160}}>操作</th></tr></thead>
                   <tbody>
                     {filteredMaster.map(row=>{
                       const isE = editCode===row.code;
@@ -450,7 +619,12 @@ function Admin() {
                         <tr key={row.code} className={isE?"editing":""}>
                           <td style={{fontFamily:"monospace",fontSize:12,whiteSpace:"nowrap"}}>{row.code}</td>
                           <td style={{minWidth:180}}>{isE?<input className="cell-input" value={editDraft.name||""} onChange={e=>setEditDraft(p=>({...p,name:e.target.value}))}/>:<span className="cell-text" onClick={()=>startEdit(row)}>{row.name||<em className="empty">點擊編輯</em>}</span>}</td>
-                          <td style={{minWidth:100}}>{isE?<input className="cell-input" value={editDraft.category||""} onChange={e=>setEditDraft(p=>({...p,category:e.target.value}))}/>:<span className="cell-text" onClick={()=>startEdit(row)}>{row.category||<em className="empty">—</em>}</span>}</td>
+                          <td style={{minWidth:100}}>{isE?(
+                            <select className="cell-input" value={editDraft.category||""} onChange={e=>setEditDraft(p=>({...p,category:e.target.value}))}>
+                              <option value="">選擇分類…</option>
+                              {Object.keys(catTree).map(p=><option key={p} value={p}>{p}</option>)}
+                            </select>
+                          ):<span className="cell-text" onClick={()=>startEdit(row)}>{row.category||<em className="empty">—</em>}</span>}</td>
                           <td style={{minWidth:70}}>{isE?<input className="cell-input" value={editDraft.listPrice||""} onChange={e=>setEditDraft(p=>({...p,listPrice:e.target.value}))} style={{width:70}}/>:<span className="cell-text" onClick={()=>startEdit(row)}>{row.listPrice||<em className="empty">—</em>}</span>}</td>
                           <td style={{minWidth:70}}>{isE?<input className="cell-input" value={editDraft.cost||""} onChange={e=>setEditDraft(p=>({...p,cost:e.target.value}))} style={{width:70}}/>:<span className="cell-text" onClick={()=>startEdit(row)}>{row.cost||<em className="empty">—</em>}</span>}</td>
                           <td style={{minWidth:60}}>{isE?<input className="cell-input" value={editDraft.boxQty||""} onChange={e=>setEditDraft(p=>({...p,boxQty:e.target.value}))} style={{width:60}}/>:<span className="cell-text" onClick={()=>startEdit(row)}>{row.boxQty||<em className="empty">—</em>}</span>}</td>
