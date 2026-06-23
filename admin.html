@@ -441,7 +441,7 @@ function Admin() {
             {mLoading?<p style={{color:"var(--ink-soft)",fontSize:14}}>載入中…</p>:(
               <div style={{overflowX:"auto"}}>
                 <table className="mgmt-table">
-                  <thead><tr><th>品號</th><th>品名</th><th>分類</th><th>定價</th><th>箱入</th><th>成本</th><th style={{textAlign:"center"}}>失效</th><th>圖片</th><th style={{width:160}}>操作</th></tr></thead>
+                  <thead><tr><th>品號</th><th>品名</th><th>分類</th><th>定價</th><th>成本</th><th>箱入</th><th style={{textAlign:"center"}}>失效</th><th>圖片</th><th style={{width:160}}>操作</th></tr></thead>
                   <tbody>
                     {filteredMaster.map(row=>{
                       const isE = editCode===row.code;
@@ -452,8 +452,8 @@ function Admin() {
                           <td style={{minWidth:180}}>{isE?<input className="cell-input" value={editDraft.name||""} onChange={e=>setEditDraft(p=>({...p,name:e.target.value}))}/>:<span className="cell-text" onClick={()=>startEdit(row)}>{row.name||<em className="empty">點擊編輯</em>}</span>}</td>
                           <td style={{minWidth:100}}>{isE?<input className="cell-input" value={editDraft.category||""} onChange={e=>setEditDraft(p=>({...p,category:e.target.value}))}/>:<span className="cell-text" onClick={()=>startEdit(row)}>{row.category||<em className="empty">—</em>}</span>}</td>
                           <td style={{minWidth:70}}>{isE?<input className="cell-input" value={editDraft.listPrice||""} onChange={e=>setEditDraft(p=>({...p,listPrice:e.target.value}))} style={{width:70}}/>:<span className="cell-text" onClick={()=>startEdit(row)}>{row.listPrice||<em className="empty">—</em>}</span>}</td>
-                          <td style={{minWidth:60}}>{isE?<input className="cell-input" value={editDraft.boxQty||""} onChange={e=>setEditDraft(p=>({...p,boxQty:e.target.value}))} style={{width:60}}/>:<span className="cell-text" onClick={()=>startEdit(row)}>{row.boxQty||<em className="empty">—</em>}</span>}</td>
                           <td style={{minWidth:70}}>{isE?<input className="cell-input" value={editDraft.cost||""} onChange={e=>setEditDraft(p=>({...p,cost:e.target.value}))} style={{width:70}}/>:<span className="cell-text" onClick={()=>startEdit(row)}>{row.cost||<em className="empty">—</em>}</span>}</td>
+                          <td style={{minWidth:60}}>{isE?<input className="cell-input" value={editDraft.boxQty||""} onChange={e=>setEditDraft(p=>({...p,boxQty:e.target.value}))} style={{width:60}}/>:<span className="cell-text" onClick={()=>startEdit(row)}>{row.boxQty||<em className="empty">—</em>}</span>}</td>
                           <td style={{textAlign:"center"}}>
                             <input type="checkbox"
                               checked={isE ? !!editDraft.inactive : !!row.inactive}
