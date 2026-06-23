@@ -210,7 +210,7 @@ function Admin() {
   const [editCode,     setEditCode]     = useState(null);
   const [editDraft,    setEditDraft]    = useState({});
   const [showAddM,     setShowAddM]     = useState(false);
-  const [newM, setNewM] = useState({code:"",name:"",category:"",listPrice:"",boxQty:"",discontinued:false});
+  const [newM, setNewM] = useState({code:"",name:"",category:"",listPrice:"",boxQty:"",cost:"",inactive:false});
 
   async function loadMaster() {
     setMLoading(true); setMError("");
@@ -222,7 +222,7 @@ function Admin() {
 
   const filteredMaster = useMemo(() => masterRows.filter(r => !mSearch || r.name.includes(mSearch) || r.code.includes(mSearch) || (r.category||"").includes(mSearch)), [masterRows, mSearch]);
 
-  function startEdit(row) { setEditCode(row.code); setEditDraft({name:row.name, category:row.category, listPrice:row.listPrice, boxQty:row.boxQty, discontinued:row.discontinued}); }
+  function startEdit(row) { setEditCode(row.code); setEditDraft({name:row.name, category:row.category, listPrice:row.listPrice, boxQty:row.boxQty, cost:row.cost||"", inactive:row.inactive}); }
   function cancelEdit() { setEditCode(null); setEditDraft({}); }
   async function saveEdit(row) {
     try { await callGAS("saveMasterRow",{row:{...row,...editDraft}}); setMasterRows(p=>p.map(r=>r.code===row.code?{...r,...editDraft}:r)); setEditCode(null); setEditDraft({}); }
@@ -235,7 +235,7 @@ function Admin() {
   }
   async function addMaster() {
     if (!newM.code||!newM.name) { alert("品號與品名為必填"); return; }
-    try { await callGAS("saveMasterRow",{row:newM}); setMasterRows(p=>[...p,{...newM,images:[]}]); setNewM({code:"",name:"",category:"",listPrice:"",boxQty:"",discontinued:false}); setShowAddM(false); }
+    try { await callGAS("saveMasterRow",{row:newM}); setMasterRows(p=>[...p,{...newM,images:[]}]); setNewM({code:"",name:"",category:"",listPrice:"",boxQty:"",cost:"",inactive:false}); setShowAddM(false); }
     catch(e) { alert("新增失敗："+e.message); }
   }
 
@@ -430,8 +430,9 @@ function Admin() {
                 <label className="narrow">分類<input value={newM.category} onChange={e=>setNewM(p=>({...p,category:e.target.value}))} placeholder="哺育系列"/></label>
                 <label className="narrow">定價<input value={newM.listPrice} onChange={e=>setNewM(p=>({...p,listPrice:e.target.value}))} placeholder="100"/></label>
                 <label className="narrow">箱入數<input value={newM.boxQty} onChange={e=>setNewM(p=>({...p,boxQty:e.target.value}))} placeholder="6"/></label>
+                <label className="narrow">成本<input value={newM.cost||""} onChange={e=>setNewM(p=>({...p,cost:e.target.value}))} placeholder="50"/></label>
                 <label className="narrow" style={{flexDirection:"row",alignItems:"center",gap:6,paddingBottom:2}}>
-                  <input type="checkbox" checked={newM.discontinued} onChange={e=>setNewM(p=>({...p,discontinued:e.target.checked}))} style={{width:15,height:15}}/>停產
+                  <input type="checkbox" checked={!!newM.inactive} onChange={e=>setNewM(p=>({...p,inactive:e.target.checked}))} style={{width:15,height:15,accentColor:"var(--danger)"}}/>失效
                 </label>
                 <button className="btn-save" style={{alignSelf:"flex-end",padding:"8px 20px"}} onClick={addMaster}>確認新增</button>
               </div>
@@ -440,7 +441,7 @@ function Admin() {
             {mLoading?<p style={{color:"var(--ink-soft)",fontSize:14}}>載入中…</p>:(
               <div style={{overflowX:"auto"}}>
                 <table className="mgmt-table">
-                  <thead><tr><th>品號</th><th>品名</th><th>分類</th><th>定價</th><th>箱入</th><th>停產</th><th>圖片</th><th style={{width:160}}>操作</th></tr></thead>
+                  <thead><tr><th>品號</th><th>品名</th><th>分類</th><th>定價</th><th>箱入</th><th>成本</th><th style={{textAlign:"center"}}>失效</th><th>圖片</th><th style={{width:160}}>操作</th></tr></thead>
                   <tbody>
                     {filteredMaster.map(row=>{
                       const isE = editCode===row.code;
@@ -452,7 +453,15 @@ function Admin() {
                           <td style={{minWidth:100}}>{isE?<input className="cell-input" value={editDraft.category||""} onChange={e=>setEditDraft(p=>({...p,category:e.target.value}))}/>:<span className="cell-text" onClick={()=>startEdit(row)}>{row.category||<em className="empty">—</em>}</span>}</td>
                           <td style={{minWidth:70}}>{isE?<input className="cell-input" value={editDraft.listPrice||""} onChange={e=>setEditDraft(p=>({...p,listPrice:e.target.value}))} style={{width:70}}/>:<span className="cell-text" onClick={()=>startEdit(row)}>{row.listPrice||<em className="empty">—</em>}</span>}</td>
                           <td style={{minWidth:60}}>{isE?<input className="cell-input" value={editDraft.boxQty||""} onChange={e=>setEditDraft(p=>({...p,boxQty:e.target.value}))} style={{width:60}}/>:<span className="cell-text" onClick={()=>startEdit(row)}>{row.boxQty||<em className="empty">—</em>}</span>}</td>
-                          <td style={{textAlign:"center"}}>{isE?<input type="checkbox" checked={!!editDraft.discontinued} onChange={e=>setEditDraft(p=>({...p,discontinued:e.target.checked}))} style={{width:15,height:15}}/>:<span onClick={()=>startEdit(row)} style={{cursor:"pointer"}}>{row.discontinued?"✅":"—"}</span>}</td>
+                          <td style={{minWidth:70}}>{isE?<input className="cell-input" value={editDraft.cost||""} onChange={e=>setEditDraft(p=>({...p,cost:e.target.value}))} style={{width:70}}/>:<span className="cell-text" onClick={()=>startEdit(row)}>{row.cost||<em className="empty">—</em>}</span>}</td>
+                          <td style={{textAlign:"center"}}>
+                            <input type="checkbox"
+                              checked={isE ? !!editDraft.inactive : !!row.inactive}
+                              onChange={isE ? e=>setEditDraft(p=>({...p,inactive:e.target.checked})) : ()=>startEdit(row)}
+                              style={{width:16,height:16,accentColor:"var(--danger)",cursor:"pointer"}}
+                              title={isE?"":"點擊先進入編輯模式"}
+                            />
+                          </td>
                           <td>
                             <div className="img-thumb-row">
                               {imgs.map((url,i)=>(
