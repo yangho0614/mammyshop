@@ -293,8 +293,11 @@
       white-space:nowrap;width:auto;flex-shrink:0;
       padding:7px 12px;border-radius:16px;font-size:13px;
     }
-    .sidebar-all.active,.sidebar-child.active{background:var(--brand);color:#fff;}
-    .sidebar-parent-btn{display:none;}
+    .sidebar-all.active,.sidebar-child.active,.sidebar-parent-btn.active{background:var(--brand);color:#fff;}
+    /* 手機版：大類按鈕正常顯示，選中後展開子類 */
+    .sidebar-parent-btn{display:flex;align-items:center;white-space:nowrap;width:auto;flex-shrink:0;
+      padding:7px 12px;border-radius:16px;font-size:13px;border:1.5px solid var(--line);background:#fff;color:var(--ink);cursor:pointer;}
+    .sidebar-parent-btn.active{background:var(--brand);color:#fff;border-color:var(--brand);}
     .sidebar-children{display:contents;}
     .sidebar .arrow{display:none;}
     .sidebar .count{display:none;}
@@ -980,32 +983,37 @@ function App() {
             全部<span className="count">{products.length}</span>
           </button>
           {/* 有 catTree 用兩層，否則降級用商品 category */}
-          {hasCatTree ? treeParents.map(parent=>(
-            <div key={parent}>
-              <button className="sidebar-parent-btn" onClick={()=>toggleParent(parent)}>
-                {parent}
-                <span className="arrow">{openParents[parent]?"▼":"▶"}</span>
-              </button>
-              {openParents[parent]&&(
-                <div className="sidebar-children">
-                  <button className={"sidebar-child"+(activeCat&&activeCat.parent===parent&&!activeCat.child?" active":"")}
-                    onClick={()=>setActiveCat({parent,child:null})}>全部（{countByParent(parent)}）</button>
-                  {(catTree[parent]||[]).map(child=>(
-                    <button key={child} className={"sidebar-child"+(activeCat&&activeCat.parent===parent&&activeCat.child===child?" active":"")}
-                      onClick={()=>setActiveCat({parent,child})}>
-                      {child}<span className="count">{countByChild(parent,child)}</span>
-                    </button>
-                  ))}
-                </div>
-              )}
-            </div>
-          )) : [...new Set(products.map(p=>p.category))].map(cat=>(
+          {hasCatTree ? treeParents.map(parent=>{
+            const isParentActive = activeCat&&activeCat.parent===parent;
+            const children = catTree[parent]||[];
+            return (
+              <React.Fragment key={parent}>
+                {/* 大類按鈕：桌機點展開子列表；手機點直接選此大類 */}
+                <button
+                  className={"sidebar-parent-btn"+(isParentActive?" active":"")}
+                  onClick={()=>{ toggleParent(parent); setActiveCat({parent,child:null}); }}>
+                  {parent}
+                  <span className="arrow">{openParents[parent]?"▼":"▶"}</span>
+                </button>
+                {/* 桌機：openParents 控制展開；手機：大類被選中就顯示子類 pills */}
+                {(openParents[parent]||isParentActive)&&(
+                  <div className="sidebar-children">
+                    {children.map(child=>(
+                      <button key={child} className={"sidebar-child"+(activeCat&&activeCat.parent===parent&&activeCat.child===child?" active":"")}
+                        onClick={()=>setActiveCat({parent,child})}>
+                        {child}<span className="count">{countByChild(parent,child)}</span>
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </React.Fragment>
+            );
+          }) : [...new Set(products.map(p=>p.category))].map(cat=>(
             <button key={cat} className={"sidebar-child"+(activeCat&&activeCat.parent===cat&&!activeCat.child?" active":"")}
               onClick={()=>setActiveCat({parent:cat,child:null})}>
               {cat}<span className="count">{products.filter(p=>p.category===cat).length}</span>
             </button>
           ))}
-
         </div>
         <div className="main">
           <div className="main-title-row">
