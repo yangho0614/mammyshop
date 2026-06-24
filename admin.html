@@ -364,10 +364,25 @@ function Admin() {
     if (!newParent.trim()) { alert("大類別不可空白"); return; }
     try {
       await callGAS("saveCategory",{parent:newParent.trim(), child:newChild.trim()});
+      const p = newParent.trim(), c = newChild.trim();
+      // 更新 catTree
       const tree = {...catTree};
-      if (!tree[newParent]) tree[newParent] = [];
-      if (newChild && !tree[newParent].includes(newChild)) tree[newParent] = [...tree[newParent], newChild];
-      setCatTree(tree); setNewChild("");
+      if (!tree[p]) tree[p] = [];
+      if (c && !tree[p].includes(c)) tree[p] = [...tree[p], c];
+      setCatTree(tree);
+      // 同步更新 dragTree
+      setDragTree(prev => {
+        if (!prev) return prev;
+        const exists = prev.find(g=>g.parent===p);
+        if (exists) {
+          return prev.map(g=>g.parent===p
+            ? {...g, children: c&&!g.children.includes(c)?[...g.children,c]:g.children}
+            : g);
+        } else {
+          return [...prev, {parent:p, children: c?[c]:[]}];
+        }
+      });
+      setNewChild("");
     } catch(e) { alert("新增失敗："+e.message); }
   }
   async function delCatChild(parent, child) {
@@ -383,6 +398,76 @@ function Admin() {
       await callGAS("deleteCategory",{parent, child:null});
       const t={...catTree}; delete t[parent]; setCatTree(t);
     } catch(e) { alert("刪除失敗："+e.message); }
+  }
+
+  // ── 分類拖拉排序 ──
+  const [dragTree, setDragTree] = useState(null); // 拖拉中的暫存樹（開 Modal 時 clone）
+  const [catSaving, setCatSaving] = useState(false);
+  const dragItem = React.useRef(null);   // { type:'parent'|'child', parent, child, index }
+  const dragOver = React.useRef(null);
+
+  function openCatMgr() {
+    // clone catTree 為有序陣列結構 [{parent, children:[...]}]
+    const ordered = Object.keys(catTree).map(p => ({ parent: p, children: [...(catTree[p]||[])] }));
+    setDragTree(ordered);
+    setShowCatMgr(true);
+  }
+
+  function onDragStart(e, info) {
+    dragItem.current = info;
+    e.dataTransfer.effectAllowed = 'move';
+  }
+  function onDragOver(e, info) {
+    e.preventDefault();
+    dragOver.current = info;
+  }
+  function onDrop(e, info) {
+    e.preventDefault();
+    const src = dragItem.current;
+    const tgt = info;
+    if (!src || !tgt) return;
+    setDragTree(prev => {
+      const tree = prev.map(g => ({ parent: g.parent, children: [...g.children] }));
+      if (src.type === 'parent' && tgt.type === 'parent' && src.parentIdx !== tgt.parentIdx) {
+        // 大類換位置
+        const [moved] = tree.splice(src.parentIdx, 1);
+        tree.splice(tgt.parentIdx, 0, moved);
+      } else if (src.type === 'child' && tgt.type === 'child') {
+        if (src.parentIdx === tgt.parentIdx) {
+          // 同大類子類換順序
+          const children = tree[src.parentIdx].children;
+          const [moved] = children.splice(src.childIdx, 1);
+          children.splice(tgt.childIdx, 0, moved);
+        } else {
+          // 跨大類：子類移到另一個大類
+          const [moved] = tree[src.parentIdx].children.splice(src.childIdx, 1);
+          tree[tgt.parentIdx].children.splice(tgt.childIdx, 0, moved);
+        }
+      } else if (src.type === 'child' && tgt.type === 'parent') {
+        // 子類拖到大類標題 → 移到該大類最前面
+        const [moved] = tree[src.parentIdx].children.splice(src.childIdx, 1);
+        tree[tgt.parentIdx].children.unshift(moved);
+      }
+      return tree;
+    });
+    dragItem.current = null;
+    dragOver.current = null;
+  }
+
+  async function saveCatOrder() {
+    if (!dragTree) return;
+    setCatSaving(true);
+    try {
+      // 轉回 {parent: children[]} 格式送給 GAS
+      const ordered = dragTree.map(g => ({ parent: g.parent, children: g.children }));
+      await callGAS('reorderCategories', { ordered });
+      // 更新本地 catTree
+      const newTree = {};
+      ordered.forEach(g => { newTree[g.parent] = g.children; });
+      setCatTree(newTree);
+      setShowCatMgr(false);
+    } catch(e) { alert('儲存失敗：' + e.message); }
+    finally { setCatSaving(false); }
   }
 
   // ── 訂單展開 & 狀態切換 ──
@@ -880,7 +965,7 @@ function Admin() {
                 <option value="">全部分類</option>
                 {Object.keys(catTree).map(p=><option key={p} value={p}>{p}</option>)}
               </select>
-              <button className="btn-edit" style={{padding:"8px 14px",fontSize:13}} onClick={()=>setShowCatMgr(true)}>⚙ 管理分類</button>
+              <button className="btn-edit" style={{padding:"8px 14px",fontSize:13}} onClick={openCatMgr}>⚙ 管理分類</button>
               <button className="btn-edit" style={{padding:"8px 14px",fontSize:13}} onClick={()=>importFileRef.current&&importFileRef.current.click()}>📥 Excel匯入</button>
               <input type="file" accept=".xlsx,.xls,.csv" style={{display:"none"}} ref={importFileRef} onChange={e=>{handleImportFile(e.target.files[0]);e.target.value="";}}/>
               <button className="btn-save" style={{padding:"8px 16px",fontSize:13}} onClick={()=>setShowAddM(v=>!v)}>
@@ -962,20 +1047,37 @@ function Admin() {
                           onKeyDown={e=>{if(e.key==="Enter")addCatItem();}}/>
                         <button className="btn-save" onClick={addCatItem}>新增</button>
                       </div>
-                      {/* 樹狀列表 */}
-                      {Object.keys(catTree).length===0?<p style={{fontSize:13,color:"var(--ink-soft)"}}>尚無分類，請新增。</p>:
-                        Object.keys(catTree).map(parent=>(
-                          <div key={parent} style={{marginBottom:10,border:"1px solid var(--line)",borderRadius:8,overflow:"hidden"}}>
-                            <div style={{display:"flex",alignItems:"center",padding:"9px 12px",background:"#f4f6f5",gap:8}}>
-                              <span style={{fontWeight:700,fontSize:13,flex:1}}>{parent}</span>
-                              <button className="btn-del" style={{fontSize:11,padding:"3px 8px"}} onClick={()=>delCatParent(parent)}>刪除大類</button>
+                      {/* 拖拉排序提示 */}
+                      <p style={{fontSize:11,color:"var(--ink-soft)",marginBottom:10,lineHeight:1.5}}>
+                        ☰ 拖拉可調整順序；子類別可拖到其他大類別。
+                      </p>
+                      {(!dragTree||dragTree.length===0)?<p style={{fontSize:13,color:"var(--ink-soft)"}}>尚無分類，請新增。</p>:
+                        dragTree.map((group,parentIdx)=>(
+                          <div key={group.parent}
+                            draggable
+                            onDragStart={e=>onDragStart(e,{type:"parent",parentIdx})}
+                            onDragOver={e=>onDragOver(e,{type:"parent",parentIdx})}
+                            onDrop={e=>onDrop(e,{type:"parent",parentIdx})}
+                            style={{marginBottom:10,border:"1px solid var(--line)",borderRadius:8,overflow:"hidden"}}>
+                            <div style={{display:"flex",alignItems:"center",padding:"9px 12px",background:"#f4f6f5",gap:8,cursor:"grab"}}>
+                              <span style={{color:"var(--ink-soft)",fontSize:15}}>☰</span>
+                              <span style={{fontWeight:700,fontSize:13,flex:1}}>{group.parent}</span>
+                              <button className="btn-del" style={{fontSize:11,padding:"3px 8px"}} onClick={()=>delCatParent(group.parent)}>刪除大類</button>
                             </div>
-                            <div style={{padding:"6px 12px"}}>
-                              {(catTree[parent]||[]).length===0?<span style={{fontSize:12,color:"var(--ink-soft)"}}>無子類別</span>:
-                                (catTree[parent]||[]).map(child=>(
-                                  <div key={child} style={{display:"flex",alignItems:"center",padding:"4px 0",borderBottom:"1px solid var(--line)"}}>
-                                    <span style={{flex:1,fontSize:13}}>　{child}</span>
-                                    <button className="btn-del" style={{fontSize:11,padding:"2px 8px"}} onClick={()=>delCatChild(parent,child)}>刪除</button>
+                            <div style={{padding:"6px 12px"}}
+                              onDragOver={e=>onDragOver(e,{type:"parent",parentIdx})}
+                              onDrop={e=>onDrop(e,{type:"parent",parentIdx})}>
+                              {group.children.length===0?<span style={{fontSize:12,color:"var(--ink-soft)"}}>無子類別，可從其他大類拖入</span>:
+                                group.children.map((child,childIdx)=>(
+                                  <div key={child}
+                                    draggable
+                                    onDragStart={e=>{e.stopPropagation();onDragStart(e,{type:"child",parentIdx,childIdx});}}
+                                    onDragOver={e=>{e.preventDefault();e.stopPropagation();onDragOver(e,{type:"child",parentIdx,childIdx});}}
+                                    onDrop={e=>{e.stopPropagation();onDrop(e,{type:"child",parentIdx,childIdx});}}
+                                    style={{display:"flex",alignItems:"center",padding:"6px 0",borderBottom:"1px solid var(--line)",cursor:"grab",gap:6}}>
+                                    <span style={{color:"var(--ink-soft)",fontSize:12}}>☰</span>
+                                    <span style={{flex:1,fontSize:13}}>{child}</span>
+                                    <button className="btn-del" style={{fontSize:11,padding:"2px 8px"}} onClick={()=>delCatChild(group.parent,child)}>刪除</button>
                                   </div>
                                 ))
                               }
@@ -983,7 +1085,15 @@ function Admin() {
                           </div>
                         ))
                       }
-                    </React.Fragment>
+                      {dragTree&&dragTree.length>0&&(
+                        <div style={{marginTop:12,textAlign:"right"}}>
+                          <button className="btn-save" onClick={saveCatOrder} disabled={catSaving}
+                            style={{padding:"9px 20px",fontSize:13}}>
+                            {catSaving?"儲存中…":"💾 儲存順序"}
+                          </button>
+                        </div>
+                      )}
+                                          </React.Fragment>
                   )}
                 </div>
               </div>
