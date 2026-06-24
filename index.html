@@ -415,8 +415,17 @@ const IDLE_MINUTES = 30;
 })();
 
 async function callGAS(action, payload) {
-  const res = await fetch(GAS_URL, { method:"POST", headers:{"Content-Type":"text/plain;charset=utf-8"}, body:JSON.stringify(Object.assign({action}, payload)) });
-  const data = await res.json();
+  const res = await fetch(GAS_URL, {
+    method: "POST",
+    redirect: "follow",
+    headers: {"Content-Type": "text/plain;charset=utf-8"},
+    body: JSON.stringify(Object.assign({action}, payload))
+  });
+  const text = await res.text();
+  if (text.trim().startsWith("<")) {
+    throw new Error("GAS 回傳非 JSON（可能需要重新部署）：" + text.substring(0,80));
+  }
+  const data = JSON.parse(text);
   if (!data.ok) throw new Error(data.error || "後端回應失敗");
   return data;
 }
