@@ -18,7 +18,7 @@
     --radius:8px; --radius-lg:12px;
     --shadow-sm:0 1px 3px rgba(0,0,0,.08);
     --shadow-md:0 4px 12px rgba(0,0,0,.1);
-    --header-h:56px; --header-h-mobile:96px;
+    --header-h:56px; --header-h-mobile:96px; --header-h-mobile-cat:140px;
   }
   *{box-sizing:border-box;}
   body{margin:0;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","Noto Sans TC","PingFang TC",sans-serif;background:var(--paper);color:var(--ink);-webkit-font-smoothing:antialiased;}
@@ -77,8 +77,11 @@
   /* ── 版面 ── */
   .layout{display:flex;max-width:1280px;margin:0 auto;}
 
+  /* ── Header 分類列（手機專用，嵌在 header 內）── */
+  .header-cats{display:none;}
+
   /* ── Sidebar ── */
-  /* 桌機：隱藏手機用的 row1/row2，顯示垂直樹 */
+  /* 桌機：sidebar 內的 row1/row2 不需要，只用 desktop-tree */
   .sidebar-row1,.sidebar-row2{display:none;}
   .sidebar-desktop-tree{display:block;}
   .sidebar{
@@ -265,22 +268,63 @@
 
   /* ── 行動裝置響應式 ── */
   @media(max-width:760px){
-    :root{--header-h:96px;}
+    :root{--header-h:var(--header-h-mobile-cat);}
 
     .app-header{
-      height:var(--header-h);
+      height:auto;
       grid-template-columns:1fr auto;
-      grid-template-rows:44px 44px;
-      grid-template-areas:"who actions" "search search";
+      grid-template-rows:44px 44px auto;
+      grid-template-areas:"who actions" "search search" "cats cats";
       padding:0 16px;
       gap:0;
     }
     .header-who{grid-area:who;padding:8px 0 4px;}
     .header-actions{grid-area:actions;padding:8px 0 4px;}
-    .header-search{grid-area:search;padding:0 0 8px;}
+    .header-search{grid-area:search;padding:0 0 6px;}
     .header-search input{border-radius:var(--radius);background:#fff;}
     .btn-orders span.label{display:none;}
     .logout-link span.label{display:none;}
+    /* 手機：分類列顯示在 header 第三行 */
+    .header-cats{
+      grid-area:cats;
+      display:flex;flex-direction:column;
+      margin:0 -16px;
+      border-top:1px solid var(--line);
+    }
+    .header-cats-row1{
+      display:flex;overflow-x:auto;
+      padding:6px 12px;gap:6px;
+      -webkit-overflow-scrolling:touch;
+      scrollbar-width:none;
+    }
+    .header-cats-row1::-webkit-scrollbar{display:none;}
+    .header-cats-row2{
+      display:flex;overflow-x:auto;
+      padding:5px 12px 7px;gap:6px;
+      border-top:1px solid var(--line);
+      background:var(--paper);
+      -webkit-overflow-scrolling:touch;
+      scrollbar-width:none;
+    }
+    .header-cats-row2::-webkit-scrollbar{display:none;}
+    .cat-pill-parent{
+      white-space:nowrap;flex-shrink:0;
+      padding:5px 13px;border-radius:14px;font-size:13px;font-weight:600;
+      border:none;background:none;color:var(--ink-soft);cursor:pointer;
+    }
+    .cat-pill-parent.active{background:var(--brand);color:#fff;}
+    .cat-pill-all{
+      white-space:nowrap;flex-shrink:0;
+      padding:5px 13px;border-radius:14px;font-size:13px;font-weight:600;
+      border:none;background:none;color:var(--ink-soft);cursor:pointer;
+    }
+    .cat-pill-all.active{background:var(--brand);color:#fff;}
+    .cat-pill-child{
+      white-space:nowrap;flex-shrink:0;
+      padding:4px 11px;border-radius:12px;font-size:12px;
+      border:1px solid var(--line);background:#fff;color:var(--ink-soft);cursor:pointer;
+    }
+    .cat-pill-child.active{background:var(--brand);color:#fff;border-color:var(--brand);}
 
     .sidebar{
       position:static;width:100%;height:auto;
@@ -317,14 +361,12 @@
     }
     .sidebar-all.active,.sidebar-parent-btn.active{background:var(--brand);color:#fff;border-color:var(--brand);}
     .sidebar-child.active{background:var(--brand);color:#fff;border-color:var(--brand);}
-    .sidebar-desktop-tree{display:none;}
-    .sidebar-row1,.sidebar-row2{display:flex;}
-    .sidebar-children{display:contents;}
-    .sidebar .arrow{display:none;}
-    .sidebar .count{display:none;}
+    /* 手機：sidebar 完全隱藏（分類已移到 header） */
+    .sidebar{display:none;}
 
     .layout{flex-direction:column;}
     .main{padding:14px 16px 100px;}
+    .sidebar{display:none!important;}
     .grid{grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:12px;}
     .card .name{font-size:12px;min-height:32px;}
     .card .unit-price{font-size:15px;}
@@ -995,6 +1037,36 @@ function App() {
             🛒{cartCount>0&&<span className="cart-badge">{cartCount}</span>}
           </button>
           <button className="logout-link" onClick={doLogout}><span className="label">登出</span></button>
+        </div>
+        {/* ── 手機專用：分類 pill 列（header 第三行）── */}
+        <div className="header-cats">
+          <div className="header-cats-row1">
+            <button className={"cat-pill-all"+(activeCat===null?" active":"")} onClick={()=>setActiveCat(null)}>全部</button>
+            {hasCatTree ? treeParents.map(parent=>(
+              <button key={parent}
+                className={"cat-pill-parent"+(activeCat&&activeCat.parent===parent?" active":"")}
+                onClick={()=>setActiveCat({parent,child:null})}>
+                {parent}
+              </button>
+            )) : [...new Set(products.map(p=>p.category))].map(cat=>(
+              <button key={cat}
+                className={"cat-pill-parent"+(activeCat&&activeCat.parent===cat?" active":"")}
+                onClick={()=>setActiveCat({parent:cat,child:null})}>
+                {cat}
+              </button>
+            ))}
+          </div>
+          {hasCatTree && activeCat && (catTree[activeCat.parent]||[]).length>0 && (
+            <div className="header-cats-row2">
+              {(catTree[activeCat.parent]||[]).map(child=>(
+                <button key={child}
+                  className={"cat-pill-child"+(activeCat.child===child?" active":"")}
+                  onClick={()=>setActiveCat({parent:activeCat.parent,child})}>
+                  {child}
+                </button>
+              ))}
+            </div>
+          )}
         </div>
       </div>
       <div className="layout">
