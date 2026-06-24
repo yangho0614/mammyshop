@@ -828,7 +828,7 @@ function App() {
         <h1>業務訂購系統</h1>
         {loginStep==="input" && (<React.Fragment>
           <p className="sub">請輸入統一編號，系統將自動帶出對應的客戶資料</p>
-          <input className="taxid-input" placeholder="請輸入統一編號" value={taxIdInput} maxLength={8} inputMode="numeric" pattern="[0-9]*" autoComplete="off"
+          <input className="taxid-input" placeholder="請輸入統一編號" value={taxIdInput} maxLength={8} inputMode="numeric" autoComplete="off"
             onChange={e=>{setTaxIdInput(e.target.value.replace(/\D/g,""));setLoginError("");}} onKeyDown={e=>{if(e.key==="Enter")handleTaxIdSubmit();}} />
           {loginError && <div className="login-error">{loginError}</div>}
           <button className="submit-btn" disabled={loading} onClick={handleTaxIdSubmit}>{loading?"查詢中…":"查詢"}</button>
