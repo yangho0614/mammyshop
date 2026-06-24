@@ -66,9 +66,9 @@
     min-width:0;
   }
   .header-searchbar .header-search{flex:1;}
-  .header-who{grid-area:who;display:flex;flex-direction:column;justify-content:center;min-width:0;padding:10px 0 4px;}
-  .header-who .company{font-size:14px;font-weight:700;color:var(--ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
-  .header-who .branch{font-size:11px;color:var(--ink-soft);margin-top:1px;}
+  .header-who{grid-area:who;display:flex;align-items:center;min-width:0;padding:10px 0 4px;}
+  .header-who .company{font-size:18px;font-weight:700;color:var(--ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+  .header-who .branch{display:none;}
   .header-search{flex:1;position:relative;}
   .header-search input{width:100%;padding:9px 14px 9px 36px;border:1.5px solid var(--line);border-radius:20px;font-size:14px;background:#f6f6f7;transition:all .2s;}
   @media(max-width:760px){.header-search input{font-size:16px;}}
@@ -1031,8 +1031,7 @@ function App() {
     <div>
       <div className="app-header">
         <div className="header-who">
-          <span className="company">{customerDisplayName}</span>
-          <span className="branch">（{customer.code||customer.branchCode||""}）{customer.branchName||""}</span>
+          <span className="company">{/^\d+$/.test(customer.name||"")?customer.branchName:(customer.name||"")}（{customer.code||customer.branchCode||""}）{customer.branchName||""}</span>
         </div>
         <div className="header-actions">
           <button className="btn-orders" onClick={()=>setStage("history")}>
