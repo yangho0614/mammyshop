@@ -81,7 +81,7 @@
   .mgmt-table td{padding:6px 8px;border-bottom:1px solid var(--line);vertical-align:middle;}
   .mgmt-table tr.editing td{background:#f7fbfa;}
   .cell-input{width:100%;padding:5px 7px;border:1px solid var(--brand);border-radius:5px;font-size:13px;background:#fff;box-shadow:0 0 0 2px rgba(47,111,94,.12);}
-  .cell-text{display:block;padding:4px 2px;cursor:pointer;min-height:22px;border:1px solid transparent;border-radius:5px;}
+  .cell-text{display:block;padding:4px 2px;min-height:22px;border:1px solid transparent;border-radius:5px;}
   .cell-text:hover{background:#f0f7f5;border-color:var(--line);}
   .cell-text.empty{color:#bbb;font-style:italic;}
   .row-actions{display:flex;gap:6px;white-space:nowrap;}
@@ -1133,16 +1133,16 @@ function Admin() {
                         <tr key={row.code} className={isE?"editing":""}>
                           <td><input type="checkbox" checked={!!checkedMaster[row.code]} onChange={()=>toggleMasterCheck(row.code)} style={{width:15,height:15,accentColor:"var(--brand)"}}/></td>
                           <td style={{fontFamily:"monospace",fontSize:12,whiteSpace:"nowrap"}}>{row.code}</td>
-                          <td style={{minWidth:180}}>{isE?<input className="cell-input" value={editDraft.name||""} onChange={e=>setEditDraft(p=>({...p,name:e.target.value}))}/>:<span className="cell-text" onClick={()=>startEdit(row)}>{row.name||<em className="empty">點擊編輯</em>}</span>}</td>
+                          <td style={{minWidth:180}}>{isE?<input className="cell-input" value={editDraft.name||""} onChange={e=>setEditDraft(p=>({...p,name:e.target.value}))}/>:<span className="cell-text">{row.name||<em className="empty">—</em>}</span>}</td>
                           <td style={{minWidth:100}}>{isE?(
                             <select className="cell-input" value={editDraft.category||""} onChange={e=>setEditDraft(p=>({...p,category:e.target.value}))}>
                               <option value="">選擇分類…</option>
                               {Object.keys(catTree).map(p=><option key={p} value={p}>{p}</option>)}
                             </select>
-                          ):<span className="cell-text" onClick={()=>startEdit(row)}>{row.category||<em className="empty">—</em>}</span>}</td>
-                          <td style={{minWidth:70}}>{isE?<input className="cell-input" value={editDraft.listPrice||""} onChange={e=>setEditDraft(p=>({...p,listPrice:e.target.value}))} style={{width:70}}/>:<span className="cell-text" onClick={()=>startEdit(row)}>{row.listPrice||<em className="empty">—</em>}</span>}</td>
-                          <td style={{minWidth:70}}>{isE?<input className="cell-input" value={editDraft.cost||""} onChange={e=>setEditDraft(p=>({...p,cost:e.target.value}))} style={{width:70}}/>:<span className="cell-text" onClick={()=>startEdit(row)}>{row.cost||<em className="empty">—</em>}</span>}</td>
-                          <td style={{minWidth:60}}>{isE?<input className="cell-input" value={editDraft.boxQty||""} onChange={e=>setEditDraft(p=>({...p,boxQty:e.target.value}))} style={{width:60}}/>:<span className="cell-text" onClick={()=>startEdit(row)}>{row.boxQty||<em className="empty">—</em>}</span>}</td>
+                          ):<span className="cell-text">{row.category||<em className="empty">—</em>}</span>}</td>
+                          <td style={{minWidth:70}}>{isE?<input className="cell-input" value={editDraft.listPrice||""} onChange={e=>setEditDraft(p=>({...p,listPrice:e.target.value}))} style={{width:70}}/>:<span className="cell-text">{row.listPrice||<em className="empty">—</em>}</span>}</td>
+                          <td style={{minWidth:70}}>{isE?<input className="cell-input" value={editDraft.cost||""} onChange={e=>setEditDraft(p=>({...p,cost:e.target.value}))} style={{width:70}}/>:<span className="cell-text">{row.cost||<em className="empty">—</em>}</span>}</td>
+                          <td style={{minWidth:60}}>{isE?<input className="cell-input" value={editDraft.boxQty||""} onChange={e=>setEditDraft(p=>({...p,boxQty:e.target.value}))} style={{width:60}}/>:<span className="cell-text">{row.boxQty||<em className="empty">—</em>}</span>}</td>
                           <td style={{textAlign:"center"}}>
                             <input type="checkbox"
                               checked={isE ? !!editDraft.inactive : !!row.inactive}
@@ -1217,9 +1217,9 @@ function Admin() {
                           <td style={{fontSize:12,whiteSpace:"nowrap"}}>{row.customerCode}</td>
                           <td>{row.customerName}</td>
                           <td style={{fontFamily:"monospace",fontSize:12}}>{row.productCode}</td>
-                          <td style={{minWidth:70}}>{isE?<input className="cell-input" value={priceDraft.unitPrice||""} onChange={e=>setPriceDraft(p=>({...p,unitPrice:e.target.value}))} style={{width:80}}/>:<span className="cell-text" onClick={()=>startEditP(row)}>{row.unitPrice}</span>}</td>
-                          <td style={{minWidth:120}}>{isE?<input className="cell-input" value={priceDraft.activity||""} onChange={e=>setPriceDraft(p=>({...p,activity:e.target.value}))}/>:<span className="cell-text" onClick={()=>startEditP(row)}>{row.activity||<em className="empty">—</em>}</span>}</td>
-                          <td style={{minWidth:80}}>{isE?<input className="cell-input" value={priceDraft.note||""} onChange={e=>setPriceDraft(p=>({...p,note:e.target.value}))}/>:<span className="cell-text" onClick={()=>startEditP(row)}>{row.note||<em className="empty">—</em>}</span>}</td>
+                          <td style={{minWidth:70}}>{isE?<input className="cell-input" value={priceDraft.unitPrice||""} onChange={e=>setPriceDraft(p=>({...p,unitPrice:e.target.value}))} style={{width:80}}/>:<span className="cell-text">{row.unitPrice}</span>}</td>
+                          <td style={{minWidth:120}}>{isE?<input className="cell-input" value={priceDraft.activity||""} onChange={e=>setPriceDraft(p=>({...p,activity:e.target.value}))}/>:<span className="cell-text">{row.activity||<em className="empty">—</em>}</span>}</td>
+                          <td style={{minWidth:80}}>{isE?<input className="cell-input" value={priceDraft.note||""} onChange={e=>setPriceDraft(p=>({...p,note:e.target.value}))}/>:<span className="cell-text">{row.note||<em className="empty">—</em>}</span>}</td>
                           <td>
                             <div className="row-actions">
                               {isE?<React.Fragment><button className="btn-save" onClick={()=>saveEditP(row)}>儲存</button><button className="btn-cancel" onClick={cancelEditP}>取消</button></React.Fragment>
@@ -1381,8 +1381,8 @@ function Admin() {
               <div className="add-form">
                 <label className="narrow">統一編號<input value={newCust.taxId} onChange={e=>setNewCust(p=>({...p,taxId:e.target.value}))} placeholder="12345678"/></label>
                 <label className="wide">公司名稱＊<input value={newCust.companyName} onChange={e=>setNewCust(p=>({...p,companyName:e.target.value}))} placeholder="麗兒采家"/></label>
-                <label className="narrow">分店代號＊<input value={newCust.branchCode} onChange={e=>setNewCust(p=>({...p,branchCode:e.target.value}))} placeholder="J204200"/></label>
-                <label className="narrow">分店名稱<input value={newCust.branchName} onChange={e=>setNewCust(p=>({...p,branchName:e.target.value}))} placeholder="麗兒總倉"/></label>
+                <label className="narrow">客戶編號＊<input value={newCust.branchCode} onChange={e=>setNewCust(p=>({...p,branchCode:e.target.value}))} placeholder="J204200"/></label>
+                <label className="narrow">店家名稱<input value={newCust.branchName} onChange={e=>setNewCust(p=>({...p,branchName:e.target.value}))} placeholder="麗兒總倉"/></label>
                 <label className="narrow">區域
                   <select value={newCust.region} onChange={e=>setNewCust(p=>({...p,region:e.target.value}))} style={{width:"100%",padding:"8px 10px",border:"1px solid var(--line)",borderRadius:6,fontSize:13}}>
                     <option value="">選擇…</option>
@@ -1396,22 +1396,22 @@ function Admin() {
             {custLoading?<p style={{color:"var(--ink-soft)",fontSize:14}}>載入中…</p>:(
               <div style={{overflowX:"auto"}}>
                 <table className="cust-mgmt-table">
-                  <thead><tr><th>統一編號</th><th>公司名稱</th><th>分店代號</th><th>分店名稱</th><th>區域</th><th style={{width:140}}>操作</th></tr></thead>
+                  <thead><tr><th>統一編號</th><th>公司名稱</th><th>客戶編號</th><th>店家名稱</th><th>區域</th><th style={{width:140}}>操作</th></tr></thead>
                   <tbody>
                     {filteredCust.map(row=>{
                       const isE = editCust===row.branchCode;
                       return (
                         <tr key={row.branchCode} className={isE?"editing":""}>
                           <td style={{fontFamily:"monospace",fontSize:12}}>{isE?<input className="cell-input" value={custDraft.taxId??row.taxId} onChange={e=>setCustDraft(p=>({...p,taxId:e.target.value}))} style={{width:90}}/>:row.taxId||<em style={{color:"#bbb"}}>—</em>}</td>
-                          <td>{isE?<input className="cell-input" value={custDraft.companyName??row.companyName} onChange={e=>setCustDraft(p=>({...p,companyName:e.target.value}))}/>:<span className="cell-text" onClick={()=>{setEditCust(row.branchCode);setCustDraft({});}}>{row.companyName}</span>}</td>
+                          <td>{isE?<input className="cell-input" value={custDraft.companyName??row.companyName} onChange={e=>setCustDraft(p=>({...p,companyName:e.target.value}))}/>:<span className="cell-text">{row.companyName}</span>}</td>
                           <td style={{fontFamily:"monospace",fontSize:12}}>{row.branchCode}</td>
-                          <td>{isE?<input className="cell-input" value={custDraft.branchName??row.branchName} onChange={e=>setCustDraft(p=>({...p,branchName:e.target.value}))}/>:<span className="cell-text" onClick={()=>{setEditCust(row.branchCode);setCustDraft({});}}>{row.branchName||<em style={{color:"#bbb"}}>—</em>}</span>}</td>
+                          <td>{isE?<input className="cell-input" value={custDraft.branchName??row.branchName} onChange={e=>setCustDraft(p=>({...p,branchName:e.target.value}))}/>:<span className="cell-text">{row.branchName||<em style={{color:"#bbb"}}>—</em>}</span>}</td>
                           <td>{isE?(
                             <select className="cell-input" value={custDraft.region??row.region??""} onChange={e=>setCustDraft(p=>({...p,region:e.target.value}))} style={{padding:"4px 6px",fontSize:12}}>
                               <option value="">—</option>
                               {["北北基","桃竹苗","宜花東","台中","彰化","南投","雲林","嘉南高"].map(r=><option key={r} value={r}>{r}</option>)}
                             </select>
-                          ):<span className="cell-text" onClick={()=>{setEditCust(row.branchCode);setCustDraft({});}}>{row.region||<em style={{color:"#bbb"}}>—</em>}</span>}</td>
+                          ):<span className="cell-text">{row.region||<em style={{color:"#bbb"}}>—</em>}</span>}</td>
                           <td>
                             <div className="row-actions">
                               {isE
