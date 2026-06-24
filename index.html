@@ -279,6 +279,49 @@
   .confirm-modal-btns{display:flex;gap:8px;justify-content:flex-end;}
   .idle-banner{position:fixed;bottom:16px;left:50%;transform:translateX(-50%);background:#1a1a1a;color:#fff;font-size:13px;padding:10px 20px;border-radius:20px;z-index:50;box-shadow:0 4px 16px rgba(0,0,0,.25);display:flex;align-items:center;gap:12px;}
 
+  /* ── 底部 Footer（手機專用）── */
+  .bottom-nav{display:none;}
+  @media(max-width:760px){
+    .bottom-nav{
+      display:flex;
+      position:fixed;bottom:0;left:0;right:0;
+      z-index:100;
+      background:var(--panel);
+      border-top:1px solid var(--line);
+      box-shadow:0 -2px 12px rgba(0,0,0,.08);
+      height:60px;
+      padding:0 16px;
+      padding-bottom:env(safe-area-inset-bottom);
+    }
+    .bottom-nav-btn{
+      flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;
+      gap:3px;background:none;border:none;cursor:pointer;
+      color:var(--ink-soft);font-size:10px;font-weight:500;
+      transition:color .15s;
+    }
+    .bottom-nav-btn.active{color:var(--brand);}
+    .bottom-nav-btn .bnav-icon{font-size:20px;line-height:1;}
+    .bottom-nav-cart{
+      flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;
+      gap:3px;background:none;border:none;cursor:pointer;
+      color:var(--brand);font-size:10px;font-weight:600;
+      position:relative;
+      transition:color .15s;
+    }
+    .bottom-nav-cart .bnav-icon{font-size:20px;line-height:1;}
+    .bottom-nav-cart .bnav-badge{
+      position:absolute;top:6px;right:calc(50% - 18px);
+      background:var(--danger);color:#fff;
+      border-radius:10px;padding:1px 5px;font-size:10px;font-weight:700;
+      min-width:16px;text-align:center;
+    }
+    /* 手機 header：隱藏我的訂單和購物車按鈕 */
+    .header-actions .btn-orders{display:none;}
+    .header-actions .cart-pill{display:none;}
+    /* 內容區底部留白給 footer */
+    .main{padding-bottom:76px!important;}
+  }
+
   /* ── 行動裝置響應式 ── */
   @media(max-width:760px){
     :root{--header-h:var(--header-h-mobile-cat);}
@@ -295,8 +338,8 @@
     .header-actions{grid-area:actions;padding:8px 0 4px;gap:6px;}
     .header-searchbar{grid-area:searchbar;display:flex;align-items:center;gap:6px;padding:0 0 8px;}
     .header-search{flex:1;position:relative;}
-    .header-search input{border-radius:var(--radius);background:#fff;}
-    .header-sort{flex-shrink:0;font-size:12px;padding:8px 8px;border-radius:var(--radius);}
+    .header-search input{border-radius:var(--radius);background:#fff;height:42px;padding-top:0;padding-bottom:0;}
+    .header-sort{flex-shrink:0;font-size:12px;padding:0 8px;height:42px;border-radius:var(--radius);}
     .btn-orders span.label{display:inline;}
     .logout-link span.label{display:none;}
     /* 手機：分類列顯示在 header 第三行 */
@@ -1236,6 +1279,18 @@ function App() {
           </div>
         </div>
       )}
+      {/* ── 手機底部 Footer ── */}
+      <div className="bottom-nav">
+        <button className={"bottom-nav-btn"+(stage==="history"?" active":"")} onClick={()=>setStage(stage==="history"?"shop":"history")}>
+          <span className="bnav-icon">📋</span>
+          <span>我的訂單</span>
+        </button>
+        <button className="bottom-nav-cart" onClick={()=>setDrawerOpen(true)}>
+          <span className="bnav-icon">🛒</span>
+          {cartCount>0 && <span className="bnav-badge">{cartCount}</span>}
+          <span>購物車</span>
+        </button>
+      </div>
     </div>
   );
 }
