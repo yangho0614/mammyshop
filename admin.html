@@ -714,21 +714,36 @@ function Admin() {
   const [editPrice,    setEditPrice]    = useState(null);
   const [priceDraft,   setPriceDraft]   = useState({});
   const [showAddP,     setShowAddP]     = useState(false);
-  const [newP,         setNewP]         = useState({priceGroup:"DEFAULT",productCode:"",unitPrice:"",activity:"",note:""});
+  const [newP,         setNewP]         = useState({priceGroup:"DEFAULT",productCode:"",productName:"",unitPrice:"",activity:"",note:""});
   const [showCopyGroup, setShowCopyGroup] = useState(false);
   const [copyTarget,   setCopyTarget]   = useState("");
 
-  async function loadPrices() {
+  async function loadPrices(group) {
     setPLoading(true); setPError("");
     try {
-      const d = await callGAS("listPrices",{priceGroup:null});
-      setPriceRows(d.rows);
-      const gs = d.groups || [];
+      // 先取群組列表
+      const gd = await callGAS("listPriceGroups",{});
+      const gs = gd.groups || ["DEFAULT"];
       if (!gs.includes("DEFAULT")) gs.unshift("DEFAULT");
       setPGroups(gs);
-      if (!pFilter || !gs.includes(pFilter)) setPFilter(gs[0]||"DEFAULT");
+      const activeGroup = group || (gs.includes(pFilter)?pFilter:gs[0]);
+      setPFilter(activeGroup);
+      // 再取該群組資料
+      const d = await callGAS("listPrices",{priceGroup:activeGroup});
+      setPriceRows(d.rows||[]);
     }
     catch(e) { setPError("載入失敗："+e.message); }
+    finally { setPLoading(false); }
+  }
+
+  async function switchGroup(g) {
+    setPFilter(g);
+    setPLoading(true);
+    try {
+      const d = await callGAS("listPrices",{priceGroup:g});
+      setPriceRows(d.rows||[]);
+    }
+    catch(e) { alert("載入失敗："+e.message); }
     finally { setPLoading(false); }
   }
   useEffect(() => { if (tab==="prices" && authed && priceRows.length===0) loadPrices(); }, [tab, authed]);
@@ -760,7 +775,7 @@ function Admin() {
     try {
       await callGAS("savePriceRow",{row:newP});
       setPriceRows(p=>[...p,{...newP}]);
-      setNewP({priceGroup:pFilter,productCode:"",unitPrice:"",activity:"",note:""});
+      setNewP({priceGroup:pFilter,productCode:"",productName:"",unitPrice:"",activity:"",note:""});
       setShowAddP(false);
     }
     catch(e) { alert("新增失敗："+e.message); }
@@ -772,8 +787,7 @@ function Admin() {
       const d = await callGAS("copyPriceGroup",{fromGroup:pFilter,toGroup:copyTarget.trim()});
       alert(`已從 ${pFilter} 複製 ${d.copied} 筆到 ${copyTarget.trim()}`);
       setCopyTarget(""); setShowCopyGroup(false);
-      await loadPrices();
-      setPFilter(copyTarget.trim());
+      await loadPrices(copyTarget.trim());
     }
     catch(e) { alert("複製失敗："+e.message); }
   }
@@ -782,8 +796,7 @@ function Admin() {
     if (!confirm(`確定刪除整個「${pFilter}」群組的所有價格資料？\n（此操作不可復原）`)) return;
     try {
       await callGAS("deletePriceGroup",{priceGroup:pFilter});
-      setPFilter("DEFAULT");
-      await loadPrices();
+      await loadPrices("DEFAULT");
     }
     catch(e) { alert("刪除失敗："+e.message); }
   }
@@ -1229,7 +1242,7 @@ function Admin() {
             <div style={{display:"flex",gap:8,marginBottom:10,alignItems:"center",flexWrap:"wrap"}}>
               <span style={{fontSize:12,color:"var(--ink-soft)",flexShrink:0}}>價格群組：</span>
               {pGroups.map(g=>(
-                <button key={g} onClick={()=>setPFilter(g)}
+                <button key={g} onClick={()=>switchGroup(g)}
                   style={{padding:"5px 14px",borderRadius:16,fontSize:13,border:"1.5px solid",
                     borderColor:pFilter===g?"var(--brand)":"var(--line)",
                     background:pFilter===g?"var(--brand)":"#fff",
@@ -1241,19 +1254,17 @@ function Admin() {
                 style={{padding:"5px 12px",borderRadius:16,fontSize:12,border:"1.5px dashed var(--line)",background:"#fff",cursor:"pointer",color:"var(--ink-soft)"}}>
                 ＋ 複製群組
               </button>
-              {pGroups.length===1&&pGroups[0]==="DEFAULT"&&(
-                <button onClick={async()=>{
-                  if(!confirm("將現有客戶價格表所有 A 欄（客戶代號）改成 DEFAULT 群組？\n此操作不可復原。")) return;
-                  try{
-                    const d = await callGAS("migrateToDefaultGroup",{});
-                    alert(`移轉完成！共更新 ${d.updated} 筆`);
-                    await loadPrices();
-                  }catch(e){alert("失敗："+e.message);}
-                }}
-                style={{padding:"5px 12px",borderRadius:16,fontSize:12,border:"1.5px solid #e07b39",background:"#fff7f3",cursor:"pointer",color:"#e07b39"}}>
-                ⚡ 一鍵移轉為 DEFAULT
-              </button>
-              )}
+              <button onClick={async()=>{
+                if(!confirm(`將舊「客戶價格表」分頁的資料匯入為「價格_DEFAULT」分頁？`)) return;
+                try{
+                  const d = await callGAS("migrateOldPriceSheet",{});
+                  alert(`匯入完成！共 ${d.migrated} 筆`);
+                  await loadPrices("DEFAULT");
+                }catch(e){alert("匯入失敗："+e.message);}
+              }}
+              style={{padding:"5px 12px",borderRadius:16,fontSize:12,border:"1.5px solid #e07b39",background:"#fff7f3",cursor:"pointer",color:"#e07b39"}}>
+              📥 匯入舊資料為 DEFAULT
+            </button>
             </div>
             {/* 複製群組表單 */}
             {showCopyGroup&&(
@@ -1280,6 +1291,7 @@ function Admin() {
               <div className="add-form">
                 <label className="narrow">群組<input value={newP.priceGroup} readOnly style={{background:"#f4f4f4"}}/></label>
                 <label className="narrow">品號＊<input value={newP.productCode} onChange={e=>setNewP(p=>({...p,productCode:e.target.value}))} placeholder="021605"/></label>
+                <label className="narrow">品名<input value={newP.productName} onChange={e=>setNewP(p=>({...p,productName:e.target.value}))} placeholder="母感體驗奶嘴"/></label>
                 <label className="narrow">單價＊<input value={newP.unitPrice} onChange={e=>setNewP(p=>({...p,unitPrice:e.target.value}))} placeholder="40"/></label>
                 <label className="narrow">活動規則<input value={newP.activity} onChange={e=>setNewP(p=>({...p,activity:e.target.value}))} placeholder="buy:12,gift:1"/></label>
                 <label className="narrow">備註<input value={newP.note} onChange={e=>setNewP(p=>({...p,note:e.target.value}))}/></label>
