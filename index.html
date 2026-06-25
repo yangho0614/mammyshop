@@ -993,15 +993,16 @@ function App() {
   );
 
   if (stage==="history") return (
-    <div style={{minHeight:"100vh",background:"var(--paper)",position:"relative",zIndex:1}}>
-      <div className="app-header">
-        <span className="who">
-          <b>{customerDisplayName}</b>
-          <span style={{color:"var(--ink-soft)",fontWeight:400}}>（{customer.code||customer.branchCode||""}）{customer.branchName||""}</span>
-        </span>
-        <button style={{marginLeft:"auto",padding:"7px 14px",background:"var(--brand-tint)",border:"1px solid #c2dbd5",borderRadius:8,fontSize:13,cursor:"pointer",color:"var(--brand-dark)"}}
-          onClick={()=>setStage("shop")}>← 返回選購</button>
-        <button className="logout-link" style={{marginLeft:8}} onClick={doLogout}>登出</button>
+    <div style={{minHeight:"100vh",width:"100%",background:"var(--paper)",position:"relative",zIndex:1,overflowX:"hidden"}}>
+      <div className="app-header" style={{gridTemplateRows:"auto",gridTemplateAreas:"\"who actions\""}}>
+        <div className="header-who">
+          <span className="company">{customerDisplayName}（{customer.code||customer.branchCode||""}）{customer.branchName||""}</span>
+        </div>
+        <div className="header-actions">
+          <button style={{padding:"7px 14px",background:"var(--brand-tint)",border:"1px solid #c2dbd5",borderRadius:8,fontSize:13,cursor:"pointer",color:"var(--brand-dark)"}}
+            onClick={()=>setStage("shop")}>← 返回選購</button>
+          <button className="logout-link" onClick={doLogout}>登出</button>
+        </div>
       </div>
       <div className="history-wrap">
         <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:16}}>
