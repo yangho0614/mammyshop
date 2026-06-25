@@ -1302,18 +1302,17 @@ function Admin() {
             {pLoading?<p style={{color:"var(--ink-soft)",fontSize:14}}>載入中…</p>:(
               <div style={{overflowX:"auto"}}>
                 <table className="mgmt-table">
-                  <thead><tr><th>客戶代號</th><th>客戶名稱</th><th>品號</th><th>單價</th><th>活動規則</th><th>備註</th><th style={{width:140}}>操作</th></tr></thead>
+                  <thead><tr><th>品號</th><th>品名</th><th>單價</th><th>活動規則</th><th>備註</th><th style={{width:140}}>操作</th></tr></thead>
                   <tbody>
                     {filteredPrices.map(row=>{
-                      const isE = editPrice&&editPrice.cc===row.customerCode&&editPrice.pc===row.productCode;
+                      const isE = editPrice&&editPrice.g===row.priceGroup&&editPrice.pc===row.productCode;
                       return (
-                        <tr key={row.customerCode+"_"+row.productCode} className={isE?"editing":""}>
-                          <td style={{fontSize:12,whiteSpace:"nowrap"}}>{row.customerCode}</td>
-                          <td>{row.customerName}</td>
+                        <tr key={row.priceGroup+"_"+row.productCode} className={isE?"editing":""}>
                           <td style={{fontFamily:"monospace",fontSize:12}}>{row.productCode}</td>
-                          <td style={{minWidth:70}}>{isE?<input className="cell-input" value={priceDraft.unitPrice||""} onChange={e=>setPriceDraft(p=>({...p,unitPrice:e.target.value}))} style={{width:80}}/>:<span className="cell-text">{row.unitPrice}</span>}</td>
-                          <td style={{minWidth:120}}>{isE?<input className="cell-input" value={priceDraft.activity||""} onChange={e=>setPriceDraft(p=>({...p,activity:e.target.value}))}/>:<span className="cell-text">{row.activity||<em className="empty">—</em>}</span>}</td>
-                          <td style={{minWidth:80}}>{isE?<input className="cell-input" value={priceDraft.note||""} onChange={e=>setPriceDraft(p=>({...p,note:e.target.value}))}/>:<span className="cell-text">{row.note||<em className="empty">—</em>}</span>}</td>
+                          <td style={{minWidth:120}}>{isE?<input className="cell-input" value={priceDraft.productName??row.productName??""} onChange={e=>setPriceDraft(p=>({...p,productName:e.target.value}))}/>:<span className="cell-text">{row.productName||<em className="empty">—</em>}</span>}</td>
+                          <td style={{minWidth:70}}>{isE?<input className="cell-input" value={priceDraft.unitPrice??row.unitPrice??""} onChange={e=>setPriceDraft(p=>({...p,unitPrice:e.target.value}))} style={{width:80}}/>:<span className="cell-text">{row.unitPrice}</span>}</td>
+                          <td style={{minWidth:120}}>{isE?<input className="cell-input" value={priceDraft.activity??row.activity??""} onChange={e=>setPriceDraft(p=>({...p,activity:e.target.value}))}/>:<span className="cell-text">{row.activity||<em className="empty">—</em>}</span>}</td>
+                          <td style={{minWidth:80}}>{isE?<input className="cell-input" value={priceDraft.note??row.note??""} onChange={e=>setPriceDraft(p=>({...p,note:e.target.value}))}/>:<span className="cell-text">{row.note||<em className="empty">—</em>}</span>}</td>
                           <td>
                             <div className="row-actions">
                               {isE?<React.Fragment><button className="btn-save" onClick={()=>saveEditP(row)}>儲存</button><button className="btn-cancel" onClick={cancelEditP}>取消</button></React.Fragment>
