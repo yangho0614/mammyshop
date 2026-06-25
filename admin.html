@@ -1572,7 +1572,8 @@ function Admin() {
                               return (
                                 <span key={code} style={{display:"inline-flex",alignItems:"center",gap:4,padding:"3px 8px",
                                   background:"var(--brand-tint)",borderRadius:20,fontSize:12,color:"var(--brand-dark)"}}>
-                                  {m?m.name:code}
+                                  <span style={{fontFamily:"monospace",fontWeight:600}}>{code}</span>
+                                  {m&&<span style={{color:"var(--ink-soft)"}}>{m.name}</span>}
                                   <button onClick={()=>toggleTriggerCode(code)}
                                     style={{background:"none",border:"none",cursor:"pointer",color:"var(--brand-dark)",fontSize:14,lineHeight:1,padding:0}}>×</button>
                                 </span>
@@ -1621,7 +1622,8 @@ function Admin() {
                               return (
                                 <span key={code} style={{display:"inline-flex",alignItems:"center",gap:4,padding:"3px 8px",
                                   background:"#fff0e0",borderRadius:20,fontSize:12,color:"#b35a00"}}>
-                                  {m?m.name:code}
+                                  <span style={{fontFamily:"monospace",fontWeight:600}}>{code}</span>
+                                  {m&&<span style={{color:"#c27020"}}>{m.name}</span>}
                                   <button onClick={()=>toggleGiftCode(code)}
                                     style={{background:"none",border:"none",cursor:"pointer",color:"#b35a00",fontSize:14,lineHeight:1,padding:0}}>×</button>
                                 </span>
