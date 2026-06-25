@@ -542,6 +542,32 @@ function Admin() {
   }
   useEffect(() => { if (tab==="customers" && authed && custRows.length===0) loadCustomers(); }, [tab, authed]);
 
+  // ── 促銷活動 ──
+  const [promoRows,   setPromoRows]   = useState([]);
+  const [promoLoading,setPromoLoading]= useState(false);
+  const [showAddPromo,setShowAddPromo]= useState(false);
+  const [editPromo,   setEditPromo]   = useState(null); // promo object being edited
+  const EMPTY_PROMO = {id:"",name:"",ruleType:"buy",triggerN:2,giftM:1,triggerCodes:"",giftCodes:"",dateFrom:"",dateTo:"",priority:99,active:true};
+  const [newPromo,    setNewPromo]    = useState({...EMPTY_PROMO});
+
+  async function loadPromos() {
+    setPromoLoading(true);
+    try { const d = await callGAS("listPromos",{}); setPromoRows(d.rows||[]); }
+    catch(e) { alert("載入失敗："+e.message); }
+    finally { setPromoLoading(false); }
+  }
+  useEffect(() => { if (tab==="promos" && authed && promoRows.length===0) loadPromos(); }, [tab, authed]);
+
+  async function savePromo(row) {
+    try { await callGAS("savePromo",{row}); await loadPromos(); setShowAddPromo(false); setEditPromo(null); setNewPromo({...EMPTY_PROMO}); }
+    catch(e) { alert("儲存失敗："+e.message); }
+  }
+  async function deletePromo(id, name) {
+    if (!confirm(`確定刪除「${name}」活動？`)) return;
+    try { await callGAS("deletePromo",{id}); setPromoRows(p=>p.filter(r=>r.id!==id)); }
+    catch(e) { alert("刪除失敗："+e.message); }
+  }
+
   // 一鍵匯入 Excel 客戶名單（只更新分店名稱/區域，保留統編/公司名稱）
   const IMPORT_DATA = [{"branchCode": "J204200", "branchName": "麗兒總倉", "region": "台中"}, {"branchCode": "J204700", "branchName": "昱富", "region": "彰化"}, {"branchCode": "J202001", "branchName": "孩子王草屯", "region": "南投"}, {"branchCode": "J204202", "branchName": "麗兒斗六", "region": "雲林"}, {"branchCode": "J204215", "branchName": "麗兒嘉義四維", "region": "嘉南高"}, {"branchCode": "J108700", "branchName": "樂購", "region": "桃竹苗"}, {"branchCode": "J101400", "branchName": "俏媽咪竹北", "region": "桃竹苗"}, {"branchCode": "J107300", "branchName": "樂樂藥局羅東", "region": "宜花東"}, {"branchCode": "J106800", "branchName": "甜蜜家族總倉", "region": "北北基"}, {"branchCode": "J204201", "branchName": "麗兒大墩", "region": "台中"}, {"branchCode": "J204701", "branchName": "立富", "region": "彰化"}, {"branchCode": "J200601", "branchName": "母子屋草屯", "region": "南投"}, {"branchCode": "J203101", "branchName": "媽媽寶寶斗六", "region": "雲林"}, {"branchCode": "J204203", "branchName": "麗兒台南佳里", "region": "嘉南高"}, {"branchCode": "J100300", "branchName": "小太陽", "region": "桃竹苗"}, {"branchCode": "J101401", "branchName": "俏媽咪桃園", "region": "桃竹苗"}, {"branchCode": "J107301", "branchName": "樂樂寶貝宜蘭", "region": "宜花東"}, {"branchCode": "J200302", "branchName": "小南國中興", "region": "台中"}, {"branchCode": "J204204", "branchName": "麗兒河南", "region": "台中"}, {"branchCode": "J204214", "branchName": "麗兒彰化三民", "region": "彰化"}, {"branchCode": "J202000", "branchName": "孩子王埔里", "region": "南投"}, {"branchCode": "J203102", "branchName": "媽媽寶寶斗南", "region": "雲林"}, {"branchCode": "J204205", "branchName": "麗兒台南南紡", "region": "嘉南高"}, {"branchCode": "J100900", "branchName": "快樂寶貝屋-李淑芸", "region": "桃竹苗"}, {"branchCode": "J101402", "branchName": "俏媽咪新竹", "region": "桃竹苗"}, {"branchCode": "J105400", "branchName": "可愛宜蘭", "region": "宜花東"}, {"branchCode": "J204208", "branchName": "麗兒烏日", "region": "台中"}, {"branchCode": "J204206", "branchName": "麗兒員林中正", "region": "彰化"}, {"branchCode": "J200600", "branchName": "母子屋埔里", "region": "南投"}, {"branchCode": "J203104", "branchName": "媽媽寶寶虎尾", "region": "雲林"}, {"branchCode": "J204300", "branchName": "麗緻寶貝", "region": "嘉南高"}, {"branchCode": "J103500", "branchName": "新竹光華", "region": "桃竹苗"}, {"branchCode": "J105401", "branchName": "可愛羅東", "region": "宜花東"}, {"branchCode": "J203100", "branchName": "媽媽寶寶南平", "region": "台中"}, {"branchCode": "J204210", "branchName": "麗兒國光", "region": "台中"}, {"branchCode": "J203701", "branchName": "嬰之房彰化", "region": "彰化"}, {"branchCode": "J203000", "branchName": "媽咪寶貝埔里", "region": "南投"}, {"branchCode": "J300600", "branchName": "瑩勵", "region": "雲林"}, {"branchCode": "J104700", "branchName": "佑佑", "region": "宜花東"}, {"branchCode": "J203103", "branchName": "媽媽寶寶豐原", "region": "台中"}, {"branchCode": "J204211", "branchName": "麗兒進化", "region": "台中"}, {"branchCode": "J201600", "branchName": "易美", "region": "彰化"}, {"branchCode": "J103100", "branchName": "媽咪寶貝世界", "region": "桃竹苗"}, {"branchCode": "J100200", "branchName": "ONE STOP", "region": "北北基"}, {"branchCode": "J100101", "branchName": "1又1/2大甲", "region": "台中"}, {"branchCode": "J204500", "branchName": "寶貝屋彰化", "region": "彰化"}, {"branchCode": "J107200", "branchName": "愛嬰寶", "region": "宜花東"}, {"branchCode": "J109100", "branchName": "京育商行", "region": "北北基"}, {"branchCode": "J106500", "branchName": "美麗人生", "region": "北北基"}, {"branchCode": "J201000", "branchName": "優貝兒員林", "region": "彰化"}, {"branchCode": "J104300", "branchName": "寶貝樂新豐", "region": "桃竹苗"}, {"branchCode": "J108900", "branchName": "酷寶兒", "region": "宜花東"}, {"branchCode": "J106200", "branchName": "玟玟", "region": "北北基"}, {"branchCode": "J100103", "branchName": "1又1/2潭子", "region": "台中"}, {"branchCode": "J201001", "branchName": "優貝兒和美", "region": "彰化"}, {"branchCode": "J107100", "branchName": "童恩蘇澳", "region": "宜花東"}, {"branchCode": "J106900", "branchName": "統一", "region": "北北基"}, {"branchCode": "J201002", "branchName": "優貝兒鹿港", "region": "彰化"}, {"branchCode": "J103400", "branchName": "新小天地", "region": "桃竹苗"}, {"branchCode": "J107101", "branchName": "童恩花蓮", "region": "宜花東"}, {"branchCode": "J107500", "branchName": "寶貝家族板橋", "region": "北北基"}, {"branchCode": "J201400", "branchName": "奇屋梧棲", "region": "台中"}, {"branchCode": "J200700", "branchName": "永順", "region": "彰化"}, {"branchCode": "J108600", "branchName": "愛多寶", "region": "桃竹苗"}, {"branchCode": "J100400", "branchName": "六甲媽咪", "region": "桃竹苗"}, {"branchCode": "J203601", "branchName": "樂芙寶貝-花蓮中華", "region": "宜花東"}, {"branchCode": "J203800", "branchName": "嬰兒寶", "region": "台中"}, {"branchCode": "J202202", "branchName": "帝兒溪湖", "region": "彰化"}, {"branchCode": "J100600", "branchName": "吉吉熊", "region": "桃竹苗"}, {"branchCode": "J203602", "branchName": "樂芙寶貝-花蓮中正", "region": "宜花東"}, {"branchCode": "J203700", "branchName": "嬰之房經貿", "region": "台中"}, {"branchCode": "J104200", "branchName": "璧瑤竹南", "region": "桃竹苗"}, {"branchCode": "J203603", "branchName": "樂芙婦幼-花蓮自強", "region": "宜花東"}, {"branchCode": "J202700", "branchName": "異網", "region": "台中"}, {"branchCode": "J104201", "branchName": "璧瑤頭份", "region": "桃竹苗"}, {"branchCode": "J400200", "branchName": "泑儒花蓮建國", "region": "宜花東"}, {"branchCode": "J200200", "branchName": "小叮噹", "region": "台中"}, {"branchCode": "J201800", "branchName": "金龜車花壇", "region": "彰化"}, {"branchCode": "J107900", "branchName": "啋厤嬰品", "region": "桃竹苗"}, {"branchCode": "J400100", "branchName": "泑儒花蓮玉里", "region": "宜花東"}, {"branchCode": "J201704", "branchName": "泑儒東勢", "region": "台中"}, {"branchCode": "J201801", "branchName": "金龜車員林", "region": "彰化"}, {"branchCode": "J100100", "branchName": "1又1/2苑裡", "region": "桃竹苗"}, {"branchCode": "J400300", "branchName": "小芸芸", "region": "宜花東"}, {"branchCode": "J203600", "branchName": "樂芙寶貝后里", "region": "台中"}, {"branchCode": "J201802", "branchName": "金龜車彰化", "region": "彰化"}, {"branchCode": "J101900", "branchName": "恆安藥局", "region": "桃竹苗"}, {"branchCode": "J201803", "branchName": "金龜車霧峰", "region": "台中"}, {"branchCode": "J201804", "branchName": "金龜車和美", "region": "彰化"}, {"branchCode": "J101200", "branchName": "奇安藥局", "region": "桃竹苗"}, {"branchCode": "J202500", "branchName": "康裕藥局", "region": "台中"}, {"branchCode": "J202600", "branchName": "康寶和美", "region": "彰化"}, {"branchCode": "J100800", "branchName": "如意寶貝", "region": "北北基"}, {"branchCode": "J200800", "branchName": "玉苗屋", "region": "彰化"}, {"branchCode": "J105500", "branchName": "禾新藥局", "region": "北北基"}, {"branchCode": "J203500", "branchName": "慶安藥局", "region": "台中"}, {"branchCode": "J105700", "branchName": "好娃娃", "region": "彰化"}];
   async function importCustomers() {
@@ -879,6 +905,7 @@ function Admin() {
             ["master",    "📦 商品主檔"],
             ["prices",    "💰 客戶價格表"],
             ["customers", "👥 客戶管理"],
+            ["promos",    "🎁 促銷活動"],
           ].map(([k,l])=>(
             <div key={k} className="tab-wrap">
               <button className={"tab-btn"+(tab===k?" active":"")} onClick={()=>setTab(k)}>{l}</button>
@@ -1349,7 +1376,84 @@ function Admin() {
           </React.Fragment>
         )}
 
-        {/* ===== 數據儀表板 ===== */}
+        {/* ===== 促銷活動 ===== */}
+        {tab==="promos" && (
+          <React.Fragment>
+            <div style={{display:"flex",gap:10,marginBottom:14,alignItems:"center",flexWrap:"wrap"}}>
+              <button className="btn-save" style={{padding:"8px 16px",fontSize:13}} onClick={()=>{setShowAddPromo(v=>!v);setNewPromo({...EMPTY_PROMO});}}>
+                {showAddPromo?"取消新增":"＋ 新增活動"}
+              </button>
+              <button className="btn-edit" style={{padding:"8px 14px",fontSize:13}} onClick={loadPromos}>重新整理</button>
+              <span style={{fontSize:12,color:"var(--ink-soft)"}}>{promoRows.length} 個活動</span>
+            </div>
+            {/* 新增/編輯表單 */}
+            {(showAddPromo||editPromo)&&(
+              <div className="add-form" style={{flexDirection:"column",gap:12,marginBottom:16}}>
+                <div style={{display:"flex",gap:10,flexWrap:"wrap"}}>
+                  <label className="narrow">活動名稱＊<input value={editPromo?editPromo.name:newPromo.name} onChange={e=>editPromo?setEditPromo(p=>({...p,name:e.target.value})):setNewPromo(p=>({...p,name:e.target.value}))} placeholder="買2送1奶嘴活動"/></label>
+                  <label className="narrow">規則類型
+                    <select value={editPromo?editPromo.ruleType:newPromo.ruleType} onChange={e=>editPromo?setEditPromo(p=>({...p,ruleType:e.target.value})):setNewPromo(p=>({...p,ruleType:e.target.value}))} style={{padding:"8px",border:"1px solid var(--line)",borderRadius:6,fontSize:13}}>
+                      <option value="buy">buy（買N送M，贈品從付費數扣）</option>
+                      <option value="min">min（滿N送M，贈品額外附贈）</option>
+                    </select>
+                  </label>
+                  <label className="narrow">觸發數 N＊<input type="number" value={editPromo?editPromo.triggerN:newPromo.triggerN} onChange={e=>editPromo?setEditPromo(p=>({...p,triggerN:Number(e.target.value)})):setNewPromo(p=>({...p,triggerN:Number(e.target.value)}))} style={{width:70}}/></label>
+                  <label className="narrow">贈送數 M＊<input type="number" value={editPromo?editPromo.giftM:newPromo.giftM} onChange={e=>editPromo?setEditPromo(p=>({...p,giftM:Number(e.target.value)})):setNewPromo(p=>({...p,giftM:Number(e.target.value)}))} style={{width:70}}/></label>
+                  <label className="narrow">優先權<input type="number" value={editPromo?editPromo.priority:newPromo.priority} onChange={e=>editPromo?setEditPromo(p=>({...p,priority:Number(e.target.value)})):setNewPromo(p=>({...p,priority:Number(e.target.value)}))} style={{width:70}} placeholder="1~99"/></label>
+                </div>
+                <div style={{display:"flex",gap:10,flexWrap:"wrap"}}>
+                  <label style={{flex:1,minWidth:200,display:"flex",flexDirection:"column",fontSize:12,gap:4}}>觸發品號（逗號分隔，填「全部」=全部商品）
+                    <input value={editPromo?editPromo.triggerCodes:newPromo.triggerCodes} onChange={e=>editPromo?setEditPromo(p=>({...p,triggerCodes:e.target.value})):setNewPromo(p=>({...p,triggerCodes:e.target.value}))} placeholder="021605,021612,021629 或 全部"/>
+                  </label>
+                  <label style={{flex:1,minWidth:200,display:"flex",flexDirection:"column",fontSize:12,gap:4}}>贈品品號（buy模式可留空，自動取最低單價品）
+                    <input value={editPromo?editPromo.giftCodes:newPromo.giftCodes} onChange={e=>editPromo?setEditPromo(p=>({...p,giftCodes:e.target.value})):setNewPromo(p=>({...p,giftCodes:e.target.value}))} placeholder="906162"/>
+                  </label>
+                </div>
+                <div style={{display:"flex",gap:10,flexWrap:"wrap",alignItems:"center"}}>
+                  <label className="narrow">開始日期<input type="date" value={editPromo?editPromo.dateFrom:newPromo.dateFrom} onChange={e=>editPromo?setEditPromo(p=>({...p,dateFrom:e.target.value})):setNewPromo(p=>({...p,dateFrom:e.target.value}))}/></label>
+                  <label className="narrow">結束日期<input type="date" value={editPromo?editPromo.dateTo:newPromo.dateTo} onChange={e=>editPromo?setEditPromo(p=>({...p,dateTo:e.target.value})):setNewPromo(p=>({...p,dateTo:e.target.value}))}/></label>
+                  <label style={{display:"flex",alignItems:"center",gap:6,fontSize:13}}>
+                    <input type="checkbox" checked={editPromo?editPromo.active:newPromo.active} onChange={e=>editPromo?setEditPromo(p=>({...p,active:e.target.checked})):setNewPromo(p=>({...p,active:e.target.checked}))} style={{width:16,height:16}}/>
+                    啟用
+                  </label>
+                  <button className="btn-save" style={{padding:"8px 20px",marginLeft:"auto"}} onClick={()=>savePromo(editPromo||newPromo)}>
+                    {editPromo?"儲存修改":"確認新增"}
+                  </button>
+                  {editPromo&&<button className="btn-cancel" onClick={()=>setEditPromo(null)}>取消</button>}
+                </div>
+              </div>
+            )}
+            {/* 活動列表 */}
+            {promoLoading?<p style={{color:"var(--ink-soft)",fontSize:14}}>載入中…</p>:(
+              <div style={{overflowX:"auto"}}>
+                <table className="mgmt-table">
+                  <thead><tr><th>活動名稱</th><th>規則</th><th>觸發品號</th><th>贈品品號</th><th>日期</th><th>優先</th><th>啟用</th><th style={{width:120}}>操作</th></tr></thead>
+                  <tbody>
+                    {promoRows.map(row=>(
+                      <tr key={row.id} className={!row.active?"inactive":""}>
+                        <td style={{fontWeight:600}}>{row.name}</td>
+                        <td style={{fontSize:12}}>{row.ruleType=="buy"?`買${row.triggerN}送${row.giftM}（付費扣）`:`滿${row.triggerN}送${row.giftM}（額外贈）`}</td>
+                        <td style={{fontSize:11,maxWidth:150,wordBreak:"break-all"}}>{row.triggerCodes||"—"}</td>
+                        <td style={{fontSize:11}}>{row.giftCodes||"自動最低單價"}</td>
+                        <td style={{fontSize:11,whiteSpace:"nowrap"}}>{row.dateFrom||"∞"} ~ {row.dateTo||"∞"}</td>
+                        <td style={{textAlign:"center"}}>{row.priority}</td>
+                        <td style={{textAlign:"center"}}>{row.active?"✅":"❌"}</td>
+                        <td>
+                          <div className="row-actions">
+                            <button className="btn-edit" onClick={()=>{setEditPromo({...row});setShowAddPromo(false);}}>編輯</button>
+                            <button className="btn-del" onClick={()=>deletePromo(row.id,row.name)}>刪除</button>
+                          </div>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
+          </React.Fragment>
+        )}
+
+        {/* ===== 數據儀表板 ===== */}}
         {tab==="dashboard" && (
           <React.Fragment>
             {/* 日期篩選 */}

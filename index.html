@@ -575,6 +575,66 @@ function computeLine(p, qty) {
   return {giftQty, amount, rule, flag};
 }
 
+// ── 新促銷活動計算 ──
+function calcPromoGifts(cartItems, promos, products) {
+  // cartItems: [{product, qty, ...}]
+  // promos: 有效促銷活動（已按優先權排序）
+  // products: 全部商品（查品名用）
+  const productMap = {};
+  products.forEach(p => { productMap[p.code] = p; });
+  const giftLines = [];
+
+  promos.forEach(promo => {
+    const triggerAll = promo.triggerCodes === "全部";
+    const triggerSet = triggerAll ? null : promo.triggerCodes.split(",").map(c=>c.trim()).filter(Boolean);
+
+    // 找出觸發的購物車品項
+    const triggered = cartItems.filter(item =>
+      !triggerSet || triggerSet.includes(item.product.code)
+    );
+    if (triggered.length === 0) return;
+
+    const totalQty = triggered.reduce((s, item) => s + item.qty, 0);
+    let giftCount = 0;
+
+    if (promo.ruleType === "buy") {
+      const groupSize = promo.triggerN + promo.giftM;
+      giftCount = Math.floor(totalQty / groupSize) * promo.giftM;
+    } else { // min
+      giftCount = Math.floor(totalQty / promo.triggerN) * promo.giftM;
+    }
+    if (giftCount <= 0) return;
+
+    let giftCodes = promo.giftCodes.split(",").map(c=>c.trim()).filter(Boolean);
+
+    if (promo.ruleType === "buy") {
+      // 贈品 = 群組內購買商品中單價最低者
+      let minPrice = Infinity, minCode = "";
+      triggered.forEach(item => {
+        const price = parseFloat(item.product.unitPrice)||0;
+        if (price < minPrice) { minPrice = price; minCode = item.product.code; }
+      });
+      if (minCode) giftCodes = [minCode];
+    }
+
+    giftCodes.forEach(gCode => {
+      const gProduct = productMap[gCode];
+      giftLines.push({
+        code:      gCode,
+        name:      gProduct ? gProduct.name : gCode,
+        qty:       giftCount,
+        giftQty:   0,
+        unitPrice: 0,
+        amount:    0,
+        activity:  promo.name,
+        isGift:    true,
+        promoId:   promo.id,
+      });
+    });
+  });
+  return giftLines;
+}
+
 function App() {
   const [stage,    setStage]    = useState(() => {
     try {
@@ -587,6 +647,7 @@ function App() {
     catch { return null; }
   });
   const [products, setProducts] = useState(() => { try{return JSON.parse(localStorage.getItem(LS_PRODUCTS))||[];}catch{return [];} });
+  const [promos,   setPromos]   = useState(() => { try{return JSON.parse(localStorage.getItem("promos"))||[];}catch{return [];} });
   const [loginStep, setLoginStep] = useState("input");
   const [taxIdInput, setTaxIdInput] = useState("");
   const [loginError, setLoginError] = useState("");
@@ -688,7 +749,7 @@ function App() {
     if (stage === "shop" && customer && products.length === 0) {
       callGAS("getProducts", { branchCode: customer.code })
         .then(d => {
-          setProducts(d.products);
+          setProducts(d.products); setPromos(d.promos||[]); localStorage.setItem("promos",JSON.stringify(d.promos||[]));
           localStorage.setItem(LS_PRODUCTS, JSON.stringify(d.products));
         })
         .catch(() => {}); // 靜默失敗，不打擾使用者
@@ -852,7 +913,7 @@ function App() {
     const branch = pendingCompany.branches.find(b=>b.code===selectedBranchCode)||pendingCompany.branches[0];
     const nc = {name:pendingCompany.companyName, branchName:branch.name, code:branch.code, taxId:taxIdInput.trim()};
     setLoading(true); setPageError("");
-    try { const d = await callGAS("getProducts",{branchCode:branch.code}); localStorage.setItem(LS_CUSTOMER,JSON.stringify(nc)); localStorage.setItem(LS_PRODUCTS,JSON.stringify(d.products)); setCustomer(nc); setProducts(d.products); setStage("shop"); loadCatTree(); }
+    try { const d = await callGAS("getProducts",{branchCode:branch.code}); localStorage.setItem(LS_CUSTOMER,JSON.stringify(nc)); localStorage.setItem(LS_PRODUCTS,JSON.stringify(d.products)); localStorage.setItem("promos",JSON.stringify(d.promos||[])); setCustomer(nc); setProducts(d.products); setPromos(d.promos||[]); setStage("shop"); loadCatTree(); }
     catch(e) { setLoginError("商品資料載入失敗："+e.message); }
     finally { setLoading(false); }
   }
@@ -862,7 +923,10 @@ function App() {
     setSubmitting(true); setPageError("");
     try {
       const d = await callGAS("submitOrder",{order:{taxId:customer.taxId,customerName:customer.name+"（"+customer.code+"）"+customer.branchName,branchCode:customer.code, note:orderNote,
-        lines:cartLines.map(l=>({code:l.product.code,name:l.product.name,qty:l.qty,giftQty:l.giftQty||0,unitPrice:l.product.unitPrice,amount:l.amount,activity:l.product.activity||"",needsReview:l.flag==="review"}))}});
+        lines:[
+          ...cartLines.map(l=>({code:l.product.code,name:l.product.name,qty:l.qty,giftQty:l.giftQty||0,unitPrice:l.product.unitPrice,amount:l.amount,activity:l.product.activity||"",needsReview:l.flag==="review"})),
+          ...promoGiftLines.map(g=>({code:g.code,name:g.name,qty:g.qty,giftQty:0,unitPrice:0,amount:0,activity:g.activity,needsReview:false,isGift:true}))
+        ]}});
       localStorage.removeItem(LS_CART);
       setLastOrder({id:d.orderId,customer:customer.name,needsReview:hasReview}); setCart({}); setOrderNote(""); setDrawerOpen(false); setStage("confirmed");
     } catch(e) { setPageError("訂單送出失敗："+e.message+"，請稍後再試一次"); }
@@ -1259,6 +1323,18 @@ function App() {
               placeholder="備註（選填）：送貨時間、特殊需求…"
               style={{width:"100%",padding:"9px 11px",border:"1px solid var(--line)",borderRadius:8,fontSize:13,resize:"vertical",minHeight:52,fontFamily:"inherit",marginBottom:8,marginTop:8}}/>
             {pageError&&<div className="login-error">{pageError}</div>}
+            {/* 促銷贈品行 */}
+            {promoGiftLines.length>0&&(
+              <div style={{margin:"8px 0",padding:"8px 12px",background:"#f0f7f3",borderRadius:8,border:"1px solid var(--brand-tint)"}}>
+                <div style={{fontSize:12,fontWeight:700,color:"var(--brand-dark)",marginBottom:6}}>🎁 促銷贈品</div>
+                {promoGiftLines.map((g,i)=>(
+                  <div key={i} style={{display:"flex",justifyContent:"space-between",fontSize:13,padding:"3px 0",borderBottom:"1px solid var(--line)"}}>
+                    <span>{g.name} × {g.qty}</span>
+                    <span style={{color:"var(--brand-dark)",fontWeight:600}}>$0　<span style={{fontSize:11,color:"var(--ink-soft)"}}>{g.activity}</span></span>
+                  </div>
+                ))}
+              </div>
+            )}
             <button className="submit-btn" disabled={cartLines.length===0||submitting} onClick={submitOrder}>{submitting?"送出中…":"送出訂單"}</button>
           </div>
         </div>
