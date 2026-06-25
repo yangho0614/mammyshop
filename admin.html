@@ -547,7 +547,7 @@ function Admin() {
   const [promoLoading,  setPromoLoading]  = useState(false);
   const [showAddPromo,  setShowAddPromo]  = useState(false);
   const [editPromo,     setEditPromo]     = useState(null);
-  const EMPTY_PROMO = {id:"",name:"",ruleType:"buy",triggerN:2,giftM:1,triggerCodes:"",giftCodes:"",dateFrom:"",dateTo:"",priority:1,active:true};
+  const EMPTY_PROMO = {id:"",name:"",ruleType:"buy",triggerN:2,giftM:1,triggerCodes:"",giftCodes:"",targetGroups:"",dateFrom:"",dateTo:"",priority:1,active:true};
   const [newPromo,      setNewPromo]      = useState({...EMPTY_PROMO});
   // 商品搜尋選擇器 state
   const [triggerSearch, setTriggerSearch] = useState("");
@@ -578,6 +578,13 @@ function Admin() {
     setTriggerSearch(""); setGiftSearch("");
   }
 
+  // 套用群組 helpers
+  function toggleTargetGroup(g) {
+    const groups = parseCodes(getPromo().targetGroups||"");
+    const next = groups.includes(g) ? groups.filter(x=>x!==g) : [...groups, g];
+    setPromo(p=>({...p, targetGroups: joinCodes(next)}));
+  }
+
   // 觸發品號 helpers
   function toggleTriggerCode(code) {
     const codes = parseCodes(getPromo().triggerCodes);
@@ -605,7 +612,12 @@ function Admin() {
     catch(e) { alert("載入失敗："+e.message); }
     finally { setPromoLoading(false); }
   }
-  useEffect(() => { if (tab==="promos" && authed && promoRows.length===0) loadPromos(); }, [tab, authed]);
+  useEffect(() => {
+    if (tab==="promos" && authed) {
+      if (promoRows.length===0) loadPromos();
+      if (masterRows.length===0) loadMaster(); // 確保商品主檔已載入
+    }
+  }, [tab, authed]);
 
   async function savePromo(row) {
     try { await callGAS("savePromo",{row}); await loadPromos(); setShowAddPromo(false); setEditPromo(null); setNewPromo({...EMPTY_PROMO}); }
@@ -1480,7 +1492,33 @@ function Admin() {
                     </label>
                   </div>
 
-                  {/* 第二列：觸發品號 & 贈品品號 */}
+                  {/* 第二列：套用價格群組 */}
+                  <div style={{marginBottom:16}}>
+                    <div style={{fontSize:12,fontWeight:600,marginBottom:8}}>套用價格群組 <span style={{fontWeight:400,color:"var(--ink-soft)"}}>（只有這些群組的客戶才享有此促銷，不選=全部群組）</span></div>
+                    <div style={{display:"flex",flexWrap:"wrap",gap:8}}>
+                      {(pGroups.length>0?pGroups:["DEFAULT"]).map(g=>{
+                        const selected = parseCodes(getPromo().targetGroups||"").includes(g);
+                        return (
+                          <button key={g} onClick={()=>toggleTargetGroup(g)}
+                            style={{padding:"5px 14px",borderRadius:16,fontSize:13,border:"1.5px solid",cursor:"pointer",
+                              borderColor:selected?"var(--brand)":"var(--line)",
+                              background:selected?"var(--brand)":"#fff",
+                              color:selected?"#fff":"var(--ink)",
+                              fontWeight:selected?700:400}}>
+                            {g}
+                          </button>
+                        );
+                      })}
+                      {parseCodes(getPromo().targetGroups||"").length>0&&(
+                        <button onClick={()=>setPromo(p=>({...p,targetGroups:""}))}
+                          style={{padding:"5px 12px",borderRadius:16,fontSize:12,border:"1px solid #ccc",background:"#f4f4f4",cursor:"pointer",color:"#888"}}>
+                          清除（套用全部）
+                        </button>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* 第三列：觸發品號 & 贈品品號 */}
                   <div style={{display:"flex",gap:16,flexWrap:"wrap",marginBottom:16}}>
 
                     {/* 觸發品號 */}
@@ -1608,6 +1646,7 @@ function Admin() {
                         const row = {...(editPromo||newPromo)};
                         if(triggerAll) row.triggerCodes="全部";
                         if(autoGift && row.ruleType==="buy") row.giftCodes="";
+                        // targetGroups 空字串代表全部群組
                         savePromo(row);
                       }}>
                         {editPromo?"儲存修改":"確認新增"}
@@ -1644,6 +1683,7 @@ function Admin() {
                         <div style={{display:"flex",gap:20,fontSize:12,color:"var(--ink-soft)",flexWrap:"wrap"}}>
                           <span>觸發：{row.triggerCodes==="全部"?"全部商品":tCodes.map(c=>{const m=masterRows.find(r=>r.code===c);return m?m.name:c;}).join("、")||"—"}</span>
                           <span>贈品：{row.ruleType==="buy"&&!row.giftCodes?"自動最低單價":gCodes.map(c=>{const m=masterRows.find(r=>r.code===c);return m?m.name:c;}).join("、")||"—"}</span>
+                          <span>套用群組：{row.targetGroups?parseCodes(row.targetGroups).join("、"):"全部"}</span>
                           <span>日期：{row.dateFrom||"∞"} ～ {row.dateTo||"∞"}</span>
                         </div>
                       </div>
