@@ -1241,6 +1241,19 @@ function Admin() {
                 style={{padding:"5px 12px",borderRadius:16,fontSize:12,border:"1.5px dashed var(--line)",background:"#fff",cursor:"pointer",color:"var(--ink-soft)"}}>
                 ＋ 複製群組
               </button>
+              {pGroups.length===1&&pGroups[0]==="DEFAULT"&&(
+                <button onClick={async()=>{
+                  if(!confirm("將現有客戶價格表所有 A 欄（客戶代號）改成 DEFAULT 群組？\n此操作不可復原。")) return;
+                  try{
+                    const d = await callGAS("migrateToDefaultGroup",{});
+                    alert(`移轉完成！共更新 ${d.updated} 筆`);
+                    await loadPrices();
+                  }catch(e){alert("失敗："+e.message);}
+                }}
+                style={{padding:"5px 12px",borderRadius:16,fontSize:12,border:"1.5px solid #e07b39",background:"#fff7f3",cursor:"pointer",color:"#e07b39"}}>
+                ⚡ 一鍵移轉為 DEFAULT
+              </button>
+              )}
             </div>
             {/* 複製群組表單 */}
             {showCopyGroup&&(
