@@ -993,16 +993,12 @@ function App() {
   );
 
   if (stage==="history") return (
-    <div style={{minHeight:"100vh",width:"100%",background:"var(--paper)",position:"relative",zIndex:1,overflowX:"hidden"}}>
-      <div className="app-header" style={{gridTemplateRows:"auto",gridTemplateAreas:"\"who actions\""}}>
-        <div className="header-who">
-          <span className="company">{customerDisplayName}（{customer.code||customer.branchCode||""}）{customer.branchName||""}</span>
-        </div>
-        <div className="header-actions">
-          <button style={{padding:"7px 14px",background:"var(--brand-tint)",border:"1px solid #c2dbd5",borderRadius:8,fontSize:13,cursor:"pointer",color:"var(--brand-dark)"}}
-            onClick={()=>setStage("shop")}>← 返回選購</button>
-          <button className="logout-link" onClick={doLogout}>登出</button>
-        </div>
+    <div style={{position:"fixed",inset:0,background:"var(--paper)",zIndex:50,overflowY:"auto",overflowX:"hidden",display:"flex",flexDirection:"column"}}>
+      <div style={{position:"sticky",top:0,zIndex:51,background:"var(--panel)",borderBottom:"1px solid var(--line)",boxShadow:"0 1px 4px rgba(0,0,0,.06)",padding:"10px 20px",display:"flex",alignItems:"center",gap:12,flexShrink:0}}>
+        <span style={{flex:1,fontWeight:700,fontSize:15,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{customerDisplayName}（{customer.code||customer.branchCode||""}）</span>
+        <button style={{padding:"7px 14px",background:"var(--brand-tint)",border:"1px solid #c2dbd5",borderRadius:8,fontSize:13,cursor:"pointer",color:"var(--brand-dark)",flexShrink:0}}
+          onClick={()=>setStage("shop")}>← 返回選購</button>
+        <button className="logout-link" style={{flexShrink:0}} onClick={doLogout}>登出</button>
       </div>
       <div className="history-wrap">
         <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:16}}>
