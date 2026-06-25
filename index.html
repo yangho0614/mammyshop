@@ -1277,7 +1277,15 @@ function App() {
             <span className="main-count">{filtered.length} 項商品</span>
           </div>
           <div className="grid">
-            {filtered.map(p=>{const rule=parseActivity(p.activity);const qty=cart[p.code]||0;const calc=computeLine(p,qty);const imgs=(p.images||[]).map(fixImgUrl);return(
+            {filtered.map(p=>{const rule=parseActivity(p.activity);const qty=cart[p.code]||0;const calc=computeLine(p,qty);const imgs=(p.images||[]).map(fixImgUrl);
+              // 從促銷活動列表找出此商品適用的活動（取優先權最高的那個）
+              const matchedPromo = promos.find(promo=>{
+                const triggerAll = promo.triggerCodes==="全部";
+                if(triggerAll) return true;
+                const codes = promo.triggerCodes.split(",").map(c=>c.trim()).filter(Boolean);
+                return codes.includes(p.code);
+              });
+              return(
               <div key={p.code} className={"card"+(p.inactive?" disabled":"")}>
                 <ImageSlider images={imgs}/>
                 <div className="card-body">
@@ -1291,6 +1299,7 @@ function App() {
                   {rule&&rule.type==="autoGift"&&<span className="tag gift">{rule.label}</span>}
                   {rule&&rule.type==="autoBox"&&<span className="tag box">{rule.label}</span>}
                   {rule&&rule.type==="needReview"&&<span className="tag review">⚠ 待複核</span>}
+                  {!rule&&matchedPromo&&<span className="tag gift">{matchedPromo.name}</span>}
                   {p.inactive&&<span className="tag stop">已失效</span>}
                 </div>
                 <div className="qty-row">
