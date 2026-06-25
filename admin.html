@@ -1265,6 +1265,26 @@ function Admin() {
               style={{padding:"5px 12px",borderRadius:16,fontSize:12,border:"1.5px solid #e07b39",background:"#fff7f3",cursor:"pointer",color:"#e07b39"}}>
               📥 匯入舊資料為 DEFAULT
             </button>
+            <button onClick={async()=>{
+                if(!confirm(`清除「客戶價格表」分頁的 A欄（客戶代號）和 B欄（客戶名稱）？\n此操作不可復原。`)) return;
+                try{
+                  const d = await callGAS("clearOldPriceSheetAB",{});
+                  alert(`清除完成！共 ${d.cleared} 筆`);
+                }catch(e){alert("清除失敗："+e.message);}
+              }}
+              style={{padding:"5px 12px",borderRadius:16,fontSize:12,border:"1.5px solid #aaa",background:"#f8f8f8",cursor:"pointer",color:"#666"}}>
+              🧹 清除舊AB欄
+            </button>
+            <button onClick={async()=>{
+                if(!confirm(`在「客戶價格表」C欄（品號）右邊插入品名欄，並從商品主檔自動帶入品名？\n此操作只需執行一次。`)) return;
+                try{
+                  const d = await callGAS("fillOldPriceSheetProductName",{});
+                  alert(`完成！共帶入 ${d.filled} / ${d.total} 筆品名`);
+                }catch(e){alert("失敗："+e.message);}
+              }}
+              style={{padding:"5px 12px",borderRadius:16,fontSize:12,border:"1.5px solid #4a7c59",background:"#f0f7f3",cursor:"pointer",color:"#4a7c59"}}>
+              📝 插入品名欄
+            </button>
             </div>
             {/* 複製群組表單 */}
             {showCopyGroup&&(
