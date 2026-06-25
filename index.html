@@ -891,6 +891,11 @@ function App() {
     } catch(e) { alert("取消失敗："+e.message); }
   }
   const cartLines  = useMemo(() => Object.entries(cart).filter(([,q])=>q>0).map(([code,qty])=>{ const p=products.find(x=>x.code===code); return {product:p,qty,...computeLine(p,qty)}; }), [cart,products]);
+  const promoGiftLines = useMemo(() => {
+    if (!promos || promos.length === 0) return [];
+    try { return calcPromoGifts(cartLines, promos, products); }
+    catch(e) { console.error("促銷計算錯誤:", e); return []; }
+  }, [cartLines, promos, products]);
   const cartCount  = cartLines.reduce((s,l)=>s+l.qty, 0);
   const cartTotal  = cartLines.reduce((s,l)=>s+l.amount, 0);
   const hasReview  = cartLines.some(l=>l.flag==="review");
