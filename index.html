@@ -959,7 +959,7 @@ function App() {
           <div className="confirm-box">
             <div className="confirm-row"><span>統一編號</span><b>{taxIdInput}</b></div>
             <div className="confirm-row"><span>客戶名稱</span><b>{pendingCompany.companyName}</b></div>
-            <div className="confirm-row"><span>出貨分店</span><b>{pendingCompany.branches[0].name} ({pendingCompany.branches[0].code})</b></div>
+            <div className="confirm-row"><span>出貨分店</span><b>({pendingCompany.branches[0].code}) {pendingCompany.branches[0].name}</b></div>
           </div>
           {loginError && <div className="login-error">{loginError}</div>}
           <button className="submit-btn" disabled={loading} onClick={handleConfirmLogin}>{loading?"登入中…":"確認並登入"}</button>
@@ -968,7 +968,7 @@ function App() {
         {loginStep==="chooseBranch" && pendingCompany && (<React.Fragment>
           <p className="sub">「{pendingCompany.companyName}」名下有多個分店，請選擇本次下單的分店</p>
           <div className="branch-list">
-            {pendingCompany.branches.map(b=><button key={b.code} className={"branch-btn"+(selectedBranchCode===b.code?" active":"")} onClick={()=>setSelectedBranchCode(b.code)}>{b.name} <span style={{color:"#9aa6a4",fontSize:12}}>({b.code})</span></button>)}
+            {pendingCompany.branches.map(b=><button key={b.code} className={"branch-btn"+(selectedBranchCode===b.code?" active":"")} onClick={()=>setSelectedBranchCode(b.code)}><span style={{color:"#9aa6a4",fontSize:12}}>({b.code})</span> {b.name}</button>)}
           </div>
           {loginError && <div className="login-error">{loginError}</div>}
           <button className="submit-btn" disabled={!selectedBranchCode||loading} onClick={handleConfirmLogin}>{loading?"登入中…":"確認並登入"}</button>
