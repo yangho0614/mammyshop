@@ -704,43 +704,88 @@ function Admin() {
     catch(e) { alert("新增失敗："+e.message); }
   }
 
-  // ── 客戶價格表 ──
+  // ── 客戶價格表（群組制）──
   const [priceRows,    setPriceRows]    = useState([]);
-  const [pCustomers,   setPCustomers]   = useState([]);
+  const [pGroups,      setPGroups]      = useState([]);
   const [pLoading,     setPLoading]     = useState(false);
   const [pError,       setPError]       = useState("");
-  const [pFilter,      setPFilter]      = useState("");
+  const [pFilter,      setPFilter]      = useState("DEFAULT");
   const [pSearch,      setPSearch]      = useState("");
   const [editPrice,    setEditPrice]    = useState(null);
   const [priceDraft,   setPriceDraft]   = useState({});
   const [showAddP,     setShowAddP]     = useState(false);
-  const [newP, setNewP] = useState({customerCode:"",customerName:"",productCode:"",unitPrice:"",activity:"",note:""});
+  const [newP,         setNewP]         = useState({priceGroup:"DEFAULT",productCode:"",unitPrice:"",activity:"",note:""});
+  const [showCopyGroup, setShowCopyGroup] = useState(false);
+  const [copyTarget,   setCopyTarget]   = useState("");
 
   async function loadPrices() {
     setPLoading(true); setPError("");
-    try { const d = await callGAS("listPrices",{customerCode:null}); setPriceRows(d.rows); setPCustomers(d.customers); if(!pFilter && d.customers.length>0) setPFilter(d.customers[0].code); }
+    try {
+      const d = await callGAS("listPrices",{priceGroup:null});
+      setPriceRows(d.rows);
+      const gs = d.groups || [];
+      if (!gs.includes("DEFAULT")) gs.unshift("DEFAULT");
+      setPGroups(gs);
+      if (!pFilter || !gs.includes(pFilter)) setPFilter(gs[0]||"DEFAULT");
+    }
     catch(e) { setPError("載入失敗："+e.message); }
     finally { setPLoading(false); }
   }
   useEffect(() => { if (tab==="prices" && authed && priceRows.length===0) loadPrices(); }, [tab, authed]);
 
-  const filteredPrices = useMemo(() => priceRows.filter(r => (!pFilter||r.customerCode===pFilter) && (!pSearch||r.productCode.includes(pSearch))), [priceRows, pFilter, pSearch]);
+  const filteredPrices = useMemo(() => priceRows.filter(r =>
+    (!pFilter||r.priceGroup===pFilter) && (!pSearch||r.productCode.includes(pSearch)||String(r.unitPrice).includes(pSearch))
+  ), [priceRows, pFilter, pSearch]);
 
-  function startEditP(row) { setEditPrice({cc:row.customerCode,pc:row.productCode}); setPriceDraft({unitPrice:row.unitPrice,activity:row.activity,note:row.note}); }
+  function startEditP(row) { setEditPrice({g:row.priceGroup,pc:row.productCode}); setPriceDraft({unitPrice:row.unitPrice,activity:row.activity,note:row.note}); }
   function cancelEditP() { setEditPrice(null); setPriceDraft({}); }
   async function saveEditP(row) {
-    try { await callGAS("savePriceRow",{row:{...row,...priceDraft}}); setPriceRows(p=>p.map(r=>r.customerCode===row.customerCode&&r.productCode===row.productCode?{...r,...priceDraft}:r)); setEditPrice(null); setPriceDraft({}); }
+    try {
+      await callGAS("savePriceRow",{row:{...row,...priceDraft}});
+      setPriceRows(p=>p.map(r=>r.priceGroup===row.priceGroup&&r.productCode===row.productCode?{...r,...priceDraft}:r));
+      setEditPrice(null); setPriceDraft({});
+    }
     catch(e) { alert("儲存失敗："+e.message); }
   }
   async function delPrice(row) {
-    if (!confirm(`確定刪除 ${row.customerCode} × ${row.productCode} 的價格資料？`)) return;
-    try { await callGAS("deletePriceRow",{customerCode:row.customerCode,productCode:row.productCode}); setPriceRows(p=>p.filter(r=>!(r.customerCode===row.customerCode&&r.productCode===row.productCode))); }
+    if (!confirm(`確定刪除 ${row.priceGroup} × ${row.productCode} 的價格資料？`)) return;
+    try {
+      await callGAS("deletePriceRow",{priceGroup:row.priceGroup,productCode:row.productCode});
+      setPriceRows(p=>p.filter(r=>!(r.priceGroup===row.priceGroup&&r.productCode===row.productCode)));
+    }
     catch(e) { alert("刪除失敗："+e.message); }
   }
   async function addPrice() {
-    if (!newP.customerCode||!newP.productCode||!newP.unitPrice) { alert("客戶代號、品號、單價為必填"); return; }
-    try { await callGAS("savePriceRow",{row:newP}); setPriceRows(p=>[...p,{...newP}]); setNewP({customerCode:"",customerName:"",productCode:"",unitPrice:"",activity:"",note:""}); setShowAddP(false); }
+    if (!newP.priceGroup||!newP.productCode||!newP.unitPrice) { alert("群組、品號、單價為必填"); return; }
+    try {
+      await callGAS("savePriceRow",{row:newP});
+      setPriceRows(p=>[...p,{...newP}]);
+      setNewP({priceGroup:pFilter,productCode:"",unitPrice:"",activity:"",note:""});
+      setShowAddP(false);
+    }
     catch(e) { alert("新增失敗："+e.message); }
+  }
+  async function copyGroup() {
+    if (!copyTarget.trim()) { alert("請輸入新群組名稱"); return; }
+    if (pGroups.includes(copyTarget.trim())) { alert("群組名稱已存在"); return; }
+    try {
+      const d = await callGAS("copyPriceGroup",{fromGroup:pFilter,toGroup:copyTarget.trim()});
+      alert(`已從 ${pFilter} 複製 ${d.copied} 筆到 ${copyTarget.trim()}`);
+      setCopyTarget(""); setShowCopyGroup(false);
+      await loadPrices();
+      setPFilter(copyTarget.trim());
+    }
+    catch(e) { alert("複製失敗："+e.message); }
+  }
+  async function deleteGroup() {
+    if (pFilter==='DEFAULT') { alert("DEFAULT 群組不可刪除"); return; }
+    if (!confirm(`確定刪除整個「${pFilter}」群組的所有價格資料？\n（此操作不可復原）`)) return;
+    try {
+      await callGAS("deletePriceGroup",{priceGroup:pFilter});
+      setPFilter("DEFAULT");
+      await loadPrices();
+    }
+    catch(e) { alert("刪除失敗："+e.message); }
   }
 
   // ── 圖片 ──
@@ -1177,28 +1222,53 @@ function Admin() {
           </React.Fragment>
         )}
 
-        {/* ===== 客戶價格表 ===== */}
+        {/* ===== 客戶價格表（群組制）===== */}
         {tab==="prices" && (
           <React.Fragment>
-            <div style={{display:"flex",gap:10,marginBottom:14,alignItems:"center",flexWrap:"wrap"}}>
-              <select value={pFilter} onChange={e=>setPFilter(e.target.value)} style={{padding:"8px 11px",border:"1px solid var(--line)",borderRadius:8,fontSize:13,background:"#fff"}}>
-                <option value="">全部客戶</option>
-                {pCustomers.map(c=><option key={c.code} value={c.code}>{c.name}（{c.code}）</option>)}
-              </select>
-              <input placeholder="搜尋品號…" value={pSearch} onChange={e=>setPSearch(e.target.value)}
-                style={{flex:1,minWidth:120,padding:"8px 11px",border:"1px solid var(--line)",borderRadius:8,fontSize:13}}/>
-              <button className="btn-save" style={{padding:"8px 16px",fontSize:13}} onClick={()=>setShowAddP(v=>!v)}>
-                {showAddP?"取消新增":"＋ 新增價格"}
+            {/* 群組切換列 */}
+            <div style={{display:"flex",gap:8,marginBottom:10,alignItems:"center",flexWrap:"wrap"}}>
+              <span style={{fontSize:12,color:"var(--ink-soft)",flexShrink:0}}>價格群組：</span>
+              {pGroups.map(g=>(
+                <button key={g} onClick={()=>setPFilter(g)}
+                  style={{padding:"5px 14px",borderRadius:16,fontSize:13,border:"1.5px solid",
+                    borderColor:pFilter===g?"var(--brand)":"var(--line)",
+                    background:pFilter===g?"var(--brand)":"#fff",
+                    color:pFilter===g?"#fff":"var(--ink)",cursor:"pointer",fontWeight:pFilter===g?700:400}}>
+                  {g}
+                </button>
+              ))}
+              <button onClick={()=>{setShowCopyGroup(v=>!v);setCopyTarget("");}}
+                style={{padding:"5px 12px",borderRadius:16,fontSize:12,border:"1.5px dashed var(--line)",background:"#fff",cursor:"pointer",color:"var(--ink-soft)"}}>
+                ＋ 複製群組
               </button>
-              <span style={{fontSize:12,color:"var(--ink-soft)"}}>{filteredPrices.length} 筆</span>
+            </div>
+            {/* 複製群組表單 */}
+            {showCopyGroup&&(
+              <div style={{display:"flex",gap:8,marginBottom:12,alignItems:"center",background:"#f4f6f5",padding:"10px 14px",borderRadius:8}}>
+                <span style={{fontSize:13}}>從「{pFilter}」複製為：</span>
+                <input value={copyTarget} onChange={e=>setCopyTarget(e.target.value)} placeholder="新群組名稱（如 VIP_A）"
+                  style={{padding:"6px 10px",border:"1px solid var(--line)",borderRadius:6,fontSize:13,width:180}}/>
+                <button className="btn-save" style={{padding:"6px 16px",fontSize:13}} onClick={copyGroup}>確認複製</button>
+                {pFilter!=="DEFAULT"&&(
+                  <button className="btn-del" style={{padding:"6px 14px",fontSize:12,marginLeft:"auto"}} onClick={deleteGroup}>刪除「{pFilter}」群組</button>
+                )}
+              </div>
+            )}
+            {/* 工具列 */}
+            <div style={{display:"flex",gap:10,marginBottom:14,alignItems:"center",flexWrap:"wrap"}}>
+              <input placeholder="搜尋品號或單價…" value={pSearch} onChange={e=>setPSearch(e.target.value)}
+                style={{flex:1,minWidth:120,padding:"8px 11px",border:"1px solid var(--line)",borderRadius:8,fontSize:13}}/>
+              <button className="btn-save" style={{padding:"8px 16px",fontSize:13}} onClick={()=>{setShowAddP(v=>!v);setNewP(p=>({...p,priceGroup:pFilter}));}}>
+                {showAddP?"取消新增":"＋ 新增品項"}
+              </button>
+              <span style={{fontSize:12,color:"var(--ink-soft)"}}>{pFilter} · {filteredPrices.length} 筆</span>
             </div>
             {showAddP&&(
               <div className="add-form">
-                <label className="narrow">客戶代號＊<input value={newP.customerCode} onChange={e=>setNewP(p=>({...p,customerCode:e.target.value}))} placeholder="J100300"/></label>
-                <label className="narrow">客戶名稱<input value={newP.customerName} onChange={e=>setNewP(p=>({...p,customerName:e.target.value}))} placeholder="小太陽"/></label>
+                <label className="narrow">群組<input value={newP.priceGroup} readOnly style={{background:"#f4f4f4"}}/></label>
                 <label className="narrow">品號＊<input value={newP.productCode} onChange={e=>setNewP(p=>({...p,productCode:e.target.value}))} placeholder="021605"/></label>
                 <label className="narrow">單價＊<input value={newP.unitPrice} onChange={e=>setNewP(p=>({...p,unitPrice:e.target.value}))} placeholder="40"/></label>
-                <label className="narrow">活動規則<input value={newP.activity} onChange={e=>setNewP(p=>({...p,activity:e.target.value}))} placeholder="2+1"/></label>
+                <label className="narrow">活動規則<input value={newP.activity} onChange={e=>setNewP(p=>({...p,activity:e.target.value}))} placeholder="buy:12,gift:1"/></label>
                 <label className="narrow">備註<input value={newP.note} onChange={e=>setNewP(p=>({...p,note:e.target.value}))}/></label>
                 <button className="btn-save" style={{alignSelf:"flex-end",padding:"8px 20px"}} onClick={addPrice}>確認新增</button>
               </div>
@@ -1395,7 +1465,7 @@ function Admin() {
             {custLoading?<p style={{color:"var(--ink-soft)",fontSize:14}}>載入中…</p>:(
               <div style={{overflowX:"auto"}}>
                 <table className="cust-mgmt-table">
-                  <thead><tr><th>統一編號</th><th>公司名稱</th><th>客戶編號</th><th>店家名稱</th><th>區域</th><th style={{width:140}}>操作</th></tr></thead>
+                  <thead><tr><th>統一編號</th><th>公司名稱</th><th>客戶編號</th><th>店家名稱</th><th>區域</th><th>價格群組</th><th style={{width:140}}>操作</th></tr></thead>
                   <tbody>
                     {filteredCust.map(row=>{
                       const isE = editCust===row.branchCode;
@@ -1411,6 +1481,12 @@ function Admin() {
                               {["北北基","桃竹苗","宜花東","台中","彰化","南投","雲林","嘉南高"].map(r=><option key={r} value={r}>{r}</option>)}
                             </select>
                           ):<span className="cell-text">{row.region||<em style={{color:"#bbb"}}>—</em>}</span>}</td>
+                          <td>{isE?(
+                            <select className="cell-input" value={custDraft.priceGroup??row.priceGroup??"DEFAULT"} onChange={e=>setCustDraft(p=>({...p,priceGroup:e.target.value}))} style={{padding:"4px 6px",fontSize:12}}>
+                              <option value="DEFAULT">DEFAULT</option>
+                              {pGroups.filter(g=>g!=="DEFAULT").map(g=><option key={g} value={g}>{g}</option>)}
+                            </select>
+                          ):<span className="cell-text" style={{fontWeight:row.priceGroup&&row.priceGroup!=="DEFAULT"?700:400,color:row.priceGroup&&row.priceGroup!=="DEFAULT"?"var(--brand-dark)":"inherit"}}>{row.priceGroup||"DEFAULT"}</span>}</td>
                           <td>
                             <div className="row-actions">
                               {isE
