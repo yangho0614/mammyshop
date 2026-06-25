@@ -1536,22 +1536,35 @@ function Admin() {
                           <input value={triggerSearch} onChange={e=>setTriggerSearch(e.target.value)}
                             placeholder="搜尋品名或品號…"
                             style={{width:"100%",padding:"7px 10px",border:"1px solid var(--line)",borderRadius:6,fontSize:13,marginBottom:4,boxSizing:"border-box"}}/>
-                          {triggerSearch&&triggerResults.length>0&&(
-                            <div style={{border:"1px solid var(--line)",borderRadius:6,maxHeight:160,overflowY:"auto",marginBottom:6,background:"#fff"}}>
-                              {triggerResults.map(r=>(
-                                <div key={r.code} onClick={()=>{toggleTriggerCode(r.code);setTriggerSearch("");}}
-                                  style={{padding:"6px 10px",cursor:"pointer",fontSize:12,borderBottom:"1px solid var(--line)",
-                                    background:triggerList.includes(r.code)?"#e8f4ee":"#fff",display:"flex",gap:8,alignItems:"center"}}>
-                                  <span style={{color:"var(--ink-soft)",fontFamily:"monospace"}}>{r.code}</span>
-                                  <span style={{flex:1}}>{r.name}</span>
-                                  {triggerList.includes(r.code)&&<span style={{color:"var(--brand)",fontWeight:700}}>✓</span>}
-                                </div>
-                              ))}
+                          {triggerSearch&&(
+                            <div style={{border:"1px solid var(--line)",borderRadius:6,marginBottom:6,background:"#fff",boxShadow:"0 4px 12px rgba(0,0,0,.08)"}}>
+                              <div style={{maxHeight:200,overflowY:"auto"}}>
+                                {triggerResults.length===0
+                                  ? <div style={{padding:"10px 12px",fontSize:12,color:"var(--ink-soft)"}}>找不到商品</div>
+                                  : triggerResults.map(r=>(
+                                    <div key={r.code} onClick={()=>toggleTriggerCode(r.code)}
+                                      style={{padding:"8px 12px",cursor:"pointer",fontSize:13,borderBottom:"1px solid var(--line)",
+                                        background:triggerList.includes(r.code)?"#e8f4ee":"#fff",display:"flex",gap:10,alignItems:"center",userSelect:"none"}}>
+                                      <span style={{width:18,height:18,border:"2px solid",borderColor:triggerList.includes(r.code)?"var(--brand)":"#ccc",
+                                        borderRadius:4,background:triggerList.includes(r.code)?"var(--brand)":"#fff",
+                                        display:"inline-flex",alignItems:"center",justifyContent:"center",flexShrink:0}}>
+                                        {triggerList.includes(r.code)&&<span style={{color:"#fff",fontSize:11,fontWeight:700}}>✓</span>}
+                                      </span>
+                                      <span style={{color:"var(--ink-soft)",fontFamily:"monospace",fontSize:12}}>{r.code}</span>
+                                      <span style={{flex:1}}>{r.name}</span>
+                                    </div>
+                                  ))
+                                }
+                              </div>
+                              <div style={{padding:"6px 10px",borderTop:"1px solid var(--line)",textAlign:"right"}}>
+                                <button onClick={()=>setTriggerSearch("")}
+                                  style={{padding:"4px 14px",borderRadius:6,fontSize:12,border:"none",background:"var(--brand)",color:"#fff",cursor:"pointer"}}>
+                                  完成
+                                </button>
+                              </div>
                             </div>
                           )}
-                          {triggerSearch&&triggerResults.length===0&&(
-                            <div style={{fontSize:12,color:"var(--ink-soft)",padding:"4px 0",marginBottom:6}}>找不到商品</div>
-                          )}
+
                           {/* 已選清單 */}
                           <div style={{display:"flex",flexWrap:"wrap",gap:6}}>
                             {triggerList.map(code=>{
@@ -1588,10 +1601,10 @@ function Admin() {
                           <input value={giftSearch} onChange={e=>setGiftSearch(e.target.value)}
                             placeholder="搜尋贈品品名或品號…"
                             style={{width:"100%",padding:"7px 10px",border:"1px solid var(--line)",borderRadius:6,fontSize:13,marginBottom:4,boxSizing:"border-box"}}/>
-                          {giftSearch&&giftResults.length>0&&(
+                          {giftSearch&&(
                             <div style={{border:"1px solid var(--line)",borderRadius:6,maxHeight:160,overflowY:"auto",marginBottom:6,background:"#fff"}}>
                               {giftResults.map(r=>(
-                                <div key={r.code} onClick={()=>{toggleGiftCode(r.code);setGiftSearch("");}}
+                                <div key={r.code} onClick={()=>toggleGiftCode(r.code)}
                                   style={{padding:"6px 10px",cursor:"pointer",fontSize:12,borderBottom:"1px solid var(--line)",
                                     background:giftList.includes(r.code)?"#e8f4ee":"#fff",display:"flex",gap:8,alignItems:"center"}}>
                                   <span style={{color:"var(--ink-soft)",fontFamily:"monospace"}}>{r.code}</span>
@@ -1601,9 +1614,7 @@ function Admin() {
                               ))}
                             </div>
                           )}
-                          {giftSearch&&giftResults.length===0&&(
-                            <div style={{fontSize:12,color:"var(--ink-soft)",padding:"4px 0",marginBottom:6}}>找不到商品</div>
-                          )}
+
                           <div style={{display:"flex",flexWrap:"wrap",gap:6}}>
                             {giftList.map(code=>{
                               const m = masterRows.find(r=>r.code===code);
