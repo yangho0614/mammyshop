@@ -977,6 +977,7 @@ function App() {
       setProducts(d.products); setPromos(d.promos||[]);
       localStorage.setItem(LS_PRODUCTS, JSON.stringify(d.products));
       localStorage.setItem("promos", JSON.stringify(d.promos||[]));
+      await loadCatTree(); // 一併同步分類排序（跟後台「分類管理」拖拉順序連動）
     } catch(e) { alert("更新失敗："+e.message); }
     finally { setRefreshing(false); }
   }
