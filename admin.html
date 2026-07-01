@@ -1024,7 +1024,8 @@ const triggerList = parseCodes(p.triggerCodes).filter(c=>c!=="全部");
         const mapped = rows.map(r => ({
           code:      String(r["品號"]||r["code"]||r["產品編號"]||"").trim().padStart(6,"0"),
           name:      String(r["品名"]||r["name"]||"").trim(),
-          category:  String(r["分類"]||r["category"]||"").trim(),
+          category:  String(r["分類"]||r["大類別"]||r["category"]||"").trim(),
+          subCategory: String(r["子類別"]||r["子分類"]||r["subCategory"]||"").trim(),
           listPrice: String(r["定價"]||r["listPrice"]||"").trim(),
           boxQty:    String(r["箱入"]||r["箱入數"]||r["boxQty"]||"").trim(),
           cost:      String(r["成本"]||r["cost"]||"").trim(),
@@ -1099,6 +1100,18 @@ const triggerList = parseCodes(p.triggerCodes).filter(c=>c!=="全部");
       alert(`修復完成！\n商品主檔：${d.report.master} 筆\n價格表：${priceMsg}`);
     } catch(e) { alert("修復失敗："+e.message); }
     finally { setRepairing(false); }
+  }
+  const [migratingCols, setMigratingCols] = useState(false);
+  async function handleMigrateColumns() {
+    if (migratingCols) return;
+    if (!confirm("將重新排列「商品主檔」欄位順序為：A品號 B品名 C大類別 D子類別 E成本 F定價 G箱入數 H是否停產 I圖片網址。\n\n這是一次性遷移操作，執行後試算表欄位順序會永久改變，且無法自動復原（建議先自行備份試算表）。確定執行？")) return;
+    setMigratingCols(true);
+    try {
+      const d = await callGAS("migrateMasterColumnOrder", {});
+      await loadMaster();
+      alert(`欄位遷移完成，共處理 ${d.migratedRows} 筆商品資料。`);
+    } catch(e) { alert("遷移失敗："+e.message); }
+    finally { setMigratingCols(false); }
   }
   useEffect(() => { if (tab==="master" && authed && masterRows.length===0) loadMaster(); }, [tab, authed]);
 
@@ -1557,6 +1570,7 @@ const triggerList = parseCodes(p.triggerCodes).filter(c=>c!=="全部");
               <button className="btn-edit" style={{padding:"8px 14px",fontSize:13}} onClick={()=>importFileRef.current&&importFileRef.current.click()}>📥 Excel匯入</button>
               <button className="btn-edit" style={{padding:"8px 14px",fontSize:13,color:"var(--danger)"}} onClick={handleDedup} disabled={deduping}>{deduping?"清除中…":"🧹 清除重複品號"}</button>
               <button className="btn-edit" style={{padding:"8px 14px",fontSize:13,color:"#b35a00"}} onClick={handleRepairCodes} disabled={repairing}>{repairing?"修復中…":"🔧 修復品號前導零"}</button>
+              <button className="btn-edit" style={{padding:"8px 14px",fontSize:13,color:"#7b3fb0"}} onClick={handleMigrateColumns} disabled={migratingCols}>{migratingCols?"遷移中…":"⚙ 重新排列欄位（一次性）"}</button>
               <input type="file" accept=".xlsx,.xls,.csv" style={{display:"none"}} ref={importFileRef} onChange={e=>{handleImportFile(e.target.files[0]);e.target.value="";}}/>
               <button className="btn-save" style={{padding:"8px 16px",fontSize:13}} onClick={()=>setShowAddM(v=>!v)}>
                 {showAddM?"取消新增":"＋ 新增商品"}
@@ -1609,8 +1623,8 @@ const triggerList = parseCodes(p.triggerCodes).filter(c=>c!=="全部");
                     {(catTree[newM.category]||[]).map(c=><option key={c} value={c}>{c}</option>)}
                   </select>
                 </label>
-                <label className="narrow">定價<input value={newM.listPrice} onChange={e=>setNewM(p=>({...p,listPrice:e.target.value}))} placeholder="100"/></label>
                 <label className="narrow">成本<input value={newM.cost||""} onChange={e=>setNewM(p=>({...p,cost:e.target.value}))} placeholder="50"/></label>
+                <label className="narrow">定價<input value={newM.listPrice} onChange={e=>setNewM(p=>({...p,listPrice:e.target.value}))} placeholder="100"/></label>
                 <label className="narrow">箱入數<input value={newM.boxQty} onChange={e=>setNewM(p=>({...p,boxQty:e.target.value}))} placeholder="6"/></label>
                 <label className="narrow" style={{flexDirection:"row",alignItems:"center",gap:6,paddingBottom:2}}>
                   <input type="checkbox" checked={!!newM.inactive} onChange={e=>setNewM(p=>({...p,inactive:e.target.checked}))} style={{width:15,height:15,accentColor:"var(--danger)"}}/>失效
@@ -1700,8 +1714,9 @@ const triggerList = parseCodes(p.triggerCodes).filter(c=>c!=="全部");
                     <th><button className={"sort-btn"+(mSort==="name"?" active":"")} onClick={()=>toggleSort("name")} style={{cursor:"pointer",fontWeight:600,padding:"4px 8px",fontSize:13}}>品名 {mSort==="name"?(mSortDir==="asc"?"↑":"↓"):""}</button></th>
                     <th>大類別</th>
                     <th>子類別</th>
+                    <th>成本</th>
                     <th><button className={"sort-btn"+(mSort==="listPrice"?" active":"")} onClick={()=>toggleSort("listPrice")} style={{cursor:"pointer",fontWeight:600,padding:"4px 8px",fontSize:13}}>定價 {mSort==="listPrice"?(mSortDir==="asc"?"↑":"↓"):""}</button></th>
-                    <th>成本</th><th>箱入</th><th style={{textAlign:"center"}}>失效</th><th>圖片</th><th style={{width:160}}>操作</th>
+                    <th>箱入</th><th style={{textAlign:"center"}}>失效</th><th>圖片</th><th style={{width:160}}>操作</th>
                   </tr></thead>
                   <tbody>
                     {sortedMaster.map(row=>{
@@ -1724,8 +1739,8 @@ const triggerList = parseCodes(p.triggerCodes).filter(c=>c!=="全部");
                               {(catTree[editDraft.category]||[]).map(c=><option key={c} value={c}>{c}</option>)}
                             </select>
                           ):<span className="cell-text">{row.subCategory||<em className="empty">—</em>}</span>}</td>
-                          <td style={{minWidth:70}}>{isE?<input className="cell-input" value={editDraft.listPrice||""} onChange={e=>setEditDraft(p=>({...p,listPrice:e.target.value}))} style={{width:70}}/>:<span className="cell-text">{row.listPrice||<em className="empty">—</em>}</span>}</td>
                           <td style={{minWidth:70}}>{isE?<input className="cell-input" value={editDraft.cost||""} onChange={e=>setEditDraft(p=>({...p,cost:e.target.value}))} style={{width:70}}/>:<span className="cell-text">{row.cost||<em className="empty">—</em>}</span>}</td>
+                          <td style={{minWidth:70}}>{isE?<input className="cell-input" value={editDraft.listPrice||""} onChange={e=>setEditDraft(p=>({...p,listPrice:e.target.value}))} style={{width:70}}/>:<span className="cell-text">{row.listPrice||<em className="empty">—</em>}</span>}</td>
                           <td style={{minWidth:60}}>{isE?<input className="cell-input" value={editDraft.boxQty||""} onChange={e=>setEditDraft(p=>({...p,boxQty:e.target.value}))} style={{width:60}}/>:<span className="cell-text">{row.boxQty||<em className="empty">—</em>}</span>}</td>
                           <td style={{textAlign:"center"}}>
                             <input type="checkbox"
