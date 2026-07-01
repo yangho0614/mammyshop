@@ -329,18 +329,33 @@ function Admin() {
 
   const filteredOrders = useMemo(() => orders.filter(o => {
     if (fCust && !o.customerName.includes(fCust) && !o.branchCode.includes(fCust)) return false;
-    if (fStatus==="ok" && o.needsReview) return false;
-    if (fStatus==="review" && !o.needsReview) return false;
+    if (fStatus!=="all" && o.orderStatus!==fStatus) return false;
     if (fFrom && o.time < fFrom) return false;
     if (fTo   && o.time > fTo+" 99") return false;
     return true;
   }), [orders, fCust, fStatus, fFrom, fTo]);
 
   const stats = useMemo(() => ({
-    count: filteredOrders.length,
     total: filteredOrders.reduce((s,o)=>s+o.total, 0),
-    review: filteredOrders.filter(o=>o.needsReview).length,
   }), [filteredOrders]);
+
+  // 今日訂單／未出貨訂單：跟隨客戶搜尋(fCust)與日期篩選(fFrom/fTo)連動，但狀態固定為「未確認」（不受下方狀態篩選影響）
+  const todayStr = useMemo(() => {
+    const d = new Date();
+    return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}-${String(d.getDate()).padStart(2,"0")}`;
+  }, []);
+  const baseFilteredForKpi = useMemo(() => orders.filter(o => {
+    if (fCust && !o.customerName.includes(fCust) && !o.branchCode.includes(fCust)) return false;
+    if (fFrom && o.time < fFrom) return false;
+    if (fTo   && o.time > fTo+" 99") return false;
+    return true;
+  }), [orders, fCust, fFrom, fTo]);
+  const todayOrderCount = useMemo(() =>
+    baseFilteredForKpi.filter(o => o.orderStatus==="未確認" && o.time.slice(0,10)===todayStr).length
+  , [baseFilteredForKpi, todayStr]);
+  const unshippedOrderCount = useMemo(() =>
+    baseFilteredForKpi.filter(o => o.orderStatus==="未確認").length
+  , [baseFilteredForKpi]);
 
   const checkedList = filteredOrders.filter(o => checkedOrders[o.orderId]);
   const allChecked  = filteredOrders.length>0 && checkedList.length===filteredOrders.length;
@@ -531,6 +546,10 @@ function Admin() {
       setDashFrom(fmt(mon)); setDashTo(today);
     } else if (p==="month") {
       setDashFrom(`${now.getFullYear()}-${pad(now.getMonth()+1)}-01`); setDashTo(today);
+    } else if (p==="lastMonth") {
+      const lastMonthDate = new Date(now.getFullYear(), now.getMonth()-1, 1);
+      const lastMonthEnd  = new Date(now.getFullYear(), now.getMonth(), 0); // 上月最後一天
+      setDashFrom(fmt(lastMonthDate)); setDashTo(fmt(lastMonthEnd));
     } else if (p==="quarter") {
       const qm = Math.floor(now.getMonth()/3)*3;
       setDashFrom(`${now.getFullYear()}-${pad(qm+1)}-01`); setDashTo(today);
@@ -1435,14 +1454,14 @@ const triggerList = parseCodes(p.triggerCodes).filter(c=>c!=="全部");
         {tab==="orders" && (
           <React.Fragment>
             <div className="stats">
-              <div className="stat-card"><div className="label">篩選後訂單數</div><div className="value">{stats.count}</div></div>
+              <div className="stat-card"><div className="label">今日訂單（未確認）</div><div className="value">{todayOrderCount}</div></div>
+              <div className="stat-card"><div className="label">未出貨訂單（未確認）</div><div className={"value"+(unshippedOrderCount>0?" warn":"")}>{unshippedOrderCount}</div></div>
               <div className="stat-card"><div className="label">合計金額</div><div className="value">${stats.total.toLocaleString()}</div></div>
-              <div className="stat-card"><div className="label">待複核</div><div className={"value"+(stats.review>0?" warn":"")}>{stats.review}</div></div>
             </div>
             <div className="filters">
               <input placeholder="搜尋客戶名稱或分店代號…" value={fCust} onChange={e=>setFCust(e.target.value)}/>
               <select value={fStatus} onChange={e=>setFStatus(e.target.value)}>
-                <option value="all">全部狀態</option><option value="ok">可匯出</option><option value="review">含待複核</option>
+                <option value="all">全部狀態</option><option value="未確認">未確認</option><option value="準備中">準備中</option><option value="已出貨">已出貨</option>
               </select>
               <div className="date-wrap">
                 <span>從</span><input type="date" value={fFrom} onChange={e=>setFFrom(e.target.value)}/>
@@ -1963,7 +1982,7 @@ const triggerList = parseCodes(p.triggerCodes).filter(c=>c!=="全部");
           <React.Fragment>
             {/* 日期篩選 */}
             <div className="dash-filter">
-              {[["today","今日"],["week","本週"],["month","本月"],["quarter","本季"],["year","今年"]].map(([p,l])=>(
+              {[["today","今日"],["week","本週"],["month","本月"],["lastMonth","上個月"],["quarter","本季"],["year","今年"]].map(([p,l])=>(
                 <button key={p} className={"dash-quick-btn"+(dashPeriod===p?" active":"")} onClick={()=>setQuickPeriod(p)}>{l}</button>
               ))}
               <input type="date" value={dashFrom} onChange={e=>{setDashFrom(e.target.value);setDashPeriod("custom");}}/>
@@ -1979,10 +1998,10 @@ const triggerList = parseCodes(p.triggerCodes).filter(c=>c!=="全部");
               <React.Fragment>
                 {/* KPI 卡片 */}
                 <div className="dash-kpi-row">
-                  <div className="kpi-card"><div className="k-label">總營業額</div><div className="k-value green">${dash.summary.totalRevenue.toLocaleString()}</div><div className="k-sub">篩選期間累計</div></div>
+                  <div className="kpi-card"><div className="k-label">總營業額</div><div className="k-value green">${dash.summary.totalRevenue.toLocaleString()}</div><div className="k-sub">篩選期間累計（僅計入已出貨）</div></div>
                   <div className="kpi-card"><div className="k-label">訂單總數</div><div className="k-value blue">{dash.summary.totalOrders}</div><div className="k-sub">筆</div></div>
                   <div className="kpi-card"><div className="k-label">未確認訂單</div><div className={"k-value"+(dash.summary.pendingCount>0?" warn":"")}>{dash.summary.pendingCount}</div><div className="k-sub">待後台確認</div></div>
-                  <div className="kpi-card"><div className="k-label">平均客單價</div><div className="k-value">${dash.summary.totalOrders>0?Math.round(dash.summary.totalRevenue/dash.summary.totalOrders).toLocaleString():"0"}</div></div>
+                  <div className="kpi-card"><div className="k-label">平均客單價</div><div className="k-value">${dash.summary.shippedOrderCount>0?Math.round(dash.summary.totalRevenue/dash.summary.shippedOrderCount).toLocaleString():"0"}</div></div>
                 </div>
 
                 {/* 訂單狀態分布 */}
