@@ -837,6 +837,19 @@ function Admin() {
     } catch(e) { alert("清除失敗："+e.message); }
     finally { setDeduping(false); }
   }
+  const [repairing, setRepairing] = useState(false);
+  async function handleRepairCodes() {
+    if (repairing) return;
+    if (!confirm("將修復「商品主檔」及所有「客戶價格表」群組分頁裡遺失前導零的品號（例如 17042 → 017042），並鎖定為文字格式避免再次發生。確定執行？")) return;
+    setRepairing(true);
+    try {
+      const d = await callGAS("repairProductCodes", {});
+      await loadMaster();
+      const priceMsg = Object.entries(d.report.priceSheets||{}).map(([g,n])=>`${g}: ${n}筆`).join("、") || "無";
+      alert(`修復完成！\n商品主檔：${d.report.master} 筆\n價格表：${priceMsg}`);
+    } catch(e) { alert("修復失敗："+e.message); }
+    finally { setRepairing(false); }
+  }
   useEffect(() => { if (tab==="master" && authed && masterRows.length===0) loadMaster(); }, [tab, authed]);
 
   function startEdit(row) { setEditCode(row.code); setEditDraft({name:row.name, category:row.category, subCategory:row.subCategory||"", listPrice:row.listPrice, boxQty:row.boxQty, cost:row.cost||"", inactive:row.inactive}); }
@@ -1293,6 +1306,7 @@ function Admin() {
               <button className="btn-edit" style={{padding:"8px 14px",fontSize:13}} onClick={openCatMgr}>⚙ 管理分類</button>
               <button className="btn-edit" style={{padding:"8px 14px",fontSize:13}} onClick={()=>importFileRef.current&&importFileRef.current.click()}>📥 Excel匯入</button>
               <button className="btn-edit" style={{padding:"8px 14px",fontSize:13,color:"var(--danger)"}} onClick={handleDedup} disabled={deduping}>{deduping?"清除中…":"🧹 清除重複品號"}</button>
+              <button className="btn-edit" style={{padding:"8px 14px",fontSize:13,color:"#b35a00"}} onClick={handleRepairCodes} disabled={repairing}>{repairing?"修復中…":"🔧 修復品號前導零"}</button>
               <input type="file" accept=".xlsx,.xls,.csv" style={{display:"none"}} ref={importFileRef} onChange={e=>{handleImportFile(e.target.files[0]);e.target.value="";}}/>
               <button className="btn-save" style={{padding:"8px 16px",fontSize:13}} onClick={()=>setShowAddM(v=>!v)}>
                 {showAddM?"取消新增":"＋ 新增商品"}
