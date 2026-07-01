@@ -1534,7 +1534,7 @@ function Admin() {
                 <label className="narrow">品號＊<input value={newP.productCode} onChange={e=>setNewP(p=>({...p,productCode:e.target.value}))} placeholder="021605"/></label>
                 <label className="narrow">品名<input value={newP.productName} onChange={e=>setNewP(p=>({...p,productName:e.target.value}))} placeholder="母感體驗奶嘴"/></label>
                 <label className="narrow">單價＊<input value={newP.unitPrice} onChange={e=>setNewP(p=>({...p,unitPrice:e.target.value}))} placeholder="40"/></label>
-                <label className="narrow">活動規則<input value={newP.activity} onChange={e=>setNewP(p=>({...p,activity:e.target.value}))} placeholder="buy:12,gift:1"/></label>
+                <label className="narrow">活動備註<input value={newP.activity} onChange={e=>setNewP(p=>({...p,activity:e.target.value}))} placeholder="僅供備註，不影響價格計算"/></label>
                 <label className="narrow">備註<input value={newP.note} onChange={e=>setNewP(p=>({...p,note:e.target.value}))}/></label>
                 <button className="btn-save" style={{alignSelf:"flex-end",padding:"8px 20px"}} onClick={addPrice}>確認新增</button>
               </div>
@@ -1543,7 +1543,7 @@ function Admin() {
             {pLoading?<p style={{color:"var(--ink-soft)",fontSize:14}}>載入中…</p>:(
               <div style={{overflowX:"auto"}}>
                 <table className="mgmt-table">
-                  <thead><tr><th>品號</th><th>品名</th><th>單價</th><th>活動規則</th><th>備註</th><th style={{width:140}}>操作</th></tr></thead>
+                  <thead><tr><th>品號</th><th>品名</th><th>單價</th><th>活動備註</th><th>備註</th><th style={{width:140}}>操作</th></tr></thead>
                   <tbody>
                     {filteredPrices.map(row=>{
                       const isE = editPrice&&editPrice.g===row.priceGroup&&editPrice.pc===row.productCode;
@@ -1552,7 +1552,7 @@ function Admin() {
                           <td style={{fontFamily:"monospace",fontSize:12}}>{row.productCode}</td>
                           <td style={{minWidth:120}}>{isE?<input className="cell-input" value={priceDraft.productName??row.productName??""} onChange={e=>setPriceDraft(p=>({...p,productName:e.target.value}))}/>:<span className="cell-text">{row.productName||<em className="empty">—</em>}</span>}</td>
                           <td style={{minWidth:70}}>{isE?<input className="cell-input" value={priceDraft.unitPrice??row.unitPrice??""} onChange={e=>setPriceDraft(p=>({...p,unitPrice:e.target.value}))} style={{width:80}}/>:<span className="cell-text">{row.unitPrice}</span>}</td>
-                          <td style={{minWidth:120}}>{isE?<input className="cell-input" value={priceDraft.activity??row.activity??""} onChange={e=>setPriceDraft(p=>({...p,activity:e.target.value}))}/>:<span className="cell-text">{row.activity||<em className="empty">—</em>}</span>}</td>
+                          <td style={{minWidth:120}}>{isE?<input className="cell-input" value={priceDraft.activity??row.activity??""} onChange={e=>setPriceDraft(p=>({...p,activity:e.target.value}))} placeholder="活動備註"/>:<span className="cell-text">{row.activity||<em className="empty">—</em>}</span>}</td>
                           <td style={{minWidth:80}}>{isE?<input className="cell-input" value={priceDraft.note??row.note??""} onChange={e=>setPriceDraft(p=>({...p,note:e.target.value}))}/>:<span className="cell-text">{row.note||<em className="empty">—</em>}</span>}</td>
                           <td>
                             <div className="row-actions">

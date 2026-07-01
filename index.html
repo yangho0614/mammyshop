@@ -565,19 +565,10 @@ function ImageSlider({ images }) {
   );
 }
 
-function parseActivity(a) {
-  if (!a) return null; a = a.trim();
-  const bm = a.match(/成箱\$?(\d+)/); if (bm) return {type:"autoBox", boxPrice:Number(bm[1]), label:`整箱 $${bm[1]}`};
-  const gm = a.match(/^(\d+)\+(\d+)$/); if (gm) return {type:"autoGift", buy:Number(gm[1]), free:Number(gm[2]), label:`買${gm[1]}送${gm[2]}`};
-  return {type:"needReview", label:a};
-}
+// 商品層級的舊格式「活動規則」欄位已完全停用，
+// 贈品/折扣一律由後台「促銷活動」系統管理（見 calcPromoGifts）
 function computeLine(p, qty) {
-  const rule = parseActivity(p.activity);
-  let giftQty=0, amount=qty*p.unitPrice, flag=null;
-  if (rule && rule.type==="autoGift" && qty>0) { giftQty = Math.floor(qty/rule.buy)*rule.free; }
-  else if (rule && rule.type==="autoBox" && qty>0) { const boxes=Math.ceil(qty/(Number(p.boxQty)||1)); amount=boxes*rule.boxPrice; flag=`依整箱價，共 ${boxes} 箱`; }
-  else if (rule && rule.type==="needReview") { flag="review"; }
-  return {giftQty, amount, rule, flag};
+  return { amount: qty * (Number(p.unitPrice)||0) };
 }
 
 // ── 新促銷活動計算 ──
@@ -605,9 +596,11 @@ function calcPromoGifts(cartItems, promos, products) {
     let freeCount = 0;
 
     if (promo.ruleType === "buy") {
-      const groupSize = promo.triggerN + promo.giftM; // 買2送1 → 3件為一組
-      freeCount = Math.floor(totalQty / groupSize) * promo.giftM; // 每組免費 M 件
-    } else { // min：滿 N 件送 M 件（指定贈品，屬額外贈送）
+      // 買N送M：下單 (N+M) 件為一組，其中 M 件免費（例：買2送1 → 下單3件，1件免費，付2件錢）
+      const groupSize = promo.triggerN + promo.giftM;
+      freeCount = Math.floor(totalQty / groupSize) * promo.giftM;
+    } else {
+      // min：滿N件另外贈送M件（贈品不折抵已購商品金額，屬額外贈送）
       freeCount = Math.floor(totalQty / promo.triggerN) * promo.giftM;
     }
     if (freeCount <= 0) return;
@@ -866,12 +859,8 @@ function App() {
   function updateEditQty(code, qty) {
     setEditLines(prev=>prev.map(l=>{
       if (l.code!==code) return l;
-      const rule = parseActivity(l.activity);
-      let amount = qty * l.unitPrice;
-      let giftQty = 0;
-      if (rule && rule.type==="autoGift" && qty>0) giftQty = Math.floor(qty/rule.buy)*rule.free;
-      if (rule && rule.type==="autoBox" && qty>0) { const boxes=Math.ceil(qty/(Number(products.find(p=>p.code===code)?.boxQty)||1)); amount=boxes*rule.boxPrice; }
-      return {...l, qty, giftQty, amount};
+      const amount = qty * l.unitPrice;
+      return {...l, qty, amount};
     }));
   }
 
@@ -884,12 +873,8 @@ function App() {
     const p = products.find(x=>x.code===addItemCode);
     if (!p) { alert("找不到品號 "+addItemCode); return; }
     if (editLines.find(l=>l.code===addItemCode)) { updateEditQty(addItemCode, (editLines.find(l=>l.code===addItemCode).qty||0)+addItemQty); return; }
-    const rule = parseActivity(p.activity);
-    let amount = addItemQty * p.unitPrice;
-    let giftQty = 0;
-    if (rule && rule.type==="autoGift" && addItemQty>0) giftQty = Math.floor(addItemQty/rule.buy)*rule.free;
-    if (rule && rule.type==="autoBox" && addItemQty>0) { const boxes=Math.ceil(addItemQty/(Number(p.boxQty)||1)); amount=boxes*rule.boxPrice; }
-    setEditLines(prev=>[...prev,{code:p.code,name:p.name,qty:addItemQty,giftQty,unitPrice:p.unitPrice,activity:p.activity||"",needsReview:rule?.type==="needReview",amount}]);
+    const amount = addItemQty * p.unitPrice;
+    setEditLines(prev=>[...prev,{code:p.code,name:p.name,qty:addItemQty,giftQty:0,unitPrice:p.unitPrice,activity:"",needsReview:false,amount}]);
     setAddItemCode(""); setAddItemQty(1);
   }
 
@@ -939,7 +924,13 @@ function App() {
     promoGiftLines.forEach(g => { m[g.code] = (m[g.code]||0) + g.qty; });
     return m;
   }, [promoGiftLines]);
-  const hasReview  = cartLines.some(l=>l.flag==="review");
+  // 每個品號被新促銷系統折抵的金額（舊格式規則已直接反映在 l.amount，不需另外扣）
+  const discountByCode = useMemo(() => {
+    const m = {};
+    promoGiftLines.forEach(g => { m[g.code] = (m[g.code]||0) + (g.discountAmount||0); });
+    return m;
+  }, [promoGiftLines]);
+  // 待複核機制隨舊格式規則一併停用，一律不再觸發
   function setQty(code, qty) {
     setCart(p => {
       const next = {...p, [code]: Math.max(0, qty)};
@@ -970,11 +961,11 @@ function App() {
     try {
       const d = await callGAS("submitOrder",{order:{taxId:customer.taxId,customerName:customer.name+"（"+customer.code+"）"+customer.branchName,branchCode:customer.code, note:orderNote,
         lines:[
-          ...cartLines.map(l=>({code:l.product.code,name:l.product.name,qty:l.qty,giftQty:l.giftQty||0,unitPrice:l.product.unitPrice,amount:l.amount,activity:l.product.activity||"",needsReview:l.flag==="review"})),
+          ...cartLines.map(l=>({code:l.product.code,name:l.product.name,qty:l.qty,giftQty:0,unitPrice:l.product.unitPrice,amount:l.amount,activity:"",needsReview:false})),
           ...promoGiftLines.map(g=>({code:g.code,name:g.name+"（促銷免費）",qty:g.qty,giftQty:g.qty,unitPrice:0,amount:g.discountAmount>0?-g.discountAmount:0,activity:g.activity,needsReview:false,isGift:true}))
         ]}});
       localStorage.removeItem(LS_CART);
-      setLastOrder({id:d.orderId,customer:customer.name,needsReview:hasReview}); setCart({}); setOrderNote(""); setDrawerOpen(false); setStage("confirmed");
+      setLastOrder({id:d.orderId,customer:customer.name,needsReview:false}); setCart({}); setOrderNote(""); setDrawerOpen(false); setStage("confirmed");
     } catch(e) { setPageError("訂單送出失敗："+e.message+"，請稍後再試一次"); }
     finally { setSubmitting(false); }
   }
@@ -1318,7 +1309,7 @@ function App() {
             <span className="main-count">{filtered.length} 項商品</span>
           </div>
           <div className="grid">
-            {filtered.map(p=>{const rule=parseActivity(p.activity);const qty=cart[p.code]||0;const calc=computeLine(p,qty);const imgs=(p.images||[]).map(fixImgUrl);const matchedPromo=(promos||[]).find(pr=>{if(pr.triggerCodes==="全部")return true;return pr.triggerCodes.split(",").map(c=>c.trim()).includes(p.code);});return(
+            {filtered.map(p=>{const qty=cart[p.code]||0;const calc=computeLine(p,qty);const imgs=(p.images||[]).map(fixImgUrl);const matchedPromo=(promos||[]).find(pr=>{if(pr.triggerCodes==="全部")return true;return pr.triggerCodes.split(",").map(c=>c.trim()).includes(p.code);});return(
               <div key={p.code} className={"card"+(p.inactive?" disabled":"")}>
                 <ImageSlider images={imgs}/>
                 <div className="card-body">
@@ -1329,18 +1320,14 @@ function App() {
                     {p.listPrice&&<span className="list-price">${p.listPrice}</span>}
                   </div>
                   <div className="box-qty">每箱 {p.boxQty} 入</div>
-                  {rule&&rule.type==="autoGift"&&<span className="tag gift">{rule.label}</span>}
-                  {rule&&rule.type==="autoBox"&&<span className="tag box">{rule.label}</span>}
-                  {rule&&rule.type==="needReview"&&<span className="tag review">⚠ 待複核</span>}
-                  {!rule&&matchedPromo&&<span className="tag gift">{matchedPromo.name}</span>}
+                  {matchedPromo&&<span className="tag gift">{matchedPromo.name}</span>}
                   {p.inactive&&<span className="tag stop">已失效</span>}
                 </div>
                 <div className="qty-row">
                   <button className="qty-btn" onClick={()=>setQty(p.code,qty-1)}>－</button>
                   <input className="qty-input" type="number" min="0" value={qty} onChange={e=>setQty(p.code,Number(e.target.value)||0)}/>
                   <button className="qty-btn" onClick={()=>setQty(p.code,qty+1)}>＋</button>
-                  {qty>0&&calc.giftQty>0&&<span className="added">+贈{calc.giftQty}</span>}
-                  {qty>0&&!calc.giftQty&&(freeQtyByCode[p.code]||0)>0&&<span className="added">+贈{freeQtyByCode[p.code]}</span>}
+                  {qty>0&&(freeQtyByCode[p.code]||0)>0&&<span className="added">+贈{freeQtyByCode[p.code]}</span>}
                 </div>
               </div>
             );})}
@@ -1353,20 +1340,19 @@ function App() {
           <div className="drawer-head"><h3>購物車</h3><button onClick={()=>setDrawerOpen(false)}>✕</button></div>
           <div className="drawer-body">
             {cartLines.length===0?<div className="empty-cart">購物車是空的，請先選購商品</div>:cartLines.map(l=>{
-              const freeQty = freeQtyByCode[l.product.code] || 0;
-              const paidQty = Math.max(0, l.qty - freeQty);
+              const freeQty  = freeQtyByCode[l.product.code] || 0;
+              const paidQty  = Math.max(0, l.qty - freeQty);
+              const lineDiscount = discountByCode[l.product.code] || 0;
+              const displayPrice = Math.max(0, l.amount - lineDiscount);
               return (
               <div className="cart-line" key={l.product.code}>
                 <div className="info">
                   <div className="name">{l.product.name}</div>
                   <div className="qty-line">{paidQty} 件 × ${l.product.unitPrice}</div>
                   {freeQty>0&&<div className="qty-line free">{freeQty} 件 × $0</div>}
-                  {l.giftQty>0&&<div className="meta">另贈 {l.giftQty} 件</div>}
-                  {l.flag&&l.flag!=="review"&&<div className="meta">{l.flag}</div>}
-                  {l.flag==="review"&&<div className="meta" style={{color:"var(--warn)"}}>⚠待業務複核</div>}
                   <button className="remove" onClick={()=>setQty(l.product.code,0)}>移除</button>
                 </div>
-                <div className="lineprice">${l.amount.toLocaleString()}</div>
+                <div className="lineprice">${displayPrice.toLocaleString()}</div>
               </div>
               );
             })}
@@ -1379,7 +1365,6 @@ function App() {
               </React.Fragment>
             )}
             <div className="total-row grand"><span>合計</span><span>${cartTotal.toLocaleString()}</span></div>
-            {hasReview&&<div className="review-note">此訂單含特殊促銷品項，系統試算金額僅供參考，正式金額將由業務人員複核後確認。</div>}
             <textarea value={orderNote} onChange={e=>setOrderNote(e.target.value)}
               placeholder="備註（選填）：送貨時間、特殊需求…"
               style={{width:"100%",padding:"9px 11px",border:"1px solid var(--line)",borderRadius:8,fontSize:13,resize:"vertical",minHeight:52,fontFamily:"inherit",marginBottom:8,marginTop:8}}/>
