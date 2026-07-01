@@ -579,13 +579,15 @@ function computeLine(p, qty) {
 }
 
 // ── 新促銷活動計算 ──
+// 回傳 { giftLines, discount }
+//  - giftLines: 被選為免費的商品明細（每行含 qty 與折抵金額 discountAmount）
+//  - discount:  所有免費件的金額總和（要從購物車原價扣除）
+// 邏輯：買N送M = 每湊滿 (N+M) 件，其中最便宜的 M 件免費（非額外贈送）
 function calcPromoGifts(cartItems, promos, products) {
-  // cartItems: [{product, qty, ...}]
-  // promos: 有效促銷活動（已按優先權排序）
-  // products: 全部商品（查品名用）
   const productMap = {};
   products.forEach(p => { productMap[p.code] = p; });
   const giftLines = [];
+  let discount = 0;
 
   promos.forEach(promo => {
     const triggerAll = promo.triggerCodes === "全部";
@@ -598,44 +600,69 @@ function calcPromoGifts(cartItems, promos, products) {
     if (triggered.length === 0) return;
 
     const totalQty = triggered.reduce((s, item) => s + item.qty, 0);
-    let giftCount = 0;
+    let freeCount = 0;
 
     if (promo.ruleType === "buy") {
-      const groupSize = promo.triggerN + promo.giftM;
-      giftCount = Math.floor(totalQty / groupSize) * promo.giftM;
-    } else { // min
-      giftCount = Math.floor(totalQty / promo.triggerN) * promo.giftM;
+      const groupSize = promo.triggerN + promo.giftM; // 買2送1 → 3件為一組
+      freeCount = Math.floor(totalQty / groupSize) * promo.giftM; // 每組免費 M 件
+    } else { // min：滿 N 件送 M 件（指定贈品，屬額外贈送）
+      freeCount = Math.floor(totalQty / promo.triggerN) * promo.giftM;
     }
-    if (giftCount <= 0) return;
-
-    let giftCodes = promo.giftCodes.split(",").map(c=>c.trim()).filter(Boolean);
+    if (freeCount <= 0) return;
 
     if (promo.ruleType === "buy") {
-      // 贈品 = 群組內購買商品中單價最低者
-      let minPrice = Infinity, minCode = "";
+      // 把觸發商品攤開成單件，依單價由低到高排序，最便宜的 freeCount 件免費
+      const units = [];
       triggered.forEach(item => {
-        const price = parseFloat(item.product.unitPrice)||0;
-        if (price < minPrice) { minPrice = price; minCode = item.product.code; }
+        const price = parseFloat(item.product.unitPrice) || 0;
+        for (let n = 0; n < item.qty; n++) {
+          units.push({ code: item.product.code, name: item.product.name, price });
+        }
       });
-      if (minCode) giftCodes = [minCode];
+      units.sort((a, b) => a.price - b.price);
+      const picked = units.slice(0, freeCount); // 最便宜的 freeCount 件
+
+      // 依品號彙整（同商品合併），並累加折抵金額
+      const byCode = {};
+      picked.forEach(u => {
+        if (!byCode[u.code]) byCode[u.code] = { code: u.code, name: u.name, qty: 0, price: u.price };
+        byCode[u.code].qty += 1;
+        discount += u.price;
+      });
+
+      Object.values(byCode).forEach(g => {
+        giftLines.push({
+          code:           g.code,
+          name:           g.name,
+          qty:            g.qty,
+          unitPrice:      g.price,
+          discountAmount: g.price * g.qty, // 這幾件折抵的金額
+          activity:       promo.name,
+          isGift:         true,
+          promoId:        promo.id,
+        });
+      });
+      return;
     }
 
+    // min 規則：贈品為活動指定的 giftCodes（額外贈送，不折抵已購金額）
+    const giftCodes = promo.giftCodes.split(",").map(c=>c.trim()).filter(Boolean);
     giftCodes.forEach(gCode => {
       const gProduct = productMap[gCode];
       giftLines.push({
-        code:      gCode,
-        name:      gProduct ? gProduct.name : gCode,
-        qty:       giftCount,
-        giftQty:   0,
-        unitPrice: 0,
-        amount:    0,
-        activity:  promo.name,
-        isGift:    true,
-        promoId:   promo.id,
+        code:           gCode,
+        name:           gProduct ? gProduct.name : gCode,
+        qty:            freeCount,
+        unitPrice:      0,
+        discountAmount: 0, // 額外贈送，不折抵
+        activity:       promo.name,
+        isGift:         true,
+        promoId:        promo.id,
       });
     });
   });
-  return giftLines;
+
+  return { giftLines, discount };
 }
 
 function App() {
@@ -894,13 +921,16 @@ function App() {
     } catch(e) { alert("取消失敗："+e.message); }
   }
   const cartLines  = useMemo(() => Object.entries(cart).filter(([,q])=>q>0).map(([code,qty])=>{ const p=products.find(x=>x.code===code); return {product:p,qty,...computeLine(p,qty)}; }), [cart,products]);
-  const promoGiftLines = useMemo(() => {
-    if (!promos || promos.length === 0) return [];
+  const promoResult = useMemo(() => {
+    if (!promos || promos.length === 0) return { giftLines: [], discount: 0 };
     try { return calcPromoGifts(cartLines, promos, products); }
-    catch(e) { console.error("促銷計算錯誤:", e); return []; }
+    catch(e) { console.error("促銷計算錯誤:", e); return { giftLines: [], discount: 0 }; }
   }, [cartLines, promos, products]);
+  const promoGiftLines = promoResult.giftLines;
+  const promoDiscount  = promoResult.discount;
   const cartCount  = cartLines.reduce((s,l)=>s+l.qty, 0);
-  const cartTotal  = cartLines.reduce((s,l)=>s+l.amount, 0);
+  const cartSubtotal = cartLines.reduce((s,l)=>s+l.amount, 0);   // 原價小計
+  const cartTotal    = Math.max(0, cartSubtotal - promoDiscount); // 折抵後合計
   const hasReview  = cartLines.some(l=>l.flag==="review");
   function setQty(code, qty) {
     setCart(p => {
@@ -933,7 +963,7 @@ function App() {
       const d = await callGAS("submitOrder",{order:{taxId:customer.taxId,customerName:customer.name+"（"+customer.code+"）"+customer.branchName,branchCode:customer.code, note:orderNote,
         lines:[
           ...cartLines.map(l=>({code:l.product.code,name:l.product.name,qty:l.qty,giftQty:l.giftQty||0,unitPrice:l.product.unitPrice,amount:l.amount,activity:l.product.activity||"",needsReview:l.flag==="review"})),
-          ...promoGiftLines.map(g=>({code:g.code,name:g.name,qty:g.qty,giftQty:0,unitPrice:0,amount:0,activity:g.activity,needsReview:false,isGift:true}))
+          ...promoGiftLines.map(g=>({code:g.code,name:g.name+"（促銷免費）",qty:g.qty,giftQty:g.qty,unitPrice:0,amount:g.discountAmount>0?-g.discountAmount:0,activity:g.activity,needsReview:false,isGift:true}))
         ]}});
       localStorage.removeItem(LS_CART);
       setLastOrder({id:d.orderId,customer:customer.name,needsReview:hasReview}); setCart({}); setOrderNote(""); setDrawerOpen(false); setStage("confirmed");
@@ -1325,20 +1355,29 @@ function App() {
             ))}
           </div>
           <div className="drawer-foot">
+            {promoDiscount>0&&(
+              <React.Fragment>
+                <div className="total-row"><span>商品小計</span><span>${cartSubtotal.toLocaleString()}</span></div>
+                <div className="total-row" style={{color:"var(--brand-dark)"}}><span>促銷折抵</span><span>−${promoDiscount.toLocaleString()}</span></div>
+              </React.Fragment>
+            )}
             <div className="total-row grand"><span>合計</span><span>${cartTotal.toLocaleString()}</span></div>
             {hasReview&&<div className="review-note">此訂單含特殊促銷品項，系統試算金額僅供參考，正式金額將由業務人員複核後確認。</div>}
             <textarea value={orderNote} onChange={e=>setOrderNote(e.target.value)}
               placeholder="備註（選填）：送貨時間、特殊需求…"
               style={{width:"100%",padding:"9px 11px",border:"1px solid var(--line)",borderRadius:8,fontSize:13,resize:"vertical",minHeight:52,fontFamily:"inherit",marginBottom:8,marginTop:8}}/>
             {pageError&&<div className="login-error">{pageError}</div>}
-            {/* 促銷贈品行 */}
+            {/* 促銷免費品項 */}
             {promoGiftLines.length>0&&(
               <div style={{margin:"8px 0",padding:"8px 12px",background:"#f0f7f3",borderRadius:8,border:"1px solid var(--brand-tint)"}}>
-                <div style={{fontSize:12,fontWeight:700,color:"var(--brand-dark)",marginBottom:6}}>🎁 促銷贈品</div>
+                <div style={{fontSize:12,fontWeight:700,color:"var(--brand-dark)",marginBottom:6}}>🎁 促銷免費品項</div>
                 {promoGiftLines.map((g,i)=>(
                   <div key={i} style={{display:"flex",justifyContent:"space-between",fontSize:13,padding:"3px 0",borderBottom:"1px solid var(--line)"}}>
                     <span>{g.name} × {g.qty}</span>
-                    <span style={{color:"var(--brand-dark)",fontWeight:600}}>$0　<span style={{fontSize:11,color:"var(--ink-soft)"}}>{g.activity}</span></span>
+                    <span style={{color:"var(--brand-dark)",fontWeight:600}}>
+                      {g.discountAmount>0?`免費（折抵 $${g.discountAmount.toLocaleString()}）`:"贈送"}
+                      　<span style={{fontSize:11,color:"var(--ink-soft)"}}>{g.activity}</span>
+                    </span>
                   </div>
                 ))}
               </div>
