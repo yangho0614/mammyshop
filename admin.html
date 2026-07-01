@@ -136,6 +136,8 @@
   .imgmgr-item .del-btn:hover{background:var(--danger);}
   .imgmgr-add{border:2px dashed var(--line);border-radius:8px;aspect-ratio:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;cursor:pointer;color:#aaa;font-size:13px;transition:all .15s;}
   .imgmgr-add:hover{border-color:var(--brand);color:var(--brand);}
+  .imgmgr-add.drop-active{border-color:var(--brand);color:var(--brand);background:var(--brand-tint);transform:scale(1.02);}
+  .imgmgr-body.body-drop-active{background:rgba(47,111,94,.04);outline:2px dashed var(--brand);outline-offset:-8px;border-radius:8px;}
   .imgmgr-add .icon{font-size:28px;}
   .imgmgr-foot{padding:14px 20px;border-top:1px solid var(--line);display:flex;align-items:center;justify-content:space-between;flex-shrink:0;gap:10px;}
   .imgmgr-hint{font-size:12px;color:var(--ink-soft);}
@@ -940,6 +942,39 @@ function Admin() {
     });
   }
   function onDragEnd() { setDragIdx(null); }
+
+  // ── 拖放檔案上傳 ──
+  const [bodyDropActive, setBodyDropActive] = useState(false);
+
+  function onBodyDragEnter(e) {
+    if ([...e.dataTransfer.items].some(i => i.kind === "file")) {
+      e.preventDefault(); setBodyDropActive(true);
+    }
+  }
+  function onBodyDragLeave(e) {
+    // 只有真正離開 body 才關掉 highlight
+    if (!e.currentTarget.contains(e.relatedTarget)) setBodyDropActive(false);
+  }
+  function onBodyDragOverEv(e) {
+    if ([...e.dataTransfer.items].some(i => i.kind === "file")) e.preventDefault();
+  }
+  async function onBodyDrop(e) {
+    e.preventDefault(); setBodyDropActive(false);
+    const files = [...e.dataTransfer.files].filter(f => f.type.startsWith("image/"));
+    if (!files.length) return;
+    for (const f of files) { await handleUploadImgMgr(f); }
+  }
+
+  function onAddDragEnter(e) {
+    if ([...e.dataTransfer.items].some(i => i.kind === "file")) {
+      e.preventDefault(); e.stopPropagation();
+    }
+  }
+  function onAddDrop(e) {
+    e.preventDefault(); e.stopPropagation(); setBodyDropActive(false);
+    const files = [...e.dataTransfer.files].filter(f => f.type.startsWith("image/"));
+    files.forEach(f => handleUploadImgMgr(f));
+  }
 
   // 儲存新順序到後端
   async function saveImgOrder() {
@@ -2015,7 +2050,11 @@ function Admin() {
                 <span style={{fontSize:13,color:"var(--ink-soft)",flex:1,marginLeft:6,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{imgMgr.productName}</span>
                 <button onClick={closeImgMgr} style={{background:"none",border:"none",fontSize:22,cursor:"pointer",color:"var(--ink-soft)",lineHeight:1,padding:"0 4px"}}>✕</button>
               </div>
-              <div className="imgmgr-body">
+              <div className={"imgmgr-body"+(bodyDropActive?" body-drop-active":"")}
+                onDragEnter={onBodyDragEnter}
+                onDragLeave={onBodyDragLeave}
+                onDragOver={onBodyDragOverEv}
+                onDrop={onBodyDrop}>
                 {imgMgr.images.length===0 && (
                   <div style={{textAlign:"center",padding:"40px 0",color:"var(--ink-soft)",fontSize:14}}>尚無圖片，請點「新增圖片」上傳</div>
                 )}
@@ -2037,9 +2076,14 @@ function Admin() {
                       </div>
                     </div>
                   ))}
-                  <div className="imgmgr-add" onClick={()=>imgMgrFile.current&&imgMgrFile.current.click()}>
-                    <span className="icon">＋</span>
-                    <span>新增圖片</span>
+                  <div className={"imgmgr-add"+(bodyDropActive?" drop-active":"")}
+                    onClick={()=>imgMgrFile.current&&imgMgrFile.current.click()}
+                    onDragEnter={onAddDragEnter}
+                    onDragOver={e=>{if([...e.dataTransfer.items].some(i=>i.kind==="file")){e.preventDefault();e.stopPropagation();}}}
+                    onDrop={onAddDrop}>
+                    <span className="icon">{bodyDropActive?"📂":"＋"}</span>
+                    <span>{bodyDropActive?"放開以上傳":"新增圖片"}</span>
+                    <span style={{fontSize:11,color:"inherit",opacity:.7}}>或拖放圖片至此</span>
                   </div>
                 </div>
               </div>
@@ -2047,7 +2091,7 @@ function Admin() {
                 <div>
                   {uploading===imgMgr.productCode
                     ? <span className="imgmgr-uploading">⏳ 處理中…</span>
-                    : <span className="imgmgr-hint">拖拉圖片可調整順序，第 1 張為封面圖</span>
+                    : <span className="imgmgr-hint">拖拉圖片調整順序 ・ 拖放圖片檔案至區域內上傳 ・ 第 1 張為封面</span>
                   }
                 </div>
                 <div style={{display:"flex",gap:8}}>
