@@ -201,9 +201,11 @@
   .drawer-body{flex:1;overflow-y:auto;padding:12px 18px;}
   .cart-line{display:flex;gap:10px;padding:12px 0;border-bottom:1px solid var(--line);}
   .cart-line .info{flex:1;min-width:0;}
-  .cart-line .name{font-size:13px;line-height:1.4;}
+  .cart-line .name{font-size:13px;line-height:1.4;margin-bottom:4px;}
+  .cart-line .qty-line{font-size:16px;font-weight:700;line-height:1.5;color:var(--ink);}
+  .cart-line .qty-line.free{color:var(--brand-dark);}
   .cart-line .meta{font-size:12px;color:var(--ink-soft);margin-top:2px;}
-  .cart-line .remove{background:none;border:none;color:var(--danger);font-size:12px;cursor:pointer;padding:0;text-decoration:underline;}
+  .cart-line .remove{background:none;border:none;color:var(--danger);font-size:12px;cursor:pointer;padding:0;text-decoration:underline;margin-top:4px;}
   .cart-line .lineprice{font-size:13px;font-weight:600;white-space:nowrap;}
   .drawer-foot{border-top:1px solid var(--line);padding:16px 18px;}
   .total-row{display:flex;justify-content:space-between;font-size:15px;margin-bottom:4px;}
@@ -931,6 +933,12 @@ function App() {
   const cartCount  = cartLines.reduce((s,l)=>s+l.qty, 0);
   const cartSubtotal = cartLines.reduce((s,l)=>s+l.amount, 0);   // 原價小計
   const cartTotal    = Math.max(0, cartSubtotal - promoDiscount); // 折抵後合計
+  // 每個品號在購物車中被促銷折抵的「免費件數」加總（可能來自多個活動）
+  const freeQtyByCode = useMemo(() => {
+    const m = {};
+    promoGiftLines.forEach(g => { m[g.code] = (m[g.code]||0) + g.qty; });
+    return m;
+  }, [promoGiftLines]);
   const hasReview  = cartLines.some(l=>l.flag==="review");
   function setQty(code, qty) {
     setCart(p => {
@@ -1332,6 +1340,7 @@ function App() {
                   <input className="qty-input" type="number" min="0" value={qty} onChange={e=>setQty(p.code,Number(e.target.value)||0)}/>
                   <button className="qty-btn" onClick={()=>setQty(p.code,qty+1)}>＋</button>
                   {qty>0&&calc.giftQty>0&&<span className="added">+贈{calc.giftQty}</span>}
+                  {qty>0&&!calc.giftQty&&(freeQtyByCode[p.code]||0)>0&&<span className="added">+贈{freeQtyByCode[p.code]}</span>}
                 </div>
               </div>
             );})}
@@ -1343,16 +1352,24 @@ function App() {
         <div className="drawer">
           <div className="drawer-head"><h3>購物車</h3><button onClick={()=>setDrawerOpen(false)}>✕</button></div>
           <div className="drawer-body">
-            {cartLines.length===0?<div className="empty-cart">購物車是空的，請先選購商品</div>:cartLines.map(l=>(
+            {cartLines.length===0?<div className="empty-cart">購物車是空的，請先選購商品</div>:cartLines.map(l=>{
+              const freeQty = freeQtyByCode[l.product.code] || 0;
+              const paidQty = Math.max(0, l.qty - freeQty);
+              return (
               <div className="cart-line" key={l.product.code}>
                 <div className="info">
                   <div className="name">{l.product.name}</div>
-                  <div className="meta">{l.qty} 件 × ${l.product.unitPrice}{l.giftQty>0&&`　送 ${l.giftQty} 件`}{l.flag&&l.flag!=="review"&&`　${l.flag}`}{l.flag==="review"&&<span style={{color:"var(--warn)"}}>　⚠待業務複核</span>}</div>
+                  <div className="qty-line">{paidQty} 件 × ${l.product.unitPrice}</div>
+                  {freeQty>0&&<div className="qty-line free">{freeQty} 件 × $0</div>}
+                  {l.giftQty>0&&<div className="meta">另贈 {l.giftQty} 件</div>}
+                  {l.flag&&l.flag!=="review"&&<div className="meta">{l.flag}</div>}
+                  {l.flag==="review"&&<div className="meta" style={{color:"var(--warn)"}}>⚠待業務複核</div>}
                   <button className="remove" onClick={()=>setQty(l.product.code,0)}>移除</button>
                 </div>
                 <div className="lineprice">${l.amount.toLocaleString()}</div>
               </div>
-            ))}
+              );
+            })}
           </div>
           <div className="drawer-foot">
             {promoDiscount>0&&(
