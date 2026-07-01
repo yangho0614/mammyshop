@@ -440,15 +440,15 @@ function Admin() {
     setShowCatMgr(true);
   }
 
-  function onDragStart(e, info) {
+  function onCatDragStart(e, info) {
     dragItem.current = info;
     e.dataTransfer.effectAllowed = 'move';
   }
-  function onDragOver(e, info) {
+  function onCatDragOver(e, info) {
     e.preventDefault();
     dragOver.current = info;
   }
-  function onDrop(e, info) {
+  function onCatDrop(e, info) {
     e.preventDefault();
     const src = dragItem.current;
     const tgt = info;
@@ -1382,9 +1382,9 @@ function Admin() {
                         dragTree.map((group,parentIdx)=>(
                           <div key={group.parent}
                             draggable
-                            onDragStart={e=>onDragStart(e,{type:"parent",parentIdx})}
-                            onDragOver={e=>onDragOver(e,{type:"parent",parentIdx})}
-                            onDrop={e=>onDrop(e,{type:"parent",parentIdx})}
+                            onDragStart={e=>onCatDragStart(e,{type:"parent",parentIdx})}
+                            onDragOver={e=>onCatDragOver(e,{type:"parent",parentIdx})}
+                            onDrop={e=>onCatDrop(e,{type:"parent",parentIdx})}
                             style={{marginBottom:10,border:"1px solid var(--line)",borderRadius:8,overflow:"hidden"}}>
                             <div style={{display:"flex",alignItems:"center",padding:"9px 12px",background:"#f4f6f5",gap:8,cursor:"grab"}}>
                               <span style={{color:"var(--ink-soft)",fontSize:15}}>☰</span>
@@ -1392,15 +1392,15 @@ function Admin() {
                               <button className="btn-del" style={{fontSize:11,padding:"3px 8px"}} onClick={()=>delCatParent(group.parent)}>刪除大類</button>
                             </div>
                             <div style={{padding:"6px 12px"}}
-                              onDragOver={e=>onDragOver(e,{type:"parent",parentIdx})}
-                              onDrop={e=>onDrop(e,{type:"parent",parentIdx})}>
+                              onDragOver={e=>onCatDragOver(e,{type:"parent",parentIdx})}
+                              onDrop={e=>onCatDrop(e,{type:"parent",parentIdx})}>
                               {group.children.length===0?<span style={{fontSize:12,color:"var(--ink-soft)"}}>無子類別，可從其他大類拖入</span>:
                                 group.children.map((child,childIdx)=>(
                                   <div key={child}
                                     draggable
-                                    onDragStart={e=>{e.stopPropagation();onDragStart(e,{type:"child",parentIdx,childIdx});}}
-                                    onDragOver={e=>{e.preventDefault();e.stopPropagation();onDragOver(e,{type:"child",parentIdx,childIdx});}}
-                                    onDrop={e=>{e.stopPropagation();onDrop(e,{type:"child",parentIdx,childIdx});}}
+                                    onDragStart={e=>{e.stopPropagation();onCatDragStart(e,{type:"child",parentIdx,childIdx});}}
+                                    onDragOver={e=>{e.preventDefault();e.stopPropagation();onCatDragOver(e,{type:"child",parentIdx,childIdx});}}
+                                    onDrop={e=>{e.stopPropagation();onCatDrop(e,{type:"child",parentIdx,childIdx});}}
                                     style={{display:"flex",alignItems:"center",padding:"6px 0",borderBottom:"1px solid var(--line)",cursor:"grab",gap:6}}>
                                     <span style={{color:"var(--ink-soft)",fontSize:12}}>☰</span>
                                     <span style={{flex:1,fontSize:13}}>{child}</span>
