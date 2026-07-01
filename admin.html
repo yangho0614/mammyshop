@@ -588,11 +588,28 @@ function Admin() {
 
   // 解析/序列化品號清單（逗號分隔字串 ↔ 陣列）
   function parseCodes(str) { return (str||"").split(",").map(s=>s.trim()).filter(Boolean); }
+  // 把任何日期格式（含冗長的 Date.toString() 格式）統一轉成 YYYY/MM/DD 顯示；轉換失敗則回傳原字串
+  function formatDateYMD(v) {
+    if (!v) return "";
+    const d = new Date(v);
+    if (isNaN(d.getTime())) return String(v);
+    const y = d.getFullYear(), m = String(d.getMonth()+1).padStart(2,"0"), day = String(d.getDate()).padStart(2,"0");
+    return `${y}/${m}/${day}`;
+  }
+  // 把任何日期格式統一轉成 <input type="date"> 需要的 YYYY-MM-DD 格式
+  function toDateInputValue(v) {
+    if (!v) return "";
+    const d = new Date(v);
+    if (isNaN(d.getTime())) return "";
+    const y = d.getFullYear(), m = String(d.getMonth()+1).padStart(2,"0"), day = String(d.getDate()).padStart(2,"0");
+    return `${y}-${m}-${day}`;
+  }
   function joinCodes(arr)  { return (arr||[]).join(","); }
 
   // 開啟編輯時初始化 triggerAll / autoGift
   function openEdit(row) {
-    setEditPromo({...row});
+    if (editPromo && editPromo.id === row.id) { setEditPromo(null); return; } // 再次點擊同一活動 → 收合
+    setEditPromo({...row, dateFrom: toDateInputValue(row.dateFrom), dateTo: toDateInputValue(row.dateTo)});
     setShowAddPromo(false);
     setTriggerAll(row.triggerCodes === "全部");
     setAutoGift(row.ruleType === "buy" && !row.giftCodes);
@@ -605,6 +622,226 @@ function Admin() {
     setTriggerAll(false); setAutoGift(true);
     setTriggerSearch(""); setGiftSearch("");
   }
+
+  function renderPromoForm() {
+    const p = getPromo();
+const triggerList = parseCodes(p.triggerCodes).filter(c=>c!=="全部");
+              const giftList    = parseCodes(p.giftCodes);
+              const triggerResults = searchProducts(triggerSearch);
+              const giftResults    = searchProducts(giftSearch);
+              return (
+                <div style={{background:"#f8faf9",border:"1px solid var(--line)",borderRadius:12,padding:"20px 20px 16px",marginBottom:20}}>
+                  <h3 style={{margin:"0 0 16px",fontSize:15,fontWeight:700}}>{editPromo?"編輯活動":"新增活動"}</h3>
+
+                  {/* 第一列：基本資訊 */}
+                  <div style={{display:"flex",gap:12,flexWrap:"wrap",marginBottom:16}}>
+                    <label style={{display:"flex",flexDirection:"column",gap:4,fontSize:12,flex:2,minWidth:160}}>
+                      活動名稱＊
+                      <input value={p.name} onChange={e=>setPromo(q=>({...q,name:e.target.value}))}
+                        placeholder="買2送1奶嘴活動" style={{padding:"8px 10px",border:"1px solid var(--line)",borderRadius:6,fontSize:13}}/>
+                    </label>
+                    <label style={{display:"flex",flexDirection:"column",gap:4,fontSize:12}}>
+                      規則類型
+                      <select value={p.ruleType} onChange={e=>setPromo(q=>({...q,ruleType:e.target.value}))}
+                        style={{padding:"8px 10px",border:"1px solid var(--line)",borderRadius:6,fontSize:13,height:36}}>
+                        <option value="buy">buy — 買N送M（贈品從付費數扣）</option>
+                        <option value="min">min — 滿N送M（額外贈品不扣）</option>
+                      </select>
+                    </label>
+                    <label style={{display:"flex",flexDirection:"column",gap:4,fontSize:12}}>
+                      觸發數 N＊
+                      <input type="number" min="1" value={p.triggerN} onChange={e=>setPromo(q=>({...q,triggerN:Number(e.target.value)}))}
+                        style={{width:70,padding:"8px",border:"1px solid var(--line)",borderRadius:6,fontSize:13}}/>
+                    </label>
+                    <label style={{display:"flex",flexDirection:"column",gap:4,fontSize:12}}>
+                      贈送數 M＊
+                      <input type="number" min="1" value={p.giftM} onChange={e=>setPromo(q=>({...q,giftM:Number(e.target.value)}))}
+                        style={{width:70,padding:"8px",border:"1px solid var(--line)",borderRadius:6,fontSize:13}}/>
+                    </label>
+                    <label style={{display:"flex",flexDirection:"column",gap:4,fontSize:12}}>
+                      優先權
+                      <input type="number" min="1" max="99" value={p.priority} onChange={e=>setPromo(q=>({...q,priority:Number(e.target.value)}))}
+                        style={{width:70,padding:"8px",border:"1px solid var(--line)",borderRadius:6,fontSize:13}}/>
+                    </label>
+                  </div>
+
+                  {/* 第二列：套用價格群組 */}
+                  <div style={{marginBottom:16}}>
+                    <div style={{fontSize:12,fontWeight:600,marginBottom:8}}>套用價格群組 <span style={{fontWeight:400,color:"var(--ink-soft)"}}>（只有這些群組的客戶才享有此促銷，不選=全部群組）</span></div>
+                    <div style={{display:"flex",flexWrap:"wrap",gap:8}}>
+                      {(pGroups.length>0?pGroups:["DEFAULT"]).map(g=>{
+                        const selected = parseCodes(getPromo().targetGroups||"").includes(g);
+                        return (
+                          <button key={g} onClick={()=>toggleTargetGroup(g)}
+                            style={{padding:"5px 14px",borderRadius:16,fontSize:13,border:"1.5px solid",cursor:"pointer",
+                              borderColor:selected?"var(--brand)":"var(--line)",
+                              background:selected?"var(--brand)":"#fff",
+                              color:selected?"#fff":"var(--ink)",
+                              fontWeight:selected?700:400}}>
+                            {g}
+                          </button>
+                        );
+                      })}
+                      {parseCodes(getPromo().targetGroups||"").length>0&&(
+                        <button onClick={()=>setPromo(p=>({...p,targetGroups:""}))}
+                          style={{padding:"5px 12px",borderRadius:16,fontSize:12,border:"1px solid #ccc",background:"#f4f4f4",cursor:"pointer",color:"#888"}}>
+                          清除（套用全部）
+                        </button>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* 第三列：觸發品號 & 贈品品號 */}
+                  <div style={{display:"flex",gap:16,flexWrap:"wrap",marginBottom:16}}>
+
+                    {/* 觸發品號 */}
+                    <div style={{flex:1,minWidth:280}}>
+                      <div style={{fontSize:12,fontWeight:600,marginBottom:8}}>觸發品號</div>
+                      <label style={{display:"flex",alignItems:"center",gap:6,fontSize:13,marginBottom:8}}>
+                        <input type="checkbox" checked={triggerAll} onChange={e=>{
+                          setTriggerAll(e.target.checked);
+                          setPromo(q=>({...q,triggerCodes:e.target.checked?"全部":""}));
+                        }} style={{width:15,height:15}}/>
+                        套用全部商品
+                      </label>
+                      {!triggerAll&&(
+                        <React.Fragment>
+                          <input value={triggerSearch} onChange={e=>setTriggerSearch(e.target.value)}
+                            placeholder="搜尋品名或品號…"
+                            style={{width:"100%",padding:"7px 10px",border:"1px solid var(--line)",borderRadius:6,fontSize:13,marginBottom:4,boxSizing:"border-box"}}/>
+                          {triggerSearch&&(
+                            <div style={{border:"1px solid var(--line)",borderRadius:6,marginBottom:6,background:"#fff",boxShadow:"0 4px 12px rgba(0,0,0,.08)"}}>
+                              <div style={{maxHeight:200,overflowY:"auto"}}>
+                                {triggerResults.length===0
+                                  ? <div style={{padding:"10px 12px",fontSize:12,color:"var(--ink-soft)"}}>找不到商品</div>
+                                  : triggerResults.map(r=>(
+                                    <div key={r.code} onClick={()=>toggleTriggerCode(r.code)}
+                                      style={{padding:"8px 12px",cursor:"pointer",fontSize:13,borderBottom:"1px solid var(--line)",
+                                        background:triggerList.includes(r.code)?"#e8f4ee":"#fff",display:"flex",gap:10,alignItems:"center",userSelect:"none"}}>
+                                      <span style={{width:18,height:18,border:"2px solid",borderColor:triggerList.includes(r.code)?"var(--brand)":"#ccc",
+                                        borderRadius:4,background:triggerList.includes(r.code)?"var(--brand)":"#fff",
+                                        display:"inline-flex",alignItems:"center",justifyContent:"center",flexShrink:0}}>
+                                        {triggerList.includes(r.code)&&<span style={{color:"#fff",fontSize:11,fontWeight:700}}>✓</span>}
+                                      </span>
+                                      <span style={{color:"var(--ink-soft)",fontFamily:"monospace",fontSize:12}}>{r.code}</span>
+                                      <span style={{flex:1}}>{r.name}</span>
+                                    </div>
+                                  ))
+                                }
+                              </div>
+                              <div style={{padding:"6px 10px",borderTop:"1px solid var(--line)",textAlign:"right"}}>
+                                <button onClick={()=>setTriggerSearch("")}
+                                  style={{padding:"4px 14px",borderRadius:6,fontSize:12,border:"none",background:"var(--brand)",color:"#fff",cursor:"pointer"}}>
+                                  完成
+                                </button>
+                              </div>
+                            </div>
+                          )}
+
+                          {/* 已選清單 */}
+                          <div style={{display:"flex",flexWrap:"wrap",gap:6}}>
+                            {triggerList.map(code=>{
+                              const m = masterRows.find(r=>r.code===code);
+                              return (
+                                <span key={code} style={{display:"inline-flex",alignItems:"center",gap:4,padding:"3px 8px",
+                                  background:"var(--brand-tint)",borderRadius:20,fontSize:12,color:"var(--brand-dark)"}}>
+                                  <span style={{fontFamily:"monospace",fontWeight:600}}>{code}</span>
+                                  {m&&<span style={{color:"var(--ink-soft)"}}>{m.name}</span>}
+                                  <button onClick={()=>toggleTriggerCode(code)}
+                                    style={{background:"none",border:"none",cursor:"pointer",color:"var(--brand-dark)",fontSize:14,lineHeight:1,padding:0}}>×</button>
+                                </span>
+                              );
+                            })}
+                            {triggerList.length===0&&<span style={{fontSize:12,color:"var(--ink-soft)"}}>尚未選擇觸發商品</span>}
+                          </div>
+                        </React.Fragment>
+                      )}
+                    </div>
+
+                    {/* 贈品品號 */}
+                    <div style={{flex:1,minWidth:280}}>
+                      <div style={{fontSize:12,fontWeight:600,marginBottom:8}}>贈品設定</div>
+                      {p.ruleType==="buy"&&(
+                        <label style={{display:"flex",alignItems:"center",gap:6,fontSize:13,marginBottom:8}}>
+                          <input type="checkbox" checked={autoGift} onChange={e=>{
+                            setAutoGift(e.target.checked);
+                            if(e.target.checked) setPromo(q=>({...q,giftCodes:""}));
+                          }} style={{width:15,height:15}}/>
+                          自動贈送群組內最低單價商品
+                        </label>
+                      )}
+                      {(!autoGift||p.ruleType==="min")&&(
+                        <React.Fragment>
+                          <input value={giftSearch} onChange={e=>setGiftSearch(e.target.value)}
+                            placeholder="搜尋贈品品名或品號…"
+                            style={{width:"100%",padding:"7px 10px",border:"1px solid var(--line)",borderRadius:6,fontSize:13,marginBottom:4,boxSizing:"border-box"}}/>
+                          {giftSearch&&(
+                            <div style={{border:"1px solid var(--line)",borderRadius:6,maxHeight:160,overflowY:"auto",marginBottom:6,background:"#fff"}}>
+                              {giftResults.map(r=>(
+                                <div key={r.code} onClick={()=>toggleGiftCode(r.code)}
+                                  style={{padding:"6px 10px",cursor:"pointer",fontSize:12,borderBottom:"1px solid var(--line)",
+                                    background:giftList.includes(r.code)?"#e8f4ee":"#fff",display:"flex",gap:8,alignItems:"center"}}>
+                                  <span style={{color:"var(--ink-soft)",fontFamily:"monospace"}}>{r.code}</span>
+                                  <span style={{flex:1}}>{r.name}</span>
+                                  {giftList.includes(r.code)&&<span style={{color:"var(--brand)",fontWeight:700}}>✓</span>}
+                                </div>
+                              ))}
+                            </div>
+                          )}
+
+                          <div style={{display:"flex",flexWrap:"wrap",gap:6}}>
+                            {giftList.map(code=>{
+                              const m = masterRows.find(r=>r.code===code);
+                              return (
+                                <span key={code} style={{display:"inline-flex",alignItems:"center",gap:4,padding:"3px 8px",
+                                  background:"#fff0e0",borderRadius:20,fontSize:12,color:"#b35a00"}}>
+                                  <span style={{fontFamily:"monospace",fontWeight:600}}>{code}</span>
+                                  {m&&<span style={{color:"#c27020"}}>{m.name}</span>}
+                                  <button onClick={()=>toggleGiftCode(code)}
+                                    style={{background:"none",border:"none",cursor:"pointer",color:"#b35a00",fontSize:14,lineHeight:1,padding:0}}>×</button>
+                                </span>
+                              );
+                            })}
+                            {giftList.length===0&&<span style={{fontSize:12,color:"var(--ink-soft)"}}>尚未選擇贈品</span>}
+                          </div>
+                        </React.Fragment>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* 第三列：日期 & 啟用 & 按鈕 */}
+                  <div style={{display:"flex",gap:12,alignItems:"flex-end",flexWrap:"wrap"}}>
+                    <label style={{display:"flex",flexDirection:"column",gap:4,fontSize:12}}>
+                      開始日期
+                      <input type="date" value={p.dateFrom} onChange={e=>setPromo(q=>({...q,dateFrom:e.target.value}))}
+                        style={{padding:"7px 10px",border:"1px solid var(--line)",borderRadius:6,fontSize:13}}/>
+                    </label>
+                    <label style={{display:"flex",flexDirection:"column",gap:4,fontSize:12}}>
+                      結束日期
+                      <input type="date" value={p.dateTo} onChange={e=>setPromo(q=>({...q,dateTo:e.target.value}))}
+                        style={{padding:"7px 10px",border:"1px solid var(--line)",borderRadius:6,fontSize:13}}/>
+                    </label>
+                    <label style={{display:"flex",alignItems:"center",gap:6,fontSize:13,paddingBottom:2}}>
+                      <input type="checkbox" checked={p.active} onChange={e=>setPromo(q=>({...q,active:e.target.checked}))}
+                        style={{width:15,height:15,accentColor:"var(--brand)"}}/>
+                      啟用活動
+                    </label>
+                    <div style={{marginLeft:"auto",display:"flex",gap:8}}>
+                      {editPromo&&<button className="btn-cancel" onClick={()=>{setEditPromo(null);}}>取消</button>}
+                      <button className="btn-save" style={{padding:"9px 24px",fontSize:13}} onClick={()=>{
+                        const row = {...(editPromo||newPromo)};
+                        if(triggerAll) row.triggerCodes="全部";
+                        if(autoGift && row.ruleType==="buy") row.giftCodes="";
+                        // targetGroups 空字串代表全部群組
+                        savePromo(row);
+                      }}>
+                        {editPromo?"儲存修改":"確認新增"}
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              );
+}
 
   // 套用群組 helpers
   function toggleTargetGroup(g) {
@@ -639,6 +876,17 @@ function Admin() {
     try { const d = await callGAS("listPromos",{}); setPromoRows(d.rows||[]); }
     catch(e) { alert("載入失敗："+e.message); }
     finally { setPromoLoading(false); }
+  }
+  const [repairingDates, setRepairingDates] = useState(false);
+  async function handleRepairDates() {
+    if (repairingDates) return;
+    setRepairingDates(true);
+    try {
+      const d = await callGAS("repairPromoDates", {});
+      await loadPromos();
+      alert(`已修復 ${d.fixedCount} 筆日期格式`);
+    } catch(e) { alert("修復失敗："+e.message); }
+    finally { setRepairingDates(false); }
   }
   useEffect(() => {
     if (tab==="promos" && authed) {
@@ -1645,229 +1893,12 @@ function Admin() {
                 {showAddPromo?"取消新增":"＋ 新增活動"}
               </button>
               <button className="btn-edit" style={{padding:"8px 14px",fontSize:13}} onClick={loadPromos}>重新整理</button>
+              <button className="btn-edit" style={{padding:"8px 14px",fontSize:13,color:"#b35a00"}} onClick={handleRepairDates} disabled={repairingDates}>{repairingDates?"修復中…":"🔧 修復日期格式"}</button>
               <span style={{fontSize:12,color:"var(--ink-soft)"}}>{promoRows.length} 個活動</span>
             </div>
 
-            {/* ── 新增 / 編輯表單 ── */}
-            {(showAddPromo||editPromo)&&(()=>{
-              const p = getPromo();
-              const triggerList = parseCodes(p.triggerCodes).filter(c=>c!=="全部");
-              const giftList    = parseCodes(p.giftCodes);
-              const triggerResults = searchProducts(triggerSearch);
-              const giftResults    = searchProducts(giftSearch);
-              return (
-                <div style={{background:"#f8faf9",border:"1px solid var(--line)",borderRadius:12,padding:"20px 20px 16px",marginBottom:20}}>
-                  <h3 style={{margin:"0 0 16px",fontSize:15,fontWeight:700}}>{editPromo?"編輯活動":"新增活動"}</h3>
-
-                  {/* 第一列：基本資訊 */}
-                  <div style={{display:"flex",gap:12,flexWrap:"wrap",marginBottom:16}}>
-                    <label style={{display:"flex",flexDirection:"column",gap:4,fontSize:12,flex:2,minWidth:160}}>
-                      活動名稱＊
-                      <input value={p.name} onChange={e=>setPromo(q=>({...q,name:e.target.value}))}
-                        placeholder="買2送1奶嘴活動" style={{padding:"8px 10px",border:"1px solid var(--line)",borderRadius:6,fontSize:13}}/>
-                    </label>
-                    <label style={{display:"flex",flexDirection:"column",gap:4,fontSize:12}}>
-                      規則類型
-                      <select value={p.ruleType} onChange={e=>setPromo(q=>({...q,ruleType:e.target.value}))}
-                        style={{padding:"8px 10px",border:"1px solid var(--line)",borderRadius:6,fontSize:13,height:36}}>
-                        <option value="buy">buy — 買N送M（贈品從付費數扣）</option>
-                        <option value="min">min — 滿N送M（額外贈品不扣）</option>
-                      </select>
-                    </label>
-                    <label style={{display:"flex",flexDirection:"column",gap:4,fontSize:12}}>
-                      觸發數 N＊
-                      <input type="number" min="1" value={p.triggerN} onChange={e=>setPromo(q=>({...q,triggerN:Number(e.target.value)}))}
-                        style={{width:70,padding:"8px",border:"1px solid var(--line)",borderRadius:6,fontSize:13}}/>
-                    </label>
-                    <label style={{display:"flex",flexDirection:"column",gap:4,fontSize:12}}>
-                      贈送數 M＊
-                      <input type="number" min="1" value={p.giftM} onChange={e=>setPromo(q=>({...q,giftM:Number(e.target.value)}))}
-                        style={{width:70,padding:"8px",border:"1px solid var(--line)",borderRadius:6,fontSize:13}}/>
-                    </label>
-                    <label style={{display:"flex",flexDirection:"column",gap:4,fontSize:12}}>
-                      優先權
-                      <input type="number" min="1" max="99" value={p.priority} onChange={e=>setPromo(q=>({...q,priority:Number(e.target.value)}))}
-                        style={{width:70,padding:"8px",border:"1px solid var(--line)",borderRadius:6,fontSize:13}}/>
-                    </label>
-                  </div>
-
-                  {/* 第二列：套用價格群組 */}
-                  <div style={{marginBottom:16}}>
-                    <div style={{fontSize:12,fontWeight:600,marginBottom:8}}>套用價格群組 <span style={{fontWeight:400,color:"var(--ink-soft)"}}>（只有這些群組的客戶才享有此促銷，不選=全部群組）</span></div>
-                    <div style={{display:"flex",flexWrap:"wrap",gap:8}}>
-                      {(pGroups.length>0?pGroups:["DEFAULT"]).map(g=>{
-                        const selected = parseCodes(getPromo().targetGroups||"").includes(g);
-                        return (
-                          <button key={g} onClick={()=>toggleTargetGroup(g)}
-                            style={{padding:"5px 14px",borderRadius:16,fontSize:13,border:"1.5px solid",cursor:"pointer",
-                              borderColor:selected?"var(--brand)":"var(--line)",
-                              background:selected?"var(--brand)":"#fff",
-                              color:selected?"#fff":"var(--ink)",
-                              fontWeight:selected?700:400}}>
-                            {g}
-                          </button>
-                        );
-                      })}
-                      {parseCodes(getPromo().targetGroups||"").length>0&&(
-                        <button onClick={()=>setPromo(p=>({...p,targetGroups:""}))}
-                          style={{padding:"5px 12px",borderRadius:16,fontSize:12,border:"1px solid #ccc",background:"#f4f4f4",cursor:"pointer",color:"#888"}}>
-                          清除（套用全部）
-                        </button>
-                      )}
-                    </div>
-                  </div>
-
-                  {/* 第三列：觸發品號 & 贈品品號 */}
-                  <div style={{display:"flex",gap:16,flexWrap:"wrap",marginBottom:16}}>
-
-                    {/* 觸發品號 */}
-                    <div style={{flex:1,minWidth:280}}>
-                      <div style={{fontSize:12,fontWeight:600,marginBottom:8}}>觸發品號</div>
-                      <label style={{display:"flex",alignItems:"center",gap:6,fontSize:13,marginBottom:8}}>
-                        <input type="checkbox" checked={triggerAll} onChange={e=>{
-                          setTriggerAll(e.target.checked);
-                          setPromo(q=>({...q,triggerCodes:e.target.checked?"全部":""}));
-                        }} style={{width:15,height:15}}/>
-                        套用全部商品
-                      </label>
-                      {!triggerAll&&(
-                        <React.Fragment>
-                          <input value={triggerSearch} onChange={e=>setTriggerSearch(e.target.value)}
-                            placeholder="搜尋品名或品號…"
-                            style={{width:"100%",padding:"7px 10px",border:"1px solid var(--line)",borderRadius:6,fontSize:13,marginBottom:4,boxSizing:"border-box"}}/>
-                          {triggerSearch&&(
-                            <div style={{border:"1px solid var(--line)",borderRadius:6,marginBottom:6,background:"#fff",boxShadow:"0 4px 12px rgba(0,0,0,.08)"}}>
-                              <div style={{maxHeight:200,overflowY:"auto"}}>
-                                {triggerResults.length===0
-                                  ? <div style={{padding:"10px 12px",fontSize:12,color:"var(--ink-soft)"}}>找不到商品</div>
-                                  : triggerResults.map(r=>(
-                                    <div key={r.code} onClick={()=>toggleTriggerCode(r.code)}
-                                      style={{padding:"8px 12px",cursor:"pointer",fontSize:13,borderBottom:"1px solid var(--line)",
-                                        background:triggerList.includes(r.code)?"#e8f4ee":"#fff",display:"flex",gap:10,alignItems:"center",userSelect:"none"}}>
-                                      <span style={{width:18,height:18,border:"2px solid",borderColor:triggerList.includes(r.code)?"var(--brand)":"#ccc",
-                                        borderRadius:4,background:triggerList.includes(r.code)?"var(--brand)":"#fff",
-                                        display:"inline-flex",alignItems:"center",justifyContent:"center",flexShrink:0}}>
-                                        {triggerList.includes(r.code)&&<span style={{color:"#fff",fontSize:11,fontWeight:700}}>✓</span>}
-                                      </span>
-                                      <span style={{color:"var(--ink-soft)",fontFamily:"monospace",fontSize:12}}>{r.code}</span>
-                                      <span style={{flex:1}}>{r.name}</span>
-                                    </div>
-                                  ))
-                                }
-                              </div>
-                              <div style={{padding:"6px 10px",borderTop:"1px solid var(--line)",textAlign:"right"}}>
-                                <button onClick={()=>setTriggerSearch("")}
-                                  style={{padding:"4px 14px",borderRadius:6,fontSize:12,border:"none",background:"var(--brand)",color:"#fff",cursor:"pointer"}}>
-                                  完成
-                                </button>
-                              </div>
-                            </div>
-                          )}
-
-                          {/* 已選清單 */}
-                          <div style={{display:"flex",flexWrap:"wrap",gap:6}}>
-                            {triggerList.map(code=>{
-                              const m = masterRows.find(r=>r.code===code);
-                              return (
-                                <span key={code} style={{display:"inline-flex",alignItems:"center",gap:4,padding:"3px 8px",
-                                  background:"var(--brand-tint)",borderRadius:20,fontSize:12,color:"var(--brand-dark)"}}>
-                                  <span style={{fontFamily:"monospace",fontWeight:600}}>{code}</span>
-                                  {m&&<span style={{color:"var(--ink-soft)"}}>{m.name}</span>}
-                                  <button onClick={()=>toggleTriggerCode(code)}
-                                    style={{background:"none",border:"none",cursor:"pointer",color:"var(--brand-dark)",fontSize:14,lineHeight:1,padding:0}}>×</button>
-                                </span>
-                              );
-                            })}
-                            {triggerList.length===0&&<span style={{fontSize:12,color:"var(--ink-soft)"}}>尚未選擇觸發商品</span>}
-                          </div>
-                        </React.Fragment>
-                      )}
-                    </div>
-
-                    {/* 贈品品號 */}
-                    <div style={{flex:1,minWidth:280}}>
-                      <div style={{fontSize:12,fontWeight:600,marginBottom:8}}>贈品設定</div>
-                      {p.ruleType==="buy"&&(
-                        <label style={{display:"flex",alignItems:"center",gap:6,fontSize:13,marginBottom:8}}>
-                          <input type="checkbox" checked={autoGift} onChange={e=>{
-                            setAutoGift(e.target.checked);
-                            if(e.target.checked) setPromo(q=>({...q,giftCodes:""}));
-                          }} style={{width:15,height:15}}/>
-                          自動贈送群組內最低單價商品
-                        </label>
-                      )}
-                      {(!autoGift||p.ruleType==="min")&&(
-                        <React.Fragment>
-                          <input value={giftSearch} onChange={e=>setGiftSearch(e.target.value)}
-                            placeholder="搜尋贈品品名或品號…"
-                            style={{width:"100%",padding:"7px 10px",border:"1px solid var(--line)",borderRadius:6,fontSize:13,marginBottom:4,boxSizing:"border-box"}}/>
-                          {giftSearch&&(
-                            <div style={{border:"1px solid var(--line)",borderRadius:6,maxHeight:160,overflowY:"auto",marginBottom:6,background:"#fff"}}>
-                              {giftResults.map(r=>(
-                                <div key={r.code} onClick={()=>toggleGiftCode(r.code)}
-                                  style={{padding:"6px 10px",cursor:"pointer",fontSize:12,borderBottom:"1px solid var(--line)",
-                                    background:giftList.includes(r.code)?"#e8f4ee":"#fff",display:"flex",gap:8,alignItems:"center"}}>
-                                  <span style={{color:"var(--ink-soft)",fontFamily:"monospace"}}>{r.code}</span>
-                                  <span style={{flex:1}}>{r.name}</span>
-                                  {giftList.includes(r.code)&&<span style={{color:"var(--brand)",fontWeight:700}}>✓</span>}
-                                </div>
-                              ))}
-                            </div>
-                          )}
-
-                          <div style={{display:"flex",flexWrap:"wrap",gap:6}}>
-                            {giftList.map(code=>{
-                              const m = masterRows.find(r=>r.code===code);
-                              return (
-                                <span key={code} style={{display:"inline-flex",alignItems:"center",gap:4,padding:"3px 8px",
-                                  background:"#fff0e0",borderRadius:20,fontSize:12,color:"#b35a00"}}>
-                                  <span style={{fontFamily:"monospace",fontWeight:600}}>{code}</span>
-                                  {m&&<span style={{color:"#c27020"}}>{m.name}</span>}
-                                  <button onClick={()=>toggleGiftCode(code)}
-                                    style={{background:"none",border:"none",cursor:"pointer",color:"#b35a00",fontSize:14,lineHeight:1,padding:0}}>×</button>
-                                </span>
-                              );
-                            })}
-                            {giftList.length===0&&<span style={{fontSize:12,color:"var(--ink-soft)"}}>尚未選擇贈品</span>}
-                          </div>
-                        </React.Fragment>
-                      )}
-                    </div>
-                  </div>
-
-                  {/* 第三列：日期 & 啟用 & 按鈕 */}
-                  <div style={{display:"flex",gap:12,alignItems:"flex-end",flexWrap:"wrap"}}>
-                    <label style={{display:"flex",flexDirection:"column",gap:4,fontSize:12}}>
-                      開始日期
-                      <input type="date" value={p.dateFrom} onChange={e=>setPromo(q=>({...q,dateFrom:e.target.value}))}
-                        style={{padding:"7px 10px",border:"1px solid var(--line)",borderRadius:6,fontSize:13}}/>
-                    </label>
-                    <label style={{display:"flex",flexDirection:"column",gap:4,fontSize:12}}>
-                      結束日期
-                      <input type="date" value={p.dateTo} onChange={e=>setPromo(q=>({...q,dateTo:e.target.value}))}
-                        style={{padding:"7px 10px",border:"1px solid var(--line)",borderRadius:6,fontSize:13}}/>
-                    </label>
-                    <label style={{display:"flex",alignItems:"center",gap:6,fontSize:13,paddingBottom:2}}>
-                      <input type="checkbox" checked={p.active} onChange={e=>setPromo(q=>({...q,active:e.target.checked}))}
-                        style={{width:15,height:15,accentColor:"var(--brand)"}}/>
-                      啟用活動
-                    </label>
-                    <div style={{marginLeft:"auto",display:"flex",gap:8}}>
-                      {editPromo&&<button className="btn-cancel" onClick={()=>{setEditPromo(null);}}>取消</button>}
-                      <button className="btn-save" style={{padding:"9px 24px",fontSize:13}} onClick={()=>{
-                        const row = {...(editPromo||newPromo)};
-                        if(triggerAll) row.triggerCodes="全部";
-                        if(autoGift && row.ruleType==="buy") row.giftCodes="";
-                        // targetGroups 空字串代表全部群組
-                        savePromo(row);
-                      }}>
-                        {editPromo?"儲存修改":"確認新增"}
-                      </button>
-                    </div>
-                  </div>
-                </div>
-              );
-            })()}
+            {/* ── 新增表單（僅新增時顯示在頂部；編輯改為行內展開） ── */}
+            {showAddPromo&&renderPromoForm()}
 
             {/* ── 活動列表 ── */}
             {promoLoading?<p style={{color:"var(--ink-soft)",fontSize:14}}>載入中…</p>:(
@@ -1877,6 +1908,7 @@ function Admin() {
                   {promoRows.map(row=>{
                     const tCodes = parseCodes(row.triggerCodes).filter(c=>c!=="全部");
                     const gCodes = parseCodes(row.giftCodes);
+                    const isEditingThis = editPromo && editPromo.id === row.id;
                     return (
                       <div key={row.id} style={{border:"1px solid var(--line)",borderRadius:10,padding:"14px 16px",
                         background:row.active?"#fff":"#f8f8f8",opacity:row.active?1:0.65}}>
@@ -1889,15 +1921,20 @@ function Admin() {
                           </span>
                           {!row.active&&<span style={{fontSize:11,color:"#999",padding:"2px 8px",borderRadius:12,background:"#eee"}}>已停用</span>}
                           <span style={{fontSize:11,color:"var(--ink-soft)",marginLeft:"auto"}}>優先權 {row.priority}</span>
-                          <button className="btn-edit" onClick={()=>openEdit(row)}>編輯</button>
+                          <button className="btn-edit" onClick={()=>openEdit(row)}>{isEditingThis?"收合":"編輯"}</button>
                           <button className="btn-del" onClick={()=>deletePromo(row.id,row.name)}>刪除</button>
                         </div>
                         <div style={{display:"flex",gap:20,fontSize:12,color:"var(--ink-soft)",flexWrap:"wrap"}}>
                           <span>觸發：{row.triggerCodes==="全部"?"全部商品":tCodes.map(c=>{const m=masterRows.find(r=>r.code===c);return m?m.name:c;}).join("、")||"—"}</span>
                           <span>贈品：{row.ruleType==="buy"&&!row.giftCodes?"自動最低單價":gCodes.map(c=>{const m=masterRows.find(r=>r.code===c);return m?m.name:c;}).join("、")||"—"}</span>
                           <span>套用群組：{row.targetGroups?parseCodes(row.targetGroups).join("、"):"全部"}</span>
-                          <span>日期：{row.dateFrom||"∞"} ～ {row.dateTo||"∞"}</span>
+                          <span>日期：{formatDateYMD(row.dateFrom)||"∞"} ～ {formatDateYMD(row.dateTo)||"∞"}</span>
                         </div>
+                        {isEditingThis&&(
+                          <div style={{marginTop:14,paddingTop:14,borderTop:"1px dashed var(--line)"}}>
+                            {renderPromoForm()}
+                          </div>
+                        )}
                       </div>
                     );
                   })}
