@@ -2,6 +2,9 @@
 <html lang="zh-Hant">
 <head>
 <meta charset="UTF-8">
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+<meta http-equiv="Pragma" content="no-cache">
+<meta http-equiv="Expires" content="0">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
 <title>業務訂購系統</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.production.min.js"></script>
@@ -1163,7 +1166,7 @@ function App() {
           <button className="logout-link" onClick={doLogout}><span className="label">登出</span></button>
         </div>
         <div className="header-searchbar">
-          <select className="header-sort" value={sortBy} onChange={e=>setSortBy(e.target.value)}>
+          <select className="header-sort" value={sortBy} onChange={e=>setSortBy(e.target.value)} onInput={e=>setSortBy(e.target.value)}>
             <option value="default">預設排序</option>
             <option value="code">品號</option>
             <option value="price_asc">價格↑</option>
@@ -1171,7 +1174,7 @@ function App() {
           </select>
           <div className="header-search">
             <span className="search-icon">🔍</span>
-            <input placeholder="搜尋品名或品號…" value={search} onChange={e=>setSearch(e.target.value)}/>
+            <input placeholder="搜尋品名或品號…" value={search} onChange={e=>setSearch(e.target.value)} onInput={e=>setSearch(e.target.value)}/>
           </div>
         </div>
         {/* ── 手機專用：分類 pill 列（header 第三行）── */}
