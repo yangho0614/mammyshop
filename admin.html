@@ -801,7 +801,7 @@ function Admin() {
   }
   useEffect(() => { if (tab==="master" && authed && masterRows.length===0) loadMaster(); }, [tab, authed]);
 
-  function startEdit(row) { setEditCode(row.code); setEditDraft({name:row.name, category:row.category, listPrice:row.listPrice, boxQty:row.boxQty, cost:row.cost||"", inactive:row.inactive}); }
+  function startEdit(row) { setEditCode(row.code); setEditDraft({name:row.name, category:row.category, subCategory:row.subCategory||"", listPrice:row.listPrice, boxQty:row.boxQty, cost:row.cost||"", inactive:row.inactive}); }
   function cancelEdit() { setEditCode(null); setEditDraft({}); }
   async function saveEdit(row) {
     try { await callGAS("saveMasterRow",{row:{...row,...editDraft}}); setMasterRows(p=>p.map(r=>r.code===row.code?{...r,...editDraft}:r)); setEditCode(null); setEditDraft({}); }
@@ -814,7 +814,7 @@ function Admin() {
   }
   async function addMaster() {
     if (!newM.code||!newM.name) { alert("品號與品名為必填"); return; }
-    try { await callGAS("saveMasterRow",{row:newM}); setMasterRows(p=>[...p,{...newM,images:[]}]); setNewM({code:"",name:"",category:"",listPrice:"",boxQty:"",cost:"",inactive:false}); setShowAddM(false); }
+    try { await callGAS("saveMasterRow",{row:newM}); setMasterRows(p=>[...p,{...newM,images:[]}]); setNewM({code:"",name:"",category:"",subCategory:"",listPrice:"",boxQty:"",cost:"",inactive:false}); setShowAddM(false); }
     catch(e) { alert("新增失敗："+e.message); }
   }
 
@@ -1392,6 +1392,7 @@ function Admin() {
                     <th><button className={"sort-btn"+(mSort==="code"?" active":"")} onClick={()=>toggleSort("code")} style={{cursor:"pointer",fontWeight:600,padding:"4px 8px",fontSize:13}}>品號 {mSort==="code"?(mSortDir==="asc"?"↑":"↓"):""}</button></th>
                     <th><button className={"sort-btn"+(mSort==="name"?" active":"")} onClick={()=>toggleSort("name")} style={{cursor:"pointer",fontWeight:600,padding:"4px 8px",fontSize:13}}>品名 {mSort==="name"?(mSortDir==="asc"?"↑":"↓"):""}</button></th>
                     <th>大類別</th>
+                    <th>子類別</th>
                     <th><button className={"sort-btn"+(mSort==="listPrice"?" active":"")} onClick={()=>toggleSort("listPrice")} style={{cursor:"pointer",fontWeight:600,padding:"4px 8px",fontSize:13}}>定價 {mSort==="listPrice"?(mSortDir==="asc"?"↑":"↓"):""}</button></th>
                     <th>成本</th><th>箱入</th><th style={{textAlign:"center"}}>失效</th><th>圖片</th><th style={{width:160}}>操作</th>
                   </tr></thead>
@@ -1405,11 +1406,17 @@ function Admin() {
                           <td style={{fontFamily:"monospace",fontSize:12,whiteSpace:"nowrap"}}>{row.code}</td>
                           <td style={{minWidth:180}}>{isE?<input className="cell-input" value={editDraft.name||""} onChange={e=>setEditDraft(p=>({...p,name:e.target.value}))}/>:<span className="cell-text">{row.name||<em className="empty">—</em>}</span>}</td>
                           <td style={{minWidth:100}}>{isE?(
-                            <select className="cell-input" value={editDraft.category||""} onChange={e=>setEditDraft(p=>({...p,category:e.target.value}))}>
+                            <select className="cell-input" value={editDraft.category||""} onChange={e=>setEditDraft(p=>({...p,category:e.target.value,subCategory:""}))}>
                               <option value="">選擇分類…</option>
                               {Object.keys(catTree).map(p=><option key={p} value={p}>{p}</option>)}
                             </select>
                           ):<span className="cell-text">{row.category||<em className="empty">—</em>}</span>}</td>
+                          <td style={{minWidth:100}}>{isE?(
+                            <select className="cell-input" value={editDraft.subCategory||""} onChange={e=>setEditDraft(p=>({...p,subCategory:e.target.value}))}>
+                              <option value="">無子類別</option>
+                              {(catTree[editDraft.category]||[]).map(c=><option key={c} value={c}>{c}</option>)}
+                            </select>
+                          ):<span className="cell-text">{row.subCategory||<em className="empty">—</em>}</span>}</td>
                           <td style={{minWidth:70}}>{isE?<input className="cell-input" value={editDraft.listPrice||""} onChange={e=>setEditDraft(p=>({...p,listPrice:e.target.value}))} style={{width:70}}/>:<span className="cell-text">{row.listPrice||<em className="empty">—</em>}</span>}</td>
                           <td style={{minWidth:70}}>{isE?<input className="cell-input" value={editDraft.cost||""} onChange={e=>setEditDraft(p=>({...p,cost:e.target.value}))} style={{width:70}}/>:<span className="cell-text">{row.cost||<em className="empty">—</em>}</span>}</td>
                           <td style={{minWidth:60}}>{isE?<input className="cell-input" value={editDraft.boxQty||""} onChange={e=>setEditDraft(p=>({...p,boxQty:e.target.value}))} style={{width:60}}/>:<span className="cell-text">{row.boxQty||<em className="empty">—</em>}</span>}</td>
