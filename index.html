@@ -24,7 +24,8 @@
     --header-h:88px; --header-h-mobile:96px; --header-h-mobile-cat:140px;
   }
   *{box-sizing:border-box;}
-  body{margin:0;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","Noto Sans TC","PingFang TC",sans-serif;background:var(--paper);color:var(--ink);-webkit-font-smoothing:antialiased;}
+  html{height:100%;}
+  body{margin:0;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","Noto Sans TC","PingFang TC",sans-serif;background:var(--paper);color:var(--ink);-webkit-font-smoothing:antialiased;min-height:100%;}
   #root{min-height:100vh;}
   /* ── 登入頁 ── */
   .login-wrap{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:24px;background:var(--paper);}
@@ -198,11 +199,11 @@
   .lightbox-dots span{width:7px;height:7px;border-radius:50%;background:rgba(255,255,255,.35);cursor:pointer;}
   .lightbox-dots span.active{background:#fff;}
   .drawer-mask{position:fixed;inset:0;background:rgba(20,30,28,.35);z-index:30;}
-  .drawer{position:fixed;top:0;right:0;width:min(560px,100vw);height:100vh;height:100dvh;background:var(--panel);z-index:31;display:flex;flex-direction:column;box-shadow:-8px 0 24px rgba(0,0,0,.08);}
+  .drawer{position:fixed;top:0;right:0;bottom:0;width:min(560px,100vw);background:var(--panel);z-index:31;display:flex;flex-direction:column;box-shadow:-8px 0 24px rgba(0,0,0,.08);overflow:hidden;}
   .drawer-head{padding:18px 24px;border-bottom:1px solid var(--line);display:flex;align-items:center;justify-content:space-between;flex-shrink:0;}
   .drawer-head h3{margin:0;font-size:16px;}
   .drawer-head button{background:none;border:none;font-size:20px;cursor:pointer;color:var(--ink-soft);}
-  .drawer-body{flex:1;overflow-y:auto;padding:14px 24px;}
+  .drawer-body{flex:1;overflow-y:auto;padding:14px 24px;min-height:0;}
   .cart-line{display:flex;gap:14px;padding:16px 0;border-bottom:1px solid var(--line);align-items:flex-start;}
   .cart-line .info{flex:1;min-width:0;}
   .cart-line .name{font-size:14px;line-height:1.45;margin-bottom:6px;font-weight:500;}
