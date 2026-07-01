@@ -368,6 +368,7 @@ function Admin() {
   const [editCode,     setEditCode]     = useState(null);
   const [editDraft,    setEditDraft]    = useState({});
   const [showAddM,     setShowAddM]     = useState(false);
+  const [addingM,      setAddingM]      = useState(false);
   const [newM, setNewM] = useState({code:"",name:"",category:"",subCategory:"",listPrice:"",boxQty:"",cost:"",inactive:false});
 
   // ── 分類管理 ──
@@ -738,6 +739,7 @@ function Admin() {
 
   // ── Excel 匯入商品 ──
   const [importPreview, setImportPreview] = useState(null); // [{code,name,category,...}]
+  const [importing, setImporting] = useState(false);
   const [importDrag, setImportDrag]       = useState(false);
   const importFileRef = useRef(null);
 
@@ -766,7 +768,9 @@ function Admin() {
   }
   async function doImport() {
     if (!importPreview || importPreview.length===0) return;
+    if (importing) return; // 防止重複點擊造成資料重複寫入
     if (!confirm(`確定匯入 ${importPreview.length} 筆商品？現有相同品號的資料會被覆蓋。`)) return;
+    setImporting(true);
     try {
       for (const row of importPreview) {
         await callGAS("saveMasterRow",{row});
@@ -775,6 +779,7 @@ function Admin() {
       setImportPreview(null);
       alert(`成功匯入 ${importPreview.length} 筆商品`);
     } catch(e) { alert("匯入失敗："+e.message); }
+    finally { setImporting(false); }
   }
 
   const ORDER_STATUSES = ["未確認","準備中","已出貨"];
@@ -799,6 +804,18 @@ function Admin() {
     catch(e) { setMError("載入失敗："+e.message); }
     finally { setMLoading(false); }
   }
+  const [deduping, setDeduping] = useState(false);
+  async function handleDedup() {
+    if (deduping) return;
+    if (!confirm("將清除所有重複品號，只保留每個品號最早的一筆資料，此動作無法復原。確定執行？")) return;
+    setDeduping(true);
+    try {
+      const d = await callGAS("dedupMasterRows", {});
+      await loadMaster();
+      alert(`已清除 ${d.removedCount} 筆重複資料`);
+    } catch(e) { alert("清除失敗："+e.message); }
+    finally { setDeduping(false); }
+  }
   useEffect(() => { if (tab==="master" && authed && masterRows.length===0) loadMaster(); }, [tab, authed]);
 
   function startEdit(row) { setEditCode(row.code); setEditDraft({name:row.name, category:row.category, subCategory:row.subCategory||"", listPrice:row.listPrice, boxQty:row.boxQty, cost:row.cost||"", inactive:row.inactive}); }
@@ -814,8 +831,11 @@ function Admin() {
   }
   async function addMaster() {
     if (!newM.code||!newM.name) { alert("品號與品名為必填"); return; }
+    if (addingM) return; // 防止重複點擊造成資料重複寫入
+    setAddingM(true);
     try { await callGAS("saveMasterRow",{row:newM}); setMasterRows(p=>[...p,{...newM,images:[]}]); setNewM({code:"",name:"",category:"",subCategory:"",listPrice:"",boxQty:"",cost:"",inactive:false}); setShowAddM(false); }
     catch(e) { alert("新增失敗："+e.message); }
+    finally { setAddingM(false); }
   }
 
   // ── 客戶價格表（群組制）──
@@ -1251,6 +1271,7 @@ function Admin() {
               </select>
               <button className="btn-edit" style={{padding:"8px 14px",fontSize:13}} onClick={openCatMgr}>⚙ 管理分類</button>
               <button className="btn-edit" style={{padding:"8px 14px",fontSize:13}} onClick={()=>importFileRef.current&&importFileRef.current.click()}>📥 Excel匯入</button>
+              <button className="btn-edit" style={{padding:"8px 14px",fontSize:13,color:"var(--danger)"}} onClick={handleDedup} disabled={deduping}>{deduping?"清除中…":"🧹 清除重複品號"}</button>
               <input type="file" accept=".xlsx,.xls,.csv" style={{display:"none"}} ref={importFileRef} onChange={e=>{handleImportFile(e.target.files[0]);e.target.value="";}}/>
               <button className="btn-save" style={{padding:"8px 16px",fontSize:13}} onClick={()=>setShowAddM(v=>!v)}>
                 {showAddM?"取消新增":"＋ 新增商品"}
@@ -1264,8 +1285,8 @@ function Admin() {
                 <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:10}}>
                   <span style={{fontSize:13,fontWeight:600}}>預覽匯入 {importPreview.length} 筆商品</span>
                   <div style={{display:"flex",gap:8}}>
-                    <button className="btn-save" onClick={doImport}>確認匯入</button>
-                    <button className="btn-cancel" onClick={()=>setImportPreview(null)}>取消</button>
+                    <button className="btn-save" onClick={doImport} disabled={importing}>{importing?"匯入中…":"確認匯入"}</button>
+                    <button className="btn-cancel" onClick={()=>setImportPreview(null)} disabled={importing}>取消</button>
                   </div>
                 </div>
                 <div className="import-preview">
@@ -1308,7 +1329,7 @@ function Admin() {
                 <label className="narrow" style={{flexDirection:"row",alignItems:"center",gap:6,paddingBottom:2}}>
                   <input type="checkbox" checked={!!newM.inactive} onChange={e=>setNewM(p=>({...p,inactive:e.target.checked}))} style={{width:15,height:15,accentColor:"var(--danger)"}}/>失效
                 </label>
-                <button className="btn-save" style={{alignSelf:"flex-end",padding:"8px 20px"}} onClick={addMaster}>確認新增</button>
+                <button className="btn-save" style={{alignSelf:"flex-end",padding:"8px 20px"}} onClick={addMaster} disabled={addingM}>{addingM?"新增中…":"確認新增"}</button>
               </div>
             )}
 
