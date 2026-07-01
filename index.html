@@ -801,8 +801,10 @@ function App() {
     let list = products.filter(p => {
       const matchSearch = !search || p.name.includes(search) || p.code.includes(search);
       if (!activeCat) return matchSearch;
-      if (activeCat.child) return matchSearch && p.subCategory === activeCat.child && p.category === activeCat.parent;
-      return matchSearch && p.category === activeCat.parent;
+      const pCat = String(p.category||"").trim();
+      const pSub = String(p.subCategory||"").trim();
+      if (activeCat.child) return matchSearch && pSub === activeCat.child && pCat === activeCat.parent;
+      return matchSearch && pCat === activeCat.parent;
     });
     if (sortBy==="price_asc")  list = [...list].sort((a,b)=>Number(a.unitPrice)-Number(b.unitPrice));
     if (sortBy==="price_desc") list = [...list].sort((a,b)=>Number(b.unitPrice)-Number(a.unitPrice));
@@ -810,8 +812,8 @@ function App() {
     return list;
   }, [products, activeCat, search, sortBy]);
 
-  function countByParent(parent) { return products.filter(p=>p.category===parent).length; }
-  function countByChild(parent,child) { return products.filter(p=>p.category===parent&&p.subCategory===child).length; }
+  function countByParent(parent) { return products.filter(p=>String(p.category||"").trim()===parent).length; }
+  function countByChild(parent,child) { return products.filter(p=>String(p.category||"").trim()===parent&&String(p.subCategory||"").trim()===child).length; }
   function toggleParent(p) { setOpenParents(prev=>({...prev,[p]:!prev[p]})); }
 
   // 進入 history stage 時自動載入
