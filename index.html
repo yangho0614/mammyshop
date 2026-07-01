@@ -82,6 +82,10 @@
   .header-sort:focus{outline:none;border-color:var(--brand);}
   .btn-orders{display:flex;align-items:center;gap:5px;padding:8px 14px;border:1.5px solid var(--line);border-radius:var(--radius);font-size:13px;background:#fff;cursor:pointer;color:var(--ink-soft);white-space:nowrap;transition:all .15s;}
   .btn-orders:hover{border-color:var(--brand);color:var(--brand-dark);background:var(--brand-tint);}
+  .btn-refresh{display:flex;align-items:center;gap:5px;padding:8px 14px;border:1.5px solid var(--line);border-radius:var(--radius);font-size:13px;background:#fff;cursor:pointer;color:var(--ink-soft);white-space:nowrap;transition:all .15s;flex-shrink:0;}
+  .btn-refresh:hover{border-color:var(--brand);color:var(--brand-dark);background:var(--brand-tint);}
+  .btn-refresh:disabled{opacity:.6;cursor:default;}
+  @media(max-width:760px){ .btn-refresh .label{display:none;} .btn-refresh{padding:8px 10px;} }
   .cart-pill{display:flex;align-items:center;gap:6px;background:var(--brand);color:#fff;border:none;border-radius:var(--radius);padding:9px 16px;font-size:14px;font-weight:600;cursor:pointer;transition:background .15s;white-space:nowrap;}
   .cart-label{font-size:13px;}
   @media(max-width:760px){.cart-label{font-size:12px;}}
@@ -956,6 +960,19 @@ function App() {
   }
   function backToInput() { setLoginStep("input"); setPendingCompany(null); setSelectedBranchCode(""); setLoginError(""); }
 
+  const [refreshing, setRefreshing] = useState(false);
+  async function refreshProducts() {
+    if (!customer) return;
+    setRefreshing(true);
+    try {
+      const d = await callGAS("getProducts", { branchCode: customer.code });
+      setProducts(d.products); setPromos(d.promos||[]);
+      localStorage.setItem(LS_PRODUCTS, JSON.stringify(d.products));
+      localStorage.setItem("promos", JSON.stringify(d.promos||[]));
+    } catch(e) { alert("更新失敗："+e.message); }
+    finally { setRefreshing(false); }
+  }
+
   async function submitOrder() {
     setSubmitting(true); setPageError("");
     try {
@@ -1186,6 +1203,9 @@ function App() {
           <span className="company">{/^\d+$/.test(customer.name||"")?customer.branchName:(customer.name||"")}（{customer.code||customer.branchCode||""}）{customer.branchName||""}</span>
         </div>
         <div className="header-actions">
+          <button className="btn-refresh" onClick={refreshProducts} disabled={refreshing} title="重新整理商品與促銷活動">
+            {refreshing?"⏳":"🔄"} <span className="label">更新</span>
+          </button>
           <button className="btn-orders" onClick={()=>setStage("history")}>
             📋 <span className="label">我的訂單</span>
           </button>
