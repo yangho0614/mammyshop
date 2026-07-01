@@ -737,6 +737,27 @@ function Admin() {
     } catch(e) { alert("批次操作失敗："+e.message); }
   }
 
+  // ── 批次修改分類 ──
+  const [showBatchCat, setShowBatchCat] = useState(false);
+  const [batchCat,     setBatchCat]     = useState("");
+  const [batchSubCat,  setBatchSubCat]  = useState("");
+  const [batchCatSaving, setBatchCatSaving] = useState(false);
+  function openBatchCat() { setBatchCat(""); setBatchSubCat(""); setShowBatchCat(true); }
+  async function applyBatchCat() {
+    if (!batchCat) { alert("請選擇大類別"); return; }
+    if (!confirm(`確定將 ${checkedMasterList.length} 筆商品的分類改為「${batchCat}${batchSubCat?" / "+batchSubCat:""}」？`)) return;
+    setBatchCatSaving(true);
+    try {
+      for (const row of checkedMasterList) {
+        await callGAS("saveMasterRow",{row:{...row,category:batchCat,subCategory:batchSubCat}});
+      }
+      setMasterRows(prev=>prev.map(r=>checkedMaster[r.code]?{...r,category:batchCat,subCategory:batchSubCat}:r));
+      setCheckedMaster({});
+      setShowBatchCat(false);
+    } catch(e) { alert("批次修改分類失敗："+e.message); }
+    finally { setBatchCatSaving(false); }
+  }
+
   // ── Excel 匯入商品 ──
   const [importPreview, setImportPreview] = useState(null); // [{code,name,category,...}]
   const [importing, setImporting] = useState(false);
@@ -1302,6 +1323,7 @@ function Admin() {
             {checkedMasterList.length>0&&(
               <div className="batch-action-bar">
                 <span>已選 {checkedMasterList.length} 筆</span>
+                <button className="btn-edit" style={{fontSize:12,padding:"4px 12px"}} onClick={openBatchCat}>🏷 批次修改分類</button>
                 <button className="btn-save" style={{fontSize:12,padding:"4px 12px"}} onClick={()=>batchSetInactive(false)}>批次設為有效</button>
                 <button className="btn-del" style={{fontSize:12,padding:"4px 12px"}} onClick={()=>batchSetInactive(true)}>批次設為失效</button>
                 <button className="btn-cancel" style={{fontSize:12,padding:"4px 12px"}} onClick={()=>setCheckedMaster({})}>取消選取</button>
@@ -2126,6 +2148,51 @@ function Admin() {
                   <button className="btn-cancel" onClick={closeImgMgr}>取消</button>
                   <button className="btn-save" onClick={saveImgOrder}
                     disabled={uploading===imgMgr.productCode}>儲存順序</button>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* ── 批次修改分類 Modal ── */}
+        {showBatchCat && (
+          <div className="imgmgr-mask" onClick={e=>{if(e.target===e.currentTarget&&!batchCatSaving)setShowBatchCat(false);}}>
+            <div className="imgmgr-box" style={{width:"min(420px,95vw)"}}>
+              <div className="imgmgr-head">
+                <h3>批次修改分類</h3>
+                <span style={{fontSize:13,color:"var(--ink-soft)",flex:1,marginLeft:10}}>已選 {checkedMasterList.length} 筆商品</span>
+                <button onClick={()=>!batchCatSaving&&setShowBatchCat(false)} style={{background:"none",border:"none",fontSize:22,cursor:"pointer",color:"var(--ink-soft)",lineHeight:1,padding:"0 4px"}}>✕</button>
+              </div>
+              <div className="imgmgr-body">
+                <div style={{display:"flex",flexDirection:"column",gap:14}}>
+                  <label style={{display:"flex",flexDirection:"column",gap:6,fontSize:13,fontWeight:600}}>
+                    大類別
+                    <select value={batchCat} onChange={e=>{setBatchCat(e.target.value);setBatchSubCat("");}}
+                      style={{padding:"9px 11px",border:"1px solid var(--line)",borderRadius:8,fontSize:14,background:"#fff"}}>
+                      <option value="">選擇分類…</option>
+                      {Object.keys(catTree).map(p=><option key={p} value={p}>{p}</option>)}
+                    </select>
+                  </label>
+                  <label style={{display:"flex",flexDirection:"column",gap:6,fontSize:13,fontWeight:600}}>
+                    子類別（選填）
+                    <select value={batchSubCat} onChange={e=>setBatchSubCat(e.target.value)} disabled={!batchCat}
+                      style={{padding:"9px 11px",border:"1px solid var(--line)",borderRadius:8,fontSize:14,background:batchCat?"#fff":"#f4f4f4"}}>
+                      <option value="">無子類別</option>
+                      {(catTree[batchCat]||[]).map(c=><option key={c} value={c}>{c}</option>)}
+                    </select>
+                  </label>
+                  <div style={{fontSize:12,color:"var(--ink-soft)",background:"#f8f8f8",padding:"8px 10px",borderRadius:6}}>
+                    ⚠ 此操作會覆蓋所選商品原有的大類別與子類別設定，無法復原。
+                  </div>
+                </div>
+              </div>
+              <div className="imgmgr-foot">
+                <div></div>
+                <div style={{display:"flex",gap:8}}>
+                  <button className="btn-cancel" onClick={()=>setShowBatchCat(false)} disabled={batchCatSaving}>取消</button>
+                  <button className="btn-save" onClick={applyBatchCat} disabled={batchCatSaving||!batchCat}>
+                    {batchCatSaving?"套用中…":"確認套用"}
+                  </button>
                 </div>
               </div>
             </div>
