@@ -1337,8 +1337,8 @@ function App() {
             <span className="main-count">{filtered.length} 項商品</span>
           </div>
           <div className="grid">
-            {filtered.map(p=>{const qty=cart[p.code]||0;const calc=computeLine(p,qty);const imgs=(p.images||[]).map(fixImgUrl);const matchedPromo=(promos||[]).find(pr=>{if(pr.triggerCodes==="全部")return true;return pr.triggerCodes.split(",").map(c=>c.trim()).includes(p.code);});return(
-              <div key={p.code} className={"card"+(p.inactive?" disabled":"")}>
+            {filtered.map((p,pIdx)=>{const qty=cart[p.code]||0;const calc=computeLine(p,qty);const imgs=(p.images||[]).map(fixImgUrl);const matchedPromo=(promos||[]).find(pr=>{if(pr.triggerCodes==="全部")return true;return pr.triggerCodes.split(",").map(c=>c.trim()).includes(p.code);});return(
+              <div key={p.code+"_"+pIdx} className={"card"+(p.inactive?" disabled":"")}>
                 <ImageSlider images={imgs}/>
                 <div className="card-body">
                   <div className="code">{p.code}</div>

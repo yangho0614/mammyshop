@@ -828,12 +828,14 @@ function Admin() {
   const [deduping, setDeduping] = useState(false);
   async function handleDedup() {
     if (deduping) return;
-    if (!confirm("將清除所有重複品號，只保留每個品號最早的一筆資料，此動作無法復原。確定執行？")) return;
+    if (!confirm("將清除「商品主檔」及所有「客戶價格表」群組分頁裡的重複品號，只保留每組內最早的一筆資料，此動作無法復原。確定執行？")) return;
     setDeduping(true);
     try {
-      const d = await callGAS("dedupMasterRows", {});
+      const d1 = await callGAS("dedupMasterRows", {});
+      const d2 = await callGAS("dedupPriceSheets", {});
       await loadMaster();
-      alert(`已清除 ${d.removedCount} 筆重複資料`);
+      const priceMsg = Object.entries(d2.report||{}).map(([g,n])=>`${g}: ${n}筆`).join("、") || "無";
+      alert(`商品主檔已清除 ${d1.removedCount} 筆重複資料\n價格表：${priceMsg}`);
     } catch(e) { alert("清除失敗："+e.message); }
     finally { setDeduping(false); }
   }
