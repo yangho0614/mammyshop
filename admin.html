@@ -1132,6 +1132,18 @@ const triggerList = parseCodes(p.triggerCodes).filter(c=>c!=="全部");
     } catch(e) { alert("遷移失敗："+e.message); }
     finally { setMigratingCols(false); }
   }
+  const [syncingPrice, setSyncingPrice] = useState(false);
+  async function handleSyncPriceRows() {
+    if (syncingPrice) return;
+    if (!confirm("將檢查「商品主檔」裡的所有商品，把漏掉的品號自動補到每個價格群組分頁（單價留空，需自行填寫）。確定執行？")) return;
+    setSyncingPrice(true);
+    try {
+      const d = await callGAS("syncMissingPriceRows", {});
+      const msg = Object.entries(d.report||{}).map(([g,n])=>`${g}：補上 ${n} 筆`).join("\n") || "無資料";
+      alert(`同步完成！\n${msg}`);
+    } catch(e) { alert("同步失敗："+e.message); }
+    finally { setSyncingPrice(false); }
+  }
   useEffect(() => { if (tab==="master" && authed && masterRows.length===0) loadMaster(); }, [tab, authed]);
 
   function startEdit(row) { setEditCode(row.code); setEditDraft({name:row.name, category:row.category, subCategory:row.subCategory||"", listPrice:row.listPrice, boxQty:row.boxQty, cost:row.cost||"", inactive:row.inactive}); }
@@ -1149,7 +1161,15 @@ const triggerList = parseCodes(p.triggerCodes).filter(c=>c!=="全部");
     if (!newM.code||!newM.name) { alert("品號與品名為必填"); return; }
     if (addingM) return; // 防止重複點擊造成資料重複寫入
     setAddingM(true);
-    try { await callGAS("saveMasterRow",{row:newM}); setMasterRows(p=>[...p,{...newM,images:[]}]); setNewM({code:"",name:"",category:"",subCategory:"",listPrice:"",boxQty:"",cost:"",inactive:false}); setShowAddM(false); }
+    try {
+      const d = await callGAS("saveMasterRow",{row:newM});
+      setMasterRows(p=>[...p,{...newM,images:[]}]);
+      setNewM({code:"",name:"",category:"",subCategory:"",listPrice:"",boxQty:"",cost:"",inactive:false});
+      setShowAddM(false);
+      if (d.syncedGroups && d.syncedGroups.length>0) {
+        alert(`新增成功！已自動同步到以下價格群組（單價待填寫）：\n${d.syncedGroups.join("、")}`);
+      }
+    }
     catch(e) { alert("新增失敗："+e.message); }
     finally { setAddingM(false); }
   }
@@ -1590,6 +1610,7 @@ const triggerList = parseCodes(p.triggerCodes).filter(c=>c!=="全部");
               <button className="btn-edit" style={{padding:"8px 14px",fontSize:13,color:"var(--danger)"}} onClick={handleDedup} disabled={deduping}>{deduping?"清除中…":"🧹 清除重複品號"}</button>
               <button className="btn-edit" style={{padding:"8px 14px",fontSize:13,color:"#b35a00"}} onClick={handleRepairCodes} disabled={repairing}>{repairing?"修復中…":"🔧 修復品號前導零"}</button>
               <button className="btn-edit" style={{padding:"8px 14px",fontSize:13,color:"#7b3fb0"}} onClick={handleMigrateColumns} disabled={migratingCols}>{migratingCols?"遷移中…":"⚙ 重新排列欄位（一次性）"}</button>
+              <button className="btn-edit" style={{padding:"8px 14px",fontSize:13,color:"#1a7a4c"}} onClick={handleSyncPriceRows} disabled={syncingPrice}>{syncingPrice?"同步中…":"🔗 同步商品到所有價格表"}</button>
               <input type="file" accept=".xlsx,.xls,.csv" style={{display:"none"}} ref={importFileRef} onChange={e=>{handleImportFile(e.target.files[0]);e.target.value="";}}/>
               <button className="btn-save" style={{padding:"8px 16px",fontSize:13}} onClick={()=>setShowAddM(v=>!v)}>
                 {showAddM?"取消新增":"＋ 新增商品"}
