@@ -255,12 +255,12 @@
   .history-badge.pending{background:var(--warn-tint);color:var(--warn);}
   .history-chevron{color:var(--ink-soft);font-size:11px;transition:transform .2s;}
   .history-chevron.open{transform:rotate(90deg);}
-  .history-body{border-top:1px solid var(--line);padding:10px 16px;overflow-x:auto;}
-  .history-table-head{display:grid;grid-template-columns:70px 1fr 50px 50px 60px 70px;gap:6px;font-size:11px;font-weight:600;color:var(--ink-soft);padding:0 0 6px;border-bottom:1px solid var(--line);}
-  .history-line{display:grid;grid-template-columns:70px 1fr 50px 50px 60px 70px;gap:6px;align-items:center;font-size:13px;padding:7px 0;border-bottom:1px solid var(--line);}
+  .history-body{border-top:1px solid var(--line);padding:10px 16px;overflow-x:auto;-webkit-overflow-scrolling:touch;}
+  .history-table-head{display:grid;grid-template-columns:64px minmax(140px,max-content) 44px 44px 60px 70px;gap:8px;font-size:11px;font-weight:600;color:var(--ink-soft);padding:0 0 6px;border-bottom:1px solid var(--line);width:max-content;min-width:100%;}
+  .history-line{display:grid;grid-template-columns:64px minmax(140px,max-content) 44px 44px 60px 70px;gap:8px;align-items:center;font-size:13px;padding:7px 0;border-bottom:1px solid var(--line);width:max-content;min-width:100%;}
   .history-line:last-child{border-bottom:none;}
   .history-line .lcode{color:var(--ink-soft);font-size:11px;font-family:monospace;white-space:nowrap;}
-  .history-line .lname{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+  .history-line .lname{white-space:nowrap;}
   .history-line .lqty{color:var(--ink);white-space:nowrap;font-size:13px;text-align:center;}
   .history-line .lgift{color:var(--brand-dark);white-space:nowrap;font-size:13px;text-align:center;}
   .history-line .lprice{color:var(--ink-soft);white-space:nowrap;font-size:12px;text-align:right;}
@@ -452,7 +452,7 @@
     .card .unit-price{font-size:15px;}
     .drawer{width:100vw;}
     .history-wrap{padding:0 16px;margin-top:20px;}
-    .history-table-head,.history-line{grid-template-columns:56px 1fr 36px 36px 50px 58px;font-size:12px;gap:4px;}
+    .history-table-head,.history-line{grid-template-columns:56px minmax(120px,max-content) 36px 36px 50px 58px;font-size:12px;gap:4px;}
     .history-line .lname{font-size:12px;}
   }
   @media(max-width:380px){
