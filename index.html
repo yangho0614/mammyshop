@@ -605,6 +605,7 @@ function ImageSlider({ images }) {
 // 商品層級的舊格式「活動規則」欄位已完全停用，
 // 贈品/折扣一律由後台「促銷活動」系統管理（見 calcPromoGifts）
 function computeLine(p, qty) {
+  if (!p) return { amount: 0 };
   return { amount: qty * (Number(p.unitPrice)||0) };
 }
 
@@ -987,7 +988,7 @@ function App() {
       setHisOrders(prev=>prev.filter(o=>o.orderId!==orderId));
     } catch(e) { alert("取消失敗："+e.message); }
   }
-  const cartLines  = useMemo(() => Object.entries(cart).filter(([,q])=>q>0).map(([code,qty])=>{ const p=products.find(x=>x.code===code); return {product:p,qty,...computeLine(p,qty)}; }), [cart,products]);
+  const cartLines  = useMemo(() => Object.entries(cart).filter(([,q])=>q>0).map(([code,qty])=>{ const p=products.find(x=>x.code===code); return p?{product:p,qty,...computeLine(p,qty)}:null; }).filter(Boolean), [cart,products]);
   const promoResult = useMemo(() => {
     if (!promos || promos.length === 0) return { giftLines: [], discount: 0 };
     try { return calcPromoGifts(cartLines, promos, products); }
