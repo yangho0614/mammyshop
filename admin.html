@@ -2008,9 +2008,10 @@ const triggerList = parseCodes(p.triggerCodes).filter(c=>c!=="全部");
                     const gCodes = parseCodes(row.giftCodes);
                     const isEditingThis = editPromo && editPromo.id === row.id;
                     return (
-                      <div key={row.id} style={{border:"1px solid var(--line)",borderRadius:10,padding:"14px 16px",
+                      <div key={row.id} style={{border:"1px solid var(--line)",borderRadius:10,padding:"16px 18px",
                         background:row.active?"#fff":"#f8f8f8",opacity:row.active?1:0.65}}>
-                        <div style={{display:"flex",alignItems:"center",gap:10,marginBottom:8}}>
+                        {/* 標題列：活動名稱 + 規則徽章 + 優先權 */}
+                        <div style={{display:"flex",alignItems:"center",gap:10,marginBottom:12,flexWrap:"wrap"}}>
                           <span style={{fontWeight:700,fontSize:15}}>{row.name}</span>
                           <span style={{fontSize:12,padding:"2px 8px",borderRadius:12,
                             background:row.ruleType==="buy"?"#e8f4ee":"#fff0e0",
@@ -2018,50 +2019,92 @@ const triggerList = parseCodes(p.triggerCodes).filter(c=>c!=="全部");
                             {(row.tiers||[]).map(t=>row.ruleType==="buy"?`買${t.n}送${t.m}`:`滿${t.n}送${t.m}`).join(" / ")}
                           </span>
                           {!row.active&&<span style={{fontSize:11,color:"#999",padding:"2px 8px",borderRadius:12,background:"#eee"}}>已停用</span>}
-                          <span style={{fontSize:11,color:"var(--ink-soft)",marginLeft:"auto"}}>優先權 {row.priority}</span>
-                          <button className="btn-edit" onClick={()=>openEdit(row)}>{isEditingThis?"收合":"編輯"}</button>
-                          <button className="btn-edit" onClick={()=>openDuplicate(row)}>複製</button>
-                          <button className="btn-del" onClick={()=>deletePromo(row.id,row.name)}>刪除</button>
+                          <span style={{fontSize:11,color:"var(--ink-soft)",display:"flex",alignItems:"center",gap:3}}>
+                            <span className="msi" style={{fontSize:14}}>flag</span>優先權 {row.priority}
+                          </span>
                         </div>
-                        <div style={{display:"flex",gap:20,fontSize:12,color:"var(--ink-soft)",flexWrap:"wrap"}}>
+
+                        {/* 資訊列：每種資訊獨立一行，內容區有寬度上限避免頂到按鈕 */}
+                        <div style={{display:"flex",flexDirection:"column",gap:7,fontSize:12,color:"var(--ink-soft)",marginBottom:12}}>
                           {(()=>{
                             const triggerNames = row.triggerCodes==="全部" ? ["全部商品"] : tCodes.map(c=>{const m=masterRows.find(r=>r.code===c);return m?m.name:c;});
                             const tKey = row.id+"_trigger";
                             const tExpanded = !!expandedList[tKey];
                             const tShown = tExpanded || triggerNames.length<=3 ? triggerNames : triggerNames.slice(0,3);
                             return (
-                              <span>
-                                觸發（{triggerNames.length}項）：{tShown.join("、")||"—"}
-                                {triggerNames.length>3 && (
-                                  <button onClick={()=>setExpandedList(p=>({...p,[tKey]:!p[tKey]}))}
-                                    style={{marginLeft:6,border:"none",background:"none",color:"var(--brand-dark)",cursor:"pointer",fontSize:12,textDecoration:"underline",padding:0}}>
-                                    {tExpanded?"收合":`...等${triggerNames.length}項`}
-                                  </button>
-                                )}
-                              </span>
+                              <div style={{display:"flex",gap:6}}>
+                                <span style={{flexShrink:0,display:"flex",alignItems:"center",gap:3,color:"var(--ink)",fontWeight:600}}>
+                                  <span className="msi" style={{fontSize:15}}>bolt</span>觸發（{triggerNames.length}）
+                                </span>
+                                <span style={{minWidth:0}}>
+                                  {tShown.join("、")||"—"}
+                                  {triggerNames.length>3 && (
+                                    <button onClick={()=>setExpandedList(p=>({...p,[tKey]:!p[tKey]}))}
+                                      style={{marginLeft:6,border:"none",background:"none",color:"var(--brand-dark)",cursor:"pointer",fontSize:12,textDecoration:"underline",padding:0}}>
+                                      {tExpanded?"收合":`...等${triggerNames.length}項`}
+                                    </button>
+                                  )}
+                                </span>
+                              </div>
                             );
                           })()}
                           {(()=>{
-                            if (row.ruleType==="buy" && !row.giftCodes) return <span>贈品：自動最低單價</span>;
+                            if (row.ruleType==="buy" && !row.giftCodes) return (
+                              <div style={{display:"flex",gap:6}}>
+                                <span style={{flexShrink:0,display:"flex",alignItems:"center",gap:3,color:"var(--ink)",fontWeight:600}}>
+                                  <span className="msi" style={{fontSize:15}}>redeem</span>贈品
+                                </span>
+                                <span>自動最低單價</span>
+                              </div>
+                            );
                             const giftNames = gCodes.map(c=>{const m=masterRows.find(r=>r.code===c);return m?m.name:c;});
                             const gKey = row.id+"_gift";
                             const gExpanded = !!expandedList[gKey];
                             const gShown = gExpanded || giftNames.length<=3 ? giftNames : giftNames.slice(0,3);
                             return (
-                              <span>
-                                贈品（{giftNames.length}項）：{gShown.join("、")||"—"}
-                                {giftNames.length>3 && (
-                                  <button onClick={()=>setExpandedList(p=>({...p,[gKey]:!p[gKey]}))}
-                                    style={{marginLeft:6,border:"none",background:"none",color:"var(--brand-dark)",cursor:"pointer",fontSize:12,textDecoration:"underline",padding:0}}>
-                                    {gExpanded?"收合":`...等${giftNames.length}項`}
-                                  </button>
-                                )}
-                              </span>
+                              <div style={{display:"flex",gap:6}}>
+                                <span style={{flexShrink:0,display:"flex",alignItems:"center",gap:3,color:"var(--ink)",fontWeight:600}}>
+                                  <span className="msi" style={{fontSize:15}}>redeem</span>贈品（{giftNames.length}）
+                                </span>
+                                <span style={{minWidth:0}}>
+                                  {gShown.join("、")||"—"}
+                                  {giftNames.length>3 && (
+                                    <button onClick={()=>setExpandedList(p=>({...p,[gKey]:!p[gKey]}))}
+                                      style={{marginLeft:6,border:"none",background:"none",color:"var(--brand-dark)",cursor:"pointer",fontSize:12,textDecoration:"underline",padding:0}}>
+                                      {gExpanded?"收合":`...等${giftNames.length}項`}
+                                    </button>
+                                  )}
+                                </span>
+                              </div>
                             );
                           })()}
-                          <span>套用群組：{row.targetGroups?parseCodes(row.targetGroups).join("、"):"全部"}</span>
-                          <span>日期：{formatDateYMD(row.dateFrom)||"∞"} ～ {formatDateYMD(row.dateTo)||"∞"}</span>
+                          <div style={{display:"flex",gap:6}}>
+                            <span style={{flexShrink:0,display:"flex",alignItems:"center",gap:3,color:"var(--ink)",fontWeight:600}}>
+                              <span className="msi" style={{fontSize:15}}>group</span>套用群組
+                            </span>
+                            <span>{row.targetGroups?parseCodes(row.targetGroups).join("、"):"全部"}</span>
+                          </div>
+                          <div style={{display:"flex",gap:6}}>
+                            <span style={{flexShrink:0,display:"flex",alignItems:"center",gap:3,color:"var(--ink)",fontWeight:600}}>
+                              <span className="msi" style={{fontSize:15}}>calendar_today</span>日期
+                            </span>
+                            <span>{formatDateYMD(row.dateFrom)||"∞"} ～ {formatDateYMD(row.dateTo)||"∞"}</span>
+                          </div>
                         </div>
+
+                        {/* 操作按鈕列：獨立一行，靠右對齊，圖示+文字 */}
+                        <div style={{display:"flex",gap:8,justifyContent:"flex-end",paddingTop:10,borderTop:"1px solid var(--line)"}}>
+                          <button className="btn-edit" onClick={()=>openEdit(row)} style={{display:"flex",alignItems:"center",gap:4}}>
+                            <span className="msi" style={{fontSize:15}}>{isEditingThis?"expand_less":"edit"}</span>{isEditingThis?"收合":"編輯"}
+                          </button>
+                          <button className="btn-edit" onClick={()=>openDuplicate(row)} style={{display:"flex",alignItems:"center",gap:4}}>
+                            <span className="msi" style={{fontSize:15}}>content_copy</span>複製
+                          </button>
+                          <button className="btn-del" onClick={()=>deletePromo(row.id,row.name)} style={{display:"flex",alignItems:"center",gap:4}}>
+                            <span className="msi" style={{fontSize:15}}>delete</span>刪除
+                          </button>
+                        </div>
+
                         {isEditingThis&&(
                           <div style={{marginTop:14,paddingTop:14,borderTop:"1px dashed var(--line)"}}>
                             {renderPromoForm()}
