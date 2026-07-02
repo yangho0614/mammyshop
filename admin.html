@@ -2054,29 +2054,31 @@ const triggerList = parseCodes(p.triggerCodes).filter(c=>c!=="全部");
                             if (row.ruleType==="buy" && !row.giftCodes) return (
                               <div style={{display:"flex",gap:6}}>
                                 <span style={{flexShrink:0,display:"flex",alignItems:"center",gap:3,color:"var(--ink)",fontWeight:600}}>
-                                  <span className="msi" style={{fontSize:15}}>redeem</span>贈品
+                                  <span className="msi" style={{fontSize:15}}>redeem</span>活動贈品
                                 </span>
                                 <span>自動最低單價</span>
                               </div>
                             );
-                            const giftNames = gCodes.map(c=>{const m=masterRows.find(r=>r.code===c);return m?m.name:c;});
+                            const giftItems = gCodes.map(c=>{const m=masterRows.find(r=>r.code===c);return {code:c, name:m?m.name:c};});
                             const gKey = row.id+"_gift";
                             const gExpanded = !!expandedList[gKey];
-                            const gShown = gExpanded || giftNames.length<=3 ? giftNames : giftNames.slice(0,3);
+                            const gShown = gExpanded || giftItems.length<=3 ? giftItems : giftItems.slice(0,3);
                             return (
                               <div style={{display:"flex",gap:6}}>
                                 <span style={{flexShrink:0,display:"flex",alignItems:"center",gap:3,color:"var(--ink)",fontWeight:600}}>
-                                  <span className="msi" style={{fontSize:15}}>redeem</span>贈品（{giftNames.length}）
+                                  <span className="msi" style={{fontSize:15}}>redeem</span>活動贈品（{giftItems.length}）
                                 </span>
-                                <span style={{minWidth:0}}>
-                                  {gShown.join("、")||"—"}
-                                  {giftNames.length>3 && (
+                                <div style={{minWidth:0,display:"flex",flexDirection:"column",gap:2}}>
+                                  {gShown.map((item,ii)=>(
+                                    <span key={ii}><span style={{fontFamily:"monospace",color:"var(--ink-xsoft)"}}>{item.code}</span> {item.name}</span>
+                                  ))}
+                                  {giftItems.length>3 && (
                                     <button onClick={()=>setExpandedList(p=>({...p,[gKey]:!p[gKey]}))}
-                                      style={{marginLeft:6,border:"none",background:"none",color:"var(--brand-dark)",cursor:"pointer",fontSize:12,textDecoration:"underline",padding:0}}>
-                                      {gExpanded?"收合":`...等${giftNames.length}項`}
+                                      style={{alignSelf:"flex-start",border:"none",background:"none",color:"var(--brand-dark)",cursor:"pointer",fontSize:12,textDecoration:"underline",padding:0}}>
+                                      {gExpanded?"收合":`顯示全部${giftItems.length}項`}
                                     </button>
                                   )}
-                                </span>
+                                </div>
                               </div>
                             );
                           })()}
@@ -2088,7 +2090,7 @@ const triggerList = parseCodes(p.triggerCodes).filter(c=>c!=="全部");
                           </div>
                           <div style={{display:"flex",gap:6}}>
                             <span style={{flexShrink:0,display:"flex",alignItems:"center",gap:3,color:"var(--ink)",fontWeight:600}}>
-                              <span className="msi" style={{fontSize:15}}>calendar_today</span>日期
+                              <span className="msi" style={{fontSize:15}}>calendar_today</span>活動區間
                             </span>
                             <span>{formatDateYMD(row.dateFrom)||"∞"} ～ {formatDateYMD(row.dateTo)||"∞"}</span>
                           </div>
