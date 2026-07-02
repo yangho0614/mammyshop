@@ -130,6 +130,7 @@
   .sidebar-child{display:block;width:100%;text-align:left;padding:7px 10px 7px 20px;border:none;background:none;border-radius:var(--radius);font-size:13px;color:var(--ink-soft);cursor:pointer;transition:all .15s;}
   .sidebar-child:hover{background:#f3f4f6;color:var(--ink);}
   .sidebar-child.active{background:var(--brand-tint);color:var(--brand-dark);font-weight:600;}
+  .sidebar-all.active{background:var(--brand-tint);color:var(--brand-dark);}
   .sidebar .count{float:right;color:var(--ink-xsoft);font-size:11px;background:#f0f0f0;padding:1px 6px;border-radius:10px;}
   .sidebar-child.active .count{background:rgba(47,111,94,.15);}
 
@@ -1328,14 +1329,17 @@ function App() {
           )}
           {/* ── 桌機：垂直展開子類（sidebar-children 區塊，手機隱藏） ── */}
           <div className="sidebar-desktop-tree">
+            <button className={"sidebar-all"+(activeCat===null?" active":"")} onClick={()=>setActiveCat(null)}>
+              全部商品
+            </button>
             {hasCatTree ? treeParents.map(parent=>(
               <div key={parent}>
                 <button className={"sidebar-parent-btn"+(activeCat&&activeCat.parent===parent&&!activeCat.child?" active":"")}
                   onClick={()=>{ toggleParent(parent); setActiveCat({parent,child:null}); }}>
                   {parent}
-                  <span className="arrow">{openParents[parent]?"▼":"▶"}</span>
+                  <span className="arrow">{openParents[parent]!==false?"▼":"▶"}</span>
                 </button>
-                {openParents[parent]&&(
+                {openParents[parent]!==false&&(
                   <div className="sidebar-children">
                     <button className={"sidebar-child"+(activeCat&&activeCat.parent===parent&&!activeCat.child?" active":"")}
                       onClick={()=>setActiveCat({parent,child:null})}>全部（{countByParent(parent)}）</button>
