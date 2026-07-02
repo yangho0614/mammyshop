@@ -192,9 +192,11 @@
   .dash-quick-btn.active{background:var(--brand);color:#fff;border-color:var(--brand);}
 
   /* 客戶管理 */
-  .cust-mgmt-table{width:100%;border-collapse:collapse;font-size:13px;background:#fff;border:1px solid var(--line);border-radius:8px;overflow:hidden;}
-  .cust-mgmt-table th{text-align:left;background:#f4f6f5;padding:9px 12px;border-bottom:1px solid var(--line);font-weight:600;}
-  .cust-mgmt-table td{padding:8px 12px;border-bottom:1px solid var(--line);vertical-align:middle;}
+  .cust-mgmt-table{width:max-content;min-width:100%;border-collapse:collapse;font-size:13px;background:#fff;border:1px solid var(--line);border-radius:8px;overflow:hidden;}
+  .cust-mgmt-table th{text-align:left;background:#f4f6f5;padding:9px 12px;border-bottom:1px solid var(--line);font-weight:600;white-space:nowrap;}
+  .cust-mgmt-table td{padding:8px 12px;border-bottom:1px solid var(--line);vertical-align:middle;white-space:nowrap;}
+  .cust-mgmt-table th:nth-child(2),.cust-mgmt-table td:nth-child(2),
+  .cust-mgmt-table th:nth-child(4),.cust-mgmt-table td:nth-child(4){white-space:normal;min-width:110px;max-width:220px;}
 
   /* 新訂單通知 */
   .notif-badge{position:absolute;top:-4px;right:-4px;background:var(--danger);color:#fff;border-radius:9px;min-width:16px;height:16px;padding:0 4px;font-size:10px;display:flex;align-items:center;justify-content:center;font-weight:700;box-sizing:border-box;line-height:1;}
