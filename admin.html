@@ -1585,7 +1585,6 @@ const triggerList = parseCodes(p.triggerCodes).filter(c=>c!=="全部");
                                   <th style={{padding:"6px 12px",textAlign:"center",fontWeight:600}}>贈品</th>
                                   <th style={{padding:"6px 12px",textAlign:"right",fontWeight:600}}>單價</th>
                                   <th style={{padding:"6px 12px",textAlign:"right",fontWeight:600}}>金額</th>
-                                  <th style={{padding:"6px 12px",textAlign:"left",fontWeight:600}}>狀態</th>
                                 </tr></thead>
                                 <tbody>
                                   {o.lines.map((l,i)=>(
@@ -1596,13 +1595,11 @@ const triggerList = parseCodes(p.triggerCodes).filter(c=>c!=="全部");
                                       <td style={{padding:"6px 12px",textAlign:"center",color:"var(--brand)"}}>{l.giftQty||"—"}</td>
                                       <td style={{padding:"6px 12px",textAlign:"right"}}>${l.unitPrice}</td>
                                       <td style={{padding:"6px 12px",textAlign:"right",fontWeight:600}}>${Number(l.amount).toLocaleString()}</td>
-                                      <td style={{padding:"6px 12px"}}>{l.status==="待複核"?<span style={{color:"var(--warn)"}}><span className="msi" style={{fontSize:14}}>warning</span> 待複核</span>:l.status}</td>
                                     </tr>
                                   ))}
                                   <tr style={{borderTop:"2px solid var(--line)",background:"#f0f7f5"}}>
                                     <td colSpan={5} style={{padding:"8px 12px",textAlign:"right",fontWeight:700}}>合計</td>
                                     <td style={{padding:"8px 12px",textAlign:"right",fontWeight:700,fontSize:14}}>${Math.round(o.total).toLocaleString()}</td>
-                                    <td></td>
                                   </tr>
                                   {/* 備註列 */}
                                   <tr style={{background:"#fffbf3"}}>
