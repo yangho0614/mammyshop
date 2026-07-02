@@ -180,7 +180,7 @@
   .status-chips{display:flex;gap:10px;flex-wrap:wrap;}
   .status-chip{display:flex;align-items:center;gap:6px;padding:6px 12px;border-radius:20px;font-size:12px;font-weight:600;}
   .status-chip.unc{background:var(--warn-tint);color:var(--warn);}
-  .status-chip.prep{background:#eef1fb;color:#3d4f9e;}
+  .status-chip.prep{background:#e3f0fd;color:#1a6bb5;}
   .status-chip.ship{background:var(--brand-tint);color:var(--brand-dark);}
   /* 日期篩選列 */
   .dash-filter{display:flex;gap:10px;margin-bottom:18px;flex-wrap:wrap;align-items:center;}
@@ -1118,7 +1118,7 @@ const triggerList = parseCodes(p.triggerCodes).filter(c=>c!=="全部");
   const ORDER_STATUSES = ["未確認","準備中","已出貨"];
   function statusStyle(s) {
     if (s==="未確認") return {background:"var(--warn-tint)",color:"var(--warn)"};
-    if (s==="準備中") return {background:"#eef1fb",color:"#3d4f9e"};
+    if (s==="準備中") return {background:"#e3f0fd",color:"#1a6bb5"};
     if (s==="已出貨") return {background:"var(--brand-tint)",color:"var(--brand-dark)"};
     return {background:"#f4f6f5",color:"var(--ink-soft)"};
   }

@@ -244,7 +244,10 @@
   .order-query-box{display:flex;gap:8px;margin-bottom:20px;}
   .order-query-box input{flex:1;padding:11px 13px;border:1px solid var(--line);border-radius:8px;font-size:16px;letter-spacing:.06em;}
   .order-query-box button{padding:11px 20px;background:var(--brand);color:#fff;border:none;border-radius:8px;font-size:14px;cursor:pointer;white-space:nowrap;}
-  .history-card{background:#fff;border:1px solid var(--line);border-radius:var(--radius);margin-bottom:10px;overflow:hidden;}
+  .history-card{background:#fff;border:1px solid var(--line);border-left:4px solid var(--line);border-radius:var(--radius);margin-bottom:16px;overflow:hidden;box-shadow:0 1px 4px rgba(0,0,0,.05);}
+  .history-card.st-unconfirmed{border-left-color:var(--warn);}
+  .history-card.st-preparing{border-left-color:#1a6bb5;}
+  .history-card.st-shipped{border-left-color:var(--brand-dark);}
   .history-head{display:flex;align-items:center;gap:10px;padding:12px 16px;cursor:pointer;user-select:none;}
   .history-head:hover{background:#f7fbfa;}
   .history-meta{flex:1;min-width:0;}
@@ -276,7 +279,7 @@
   /* 訂單狀態 badge */
   .order-badge{display:inline-block;font-size:11px;padding:3px 9px;border-radius:10px;font-weight:600;white-space:nowrap;}
   .order-badge.unconfirmed{background:var(--warn-tint);color:var(--warn);}
-  .order-badge.preparing{background:#eef1fb;color:#3d4f9e;}
+  .order-badge.preparing{background:#e3f0fd;color:#1a6bb5;}
   .order-badge.shipped{background:var(--brand-tint);color:var(--brand-dark);}
   /* 訂單操作按鈕列 */
   .order-action-bar{display:flex;gap:8px;margin-top:10px;padding-top:10px;border-top:1px solid var(--line);}
@@ -459,6 +462,8 @@
     .card .unit-price{font-size:15px;}
     .drawer{width:100vw;}
     .history-wrap{padding:0 16px;margin-top:20px;}
+    .his-date-group{width:100%;}
+    .his-date-input{flex:1;min-width:0;}
     .history-table-head,.history-line{gap:5px;font-size:12px;}
     .history-table-head .hcode,.history-line .lcode{flex-basis:44px;}
     .history-table-head .hqty,.history-line .lqty,.history-table-head .hgift,.history-line .lgift{flex-basis:28px;}
@@ -1099,16 +1104,16 @@ function App() {
           </button>
         </div>
         {/* 篩選列 */}
-        <div style={{display:"flex",gap:8,marginBottom:14,flexWrap:"wrap",alignItems:"center",background:"#fff",border:"1px solid var(--line)",borderRadius:10,padding:"12px 14px"}}>
+        <div className="his-filter-row" style={{display:"flex",gap:8,marginBottom:14,flexWrap:"wrap",alignItems:"center",background:"#fff",border:"1px solid var(--line)",borderRadius:10,padding:"12px 14px"}}>
           <input placeholder="搜尋品名、品號、訂單編號…" value={hisKeyword} onChange={e=>setHisKeyword(e.target.value)}
             style={{flex:1,minWidth:160,padding:"8px 12px",border:"1px solid var(--line)",borderRadius:8,fontSize:13}}/>
-          <div style={{display:"flex",alignItems:"center",gap:6,flexShrink:0,flexWrap:"wrap"}}>
+          <div className="his-date-group" style={{display:"flex",alignItems:"center",gap:6,flexShrink:0,flexWrap:"wrap"}}>
             <span style={{fontSize:12,color:"var(--ink-soft)",whiteSpace:"nowrap"}}>日期</span>
-            <input type="date" value={hisDateFrom} onChange={e=>setHisDateFrom(e.target.value)}
-              style={{padding:"7px 9px",border:"1px solid var(--line)",borderRadius:7,fontSize:13}}/>
+            <input type="date" value={hisDateFrom} onChange={e=>setHisDateFrom(e.target.value)} className="his-date-input"
+              style={{padding:"6px 8px",border:"1px solid var(--line)",borderRadius:7,fontSize:13}}/>
             <span style={{fontSize:12,color:"var(--ink-soft)"}}>—</span>
-            <input type="date" value={hisDateTo} onChange={e=>setHisDateTo(e.target.value)}
-              style={{padding:"7px 9px",border:"1px solid var(--line)",borderRadius:7,fontSize:13}}/>
+            <input type="date" value={hisDateTo} onChange={e=>setHisDateTo(e.target.value)} className="his-date-input"
+              style={{padding:"6px 8px",border:"1px solid var(--line)",borderRadius:7,fontSize:13}}/>
           </div>
           {(hisKeyword||hisDateFrom||hisDateTo)&&(
             <button onClick={()=>{setHisKeyword("");setHisDateFrom("");setHisDateTo("");}}
@@ -1141,7 +1146,7 @@ function App() {
             ? new Set(o.lines.filter(l=>String(l.code||"").toLowerCase().includes(hisKeyword.toLowerCase())||String(l.name||"").toLowerCase().includes(hisKeyword.toLowerCase())).map(l=>l.code))
             : null;
           return (
-          <div key={o.orderId} className="history-card">
+          <div key={o.orderId} className={"history-card st-"+orderBadgeClass(o.orderStatus).split(" ")[1]}>
             <div className="history-head" onClick={()=>{ if(!isEditing) setHisExpanded(p=>({...p,[o.orderId]:!p[o.orderId]})); }}>
               <div className="history-meta">
                 <div className="history-id">{o.orderId}</div>
