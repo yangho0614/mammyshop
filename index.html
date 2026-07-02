@@ -616,26 +616,64 @@ function calcPromoGifts(cartItems, promos, products) {
   const giftLines = [];
   let discount = 0;
 
-  promos.forEach(promo => {
+  // ── Step 1：預先算出每個活動的觸發品項、觸發總量，並在「活動自己的階梯清單」裡挑出達標中門檻最高的那一階 ──
+  const infos = promos.map(promo => {
     const triggerAll = promo.triggerCodes === "全部";
     const triggerSet = triggerAll ? null : promo.triggerCodes.split(",").map(c=>c.trim()).filter(Boolean);
-
-    // 找出觸發的購物車品項
-    const triggered = cartItems.filter(item =>
-      !triggerSet || triggerSet.includes(item.product.code)
-    );
-    if (triggered.length === 0) return;
-
+    const triggered = cartItems.filter(item => !triggerSet || triggerSet.includes(item.product.code));
     const totalQty = triggered.reduce((s, item) => s + item.qty, 0);
+
+    const tiers = Array.isArray(promo.tiers) && promo.tiers.length > 0 ? promo.tiers : [{n:promo.triggerN||0, m:promo.giftM||0}]; // 相容舊資料
+    const qualifyingTiers = tiers.filter(t => totalQty >= t.n);
+    let bestTier = null;
+    if (qualifyingTiers.length > 0) {
+      bestTier = qualifyingTiers.reduce((best, t) => (t.n > best.n ? t : best), qualifyingTiers[0]);
+    }
+    return { promo, triggerAll, triggerSet, triggered, totalQty, bestTier };
+  });
+
+  // ── Step 2：把「觸發商品有重疊」的活動歸成同一個互斥群組（例如奶粉袋11+1 跟 奶粉袋50+10 都觸發同一品號，屬同群組） ──
+  function overlaps(a, b) {
+    if (a.triggerAll || b.triggerAll) return true; // 任一是「全部」視為與所有活動重疊
+    return a.triggerSet.some(c => b.triggerSet.includes(c));
+  }
+  const groupOf = new Array(infos.length).fill(-1);
+  const groups = [];
+  for (let i = 0; i < infos.length; i++) {
+    if (groupOf[i] !== -1) continue;
+    const gi = groups.length;
+    groups.push([i]);
+    groupOf[i] = gi;
+    for (let j = i + 1; j < infos.length; j++) {
+      if (groupOf[j] !== -1) continue;
+      if (groups[gi].some(k => overlaps(infos[k], infos[j]))) {
+        groups[gi].push(j);
+        groupOf[j] = gi;
+      }
+    }
+  }
+
+  // ── Step 3：同一群組裡，只挑「已達標、且該活動自身最高階梯門檻(bestTier.n)最大」的那個活動套用，其餘忽略（擇一，不疊加） ──
+  const selected = [];
+  groups.forEach(idxList => {
+    const qualifying = idxList.filter(idx => infos[idx].bestTier !== null);
+    if (qualifying.length === 0) return;
+    qualifying.sort((a, b) => infos[b].bestTier.n - infos[a].bestTier.n);
+    selected.push(qualifying[0]); // 門檻最高且達標的那個
+  });
+
+  // ── Step 4：只對被選中的活動、用它挑出的那一階梯，做贈品/折抵計算 ──
+  selected.forEach(idx => {
+    const { promo, triggered, totalQty, bestTier } = infos[idx];
     let freeCount = 0;
 
     if (promo.ruleType === "buy") {
       // 買N送M：下單 (N+M) 件為一組，其中 M 件免費（例：買2送1 → 下單3件，1件免費，付2件錢）
-      const groupSize = promo.triggerN + promo.giftM;
-      freeCount = Math.floor(totalQty / groupSize) * promo.giftM;
+      const groupSize = bestTier.n + bestTier.m;
+      freeCount = Math.floor(totalQty / groupSize) * bestTier.m;
     } else {
       // min：滿N件另外贈送M件（贈品不折抵已購商品金額，屬額外贈送）
-      freeCount = Math.floor(totalQty / promo.triggerN) * promo.giftM;
+      freeCount = Math.floor(totalQty / bestTier.n) * bestTier.m;
     }
     if (freeCount <= 0) return;
 

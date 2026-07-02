@@ -626,7 +626,7 @@ function Admin() {
   const [promoLoading,  setPromoLoading]  = useState(false);
   const [showAddPromo,  setShowAddPromo]  = useState(false);
   const [editPromo,     setEditPromo]     = useState(null);
-  const EMPTY_PROMO = {id:"",name:"",ruleType:"buy",triggerN:2,giftM:1,triggerCodes:"",giftCodes:"",targetGroups:"",dateFrom:"",dateTo:"",priority:1,active:true};
+  const EMPTY_PROMO = {id:"",name:"",ruleType:"buy",tiers:[{n:2,m:1}],triggerCodes:"",giftCodes:"",targetGroups:"",dateFrom:"",dateTo:"",priority:1,active:true};
   const [newPromo,      setNewPromo]      = useState({...EMPTY_PROMO});
   // 商品搜尋選擇器 state
   const [triggerSearch, setTriggerSearch] = useState("");
@@ -717,20 +717,48 @@ const triggerList = parseCodes(p.triggerCodes).filter(c=>c!=="全部");
                       </select>
                     </label>
                     <label style={{display:"flex",flexDirection:"column",gap:4,fontSize:12}}>
-                      觸發數 N＊
-                      <input type="number" min="1" value={p.triggerN} onChange={e=>setPromo(q=>({...q,triggerN:Number(e.target.value)}))}
-                        style={{width:70,padding:"8px",border:"1px solid var(--line)",borderRadius:6,fontSize:13}}/>
-                    </label>
-                    <label style={{display:"flex",flexDirection:"column",gap:4,fontSize:12}}>
-                      贈送數 M＊
-                      <input type="number" min="1" value={p.giftM} onChange={e=>setPromo(q=>({...q,giftM:Number(e.target.value)}))}
-                        style={{width:70,padding:"8px",border:"1px solid var(--line)",borderRadius:6,fontSize:13}}/>
-                    </label>
-                    <label style={{display:"flex",flexDirection:"column",gap:4,fontSize:12}}>
                       優先權
                       <input type="number" min="1" max="99" value={p.priority} onChange={e=>setPromo(q=>({...q,priority:Number(e.target.value)}))}
                         style={{width:70,padding:"8px",border:"1px solid var(--line)",borderRadius:6,fontSize:13}}/>
                     </label>
+                  </div>
+
+                  {/* 階梯設定：可新增多組門檻，訂購量會自動套用「達標中門檻最高」的那一組，不疊加 */}
+                  <div style={{marginBottom:16}}>
+                    <div style={{fontSize:12,fontWeight:600,marginBottom:8}}>
+                      階梯設定＊ <span style={{fontWeight:400,color:"var(--ink-soft)"}}>（可設定多組門檻，訂購量會自動套用達標中門檻最高的那一組，不會疊加）</span>
+                    </div>
+                    <div style={{display:"flex",flexDirection:"column",gap:8}}>
+                      {(p.tiers||[]).map((tier,ti)=>(
+                        <div key={ti} style={{display:"flex",alignItems:"center",gap:8}}>
+                          <span style={{fontSize:12,color:"var(--ink-soft)",width:46}}>階梯{ti+1}</span>
+                          <label style={{display:"flex",alignItems:"center",gap:4,fontSize:12}}>
+                            {p.ruleType==="buy"?"買":"滿"}
+                            <input type="number" min="1" value={tier.n} onChange={e=>{
+                              const v = Number(e.target.value);
+                              setPromo(q=>({...q, tiers: q.tiers.map((t,idx)=>idx===ti?{...t,n:v}:t)}));
+                            }} style={{width:60,padding:"6px 8px",border:"1px solid var(--line)",borderRadius:6,fontSize:13}}/>
+                          </label>
+                          <label style={{display:"flex",alignItems:"center",gap:4,fontSize:12}}>
+                            送
+                            <input type="number" min="1" value={tier.m} onChange={e=>{
+                              const v = Number(e.target.value);
+                              setPromo(q=>({...q, tiers: q.tiers.map((t,idx)=>idx===ti?{...t,m:v}:t)}));
+                            }} style={{width:60,padding:"6px 8px",border:"1px solid var(--line)",borderRadius:6,fontSize:13}}/>
+                          </label>
+                          {(p.tiers||[]).length>1&&(
+                            <button className="btn-del" style={{fontSize:11,padding:"4px 8px"}}
+                              onClick={()=>setPromo(q=>({...q, tiers: q.tiers.filter((_,idx)=>idx!==ti)}))}>
+                              移除
+                            </button>
+                          )}
+                        </div>
+                      ))}
+                      <button className="btn-edit" style={{alignSelf:"flex-start",fontSize:12,padding:"6px 12px"}}
+                        onClick={()=>setPromo(q=>({...q, tiers: [...(q.tiers||[]), {n:1,m:1}]}))}>
+                        ＋ 新增階梯
+                      </button>
+                    </div>
                   </div>
 
                   {/* 第二列：套用價格群組 */}
@@ -1986,7 +2014,7 @@ const triggerList = parseCodes(p.triggerCodes).filter(c=>c!=="全部");
                           <span style={{fontSize:12,padding:"2px 8px",borderRadius:12,
                             background:row.ruleType==="buy"?"#e8f4ee":"#fff0e0",
                             color:row.ruleType==="buy"?"var(--brand-dark)":"#b35a00"}}>
-                            {row.ruleType==="buy"?`買${row.triggerN}送${row.giftM}`:`滿${row.triggerN}送${row.giftM}`}
+                            {(row.tiers||[]).map(t=>row.ruleType==="buy"?`買${t.n}送${t.m}`:`滿${t.n}送${t.m}`).join(" / ")}
                           </span>
                           {!row.active&&<span style={{fontSize:11,color:"#999",padding:"2px 8px",borderRadius:12,background:"#eee"}}>已停用</span>}
                           <span style={{fontSize:11,color:"var(--ink-soft)",marginLeft:"auto"}}>優先權 {row.priority}</span>
