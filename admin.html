@@ -1609,7 +1609,6 @@ const triggerList = parseCodes(p.triggerCodes).filter(c=>c!=="全部");
               <button className="btn-edit" style={{padding:"8px 14px",fontSize:13}} onClick={()=>importFileRef.current&&importFileRef.current.click()}>📥 Excel匯入</button>
               <button className="btn-edit" style={{padding:"8px 14px",fontSize:13,color:"var(--danger)"}} onClick={handleDedup} disabled={deduping}>{deduping?"清除中…":"🧹 清除重複品號"}</button>
               <button className="btn-edit" style={{padding:"8px 14px",fontSize:13,color:"#b35a00"}} onClick={handleRepairCodes} disabled={repairing}>{repairing?"修復中…":"🔧 修復品號前導零"}</button>
-              <button className="btn-edit" style={{padding:"8px 14px",fontSize:13,color:"#7b3fb0"}} onClick={handleMigrateColumns} disabled={migratingCols}>{migratingCols?"遷移中…":"⚙ 重新排列欄位（一次性）"}</button>
               <button className="btn-edit" style={{padding:"8px 14px",fontSize:13,color:"#1a7a4c"}} onClick={handleSyncPriceRows} disabled={syncingPrice}>{syncingPrice?"同步中…":"🔗 同步商品到所有價格表"}</button>
               <input type="file" accept=".xlsx,.xls,.csv" style={{display:"none"}} ref={importFileRef} onChange={e=>{handleImportFile(e.target.files[0]);e.target.value="";}}/>
               <button className="btn-save" style={{padding:"8px 16px",fontSize:13}} onClick={()=>setShowAddM(v=>!v)}>
@@ -1854,26 +1853,6 @@ const triggerList = parseCodes(p.triggerCodes).filter(c=>c!=="全部");
               }}
               style={{padding:"5px 12px",borderRadius:16,fontSize:12,border:"1.5px solid #e07b39",background:"#fff7f3",cursor:"pointer",color:"#e07b39"}}>
               📥 匯入舊資料為 DEFAULT
-            </button>
-            <button onClick={async()=>{
-                if(!confirm(`清除「客戶價格表」分頁的 A欄（客戶代號）和 B欄（客戶名稱）？\n此操作不可復原。`)) return;
-                try{
-                  const d = await callGAS("clearOldPriceSheetAB",{});
-                  alert(`清除完成！共 ${d.cleared} 筆`);
-                }catch(e){alert("清除失敗："+e.message);}
-              }}
-              style={{padding:"5px 12px",borderRadius:16,fontSize:12,border:"1.5px solid #aaa",background:"#f8f8f8",cursor:"pointer",color:"#666"}}>
-              🧹 清除舊AB欄
-            </button>
-            <button onClick={async()=>{
-                if(!confirm(`在「客戶價格表」C欄（品號）右邊插入品名欄，並從商品主檔自動帶入品名？\n此操作只需執行一次。`)) return;
-                try{
-                  const d = await callGAS("fillOldPriceSheetProductName",{});
-                  alert(`完成！共帶入 ${d.filled} / ${d.total} 筆品名`);
-                }catch(e){alert("失敗："+e.message);}
-              }}
-              style={{padding:"5px 12px",borderRadius:16,fontSize:12,border:"1.5px solid #4a7c59",background:"#f0f7f3",cursor:"pointer",color:"#4a7c59"}}>
-              📝 插入品名欄
             </button>
             </div>
             {/* 複製群組表單 */}
