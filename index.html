@@ -707,6 +707,7 @@ function calcPromoGifts(cartItems, promos, products) {
           activity:       promo.name,
           isGift:         true,
           promoId:        promo.id,
+          ruleType:       "buy", // 買N送M：贈品從已購數量中扣除（付費件數會減少）
         });
       });
       return;
@@ -725,6 +726,7 @@ function calcPromoGifts(cartItems, promos, products) {
         activity:       promo.name,
         isGift:         true,
         promoId:        promo.id,
+        ruleType:       "min", // 滿N送M：額外贈送，不從已購數量扣除（即使贈品品號跟觸發品號相同）
       });
     });
   });
@@ -995,7 +997,14 @@ function App() {
   // 每個品號在購物車中被促銷折抵的「免費件數」加總（可能來自多個活動）
   const freeQtyByCode = useMemo(() => {
     const m = {};
-    promoGiftLines.forEach(g => { m[g.code] = (m[g.code]||0) + g.qty; });
+    // 只有「買N送M」的贈品才要從已購數量扣除；「滿N送M」是額外贈送，不扣除已購數量（即使贈品品號=觸發品號本身）
+    promoGiftLines.forEach(g => { if (g.ruleType === "buy") m[g.code] = (m[g.code]||0) + g.qty; });
+    return m;
+  }, [promoGiftLines]);
+  // 「滿N送M」的贈品數量，純粹用來顯示「額外贈送」提示，不影響付費件數計算
+  const bonusQtyByCode = useMemo(() => {
+    const m = {};
+    promoGiftLines.forEach(g => { if (g.ruleType === "min") m[g.code] = (m[g.code]||0) + g.qty; });
     return m;
   }, [promoGiftLines]);
   // 每個品號被新促銷系統折抵的金額（舊格式規則已直接反映在 l.amount，不需另外扣）
@@ -1048,20 +1057,32 @@ function App() {
     setSubmitting(true); setPageError("");
     try {
       const d = await callGAS("submitOrder",{order:{taxId:customer.taxId,customerName:customer.name+"（"+customer.code+"）"+customer.branchName,branchCode:customer.code, note:orderNote,
-        lines: cartLines.map(l=>{
-          const freeQty = freeQtyByCode[l.product.code] || 0;
-          const paidQty = Math.max(0, l.qty - freeQty);
-          const giftLine = promoGiftLines.find(g=>g.code===l.product.code);
-          return {
-            code: l.product.code, name: l.product.name,
-            qty: paidQty,                                    // 數量欄＝付費件數（若整筆免費則為0，後台顯示"—"）
-            giftQty: freeQty,                                 // 贈品欄＝免費件數
-            unitPrice: l.product.unitPrice,
-            amount: paidQty * l.product.unitPrice,            // 金額只算付費部分
-            activity: freeQty>0 ? (giftLine?giftLine.activity:"促銷折抵") : "",
+        lines: [
+          ...cartLines.map(l=>{
+            const freeQty = freeQtyByCode[l.product.code] || 0; // 只有buy規則的贈品才會計入（min規則不扣除已購數量）
+            const paidQty = Math.max(0, l.qty - freeQty);
+            const giftLine = promoGiftLines.find(g=>g.code===l.product.code && g.ruleType==="buy");
+            return {
+              code: l.product.code, name: l.product.name,
+              qty: paidQty,                                    // 數量欄＝付費件數（若整筆免費則為0，後台顯示"—"）
+              giftQty: freeQty,                                 // 贈品欄＝免費件數（僅buy規則）
+              unitPrice: l.product.unitPrice,
+              amount: paidQty * l.product.unitPrice,            // 金額只算付費部分
+              activity: freeQty>0 ? (giftLine?giftLine.activity:"促銷折抵") : "",
+              needsReview: false,
+            };
+          }),
+          // min規則的額外贈品（滿N送M，不扣已購數量）獨立成一行，qty=0代表全部是贈品
+          ...promoGiftLines.filter(g=>g.ruleType==="min").map(g=>({
+            code: g.code, name: g.name,
+            qty: 0,
+            giftQty: g.qty,
+            unitPrice: 0,
+            amount: 0,
+            activity: g.activity,
             needsReview: false,
-          };
-        })}});
+          })),
+        ]}});
       localStorage.removeItem(LS_CART);
       setLastOrder({id:d.orderId,customer:customer.name,needsReview:false}); setCart({}); setOrderNote(""); setDrawerOpen(false); setStage("confirmed");
     } catch(e) { setPageError("訂單送出失敗："+e.message+"，請稍後再試一次"); }
@@ -1449,6 +1470,7 @@ function App() {
           <div className="drawer-body">
             {cartLines.length===0?<div className="empty-cart">購物車是空的，請先選購商品</div>:cartLines.map(l=>{
               const freeQty  = freeQtyByCode[l.product.code] || 0;
+              const bonusQty = bonusQtyByCode[l.product.code] || 0; // 額外贈送（min規則），不影響付費件數
               const paidQty  = Math.max(0, l.qty - freeQty);
               const lineDiscount = discountByCode[l.product.code] || 0;
               const displayPrice = Math.max(0, l.amount - lineDiscount);
@@ -1459,6 +1481,7 @@ function App() {
                   <div className="name">{l.product.name}</div>
                   <div className="qty-line">{paidQty} 件 × ${l.product.unitPrice}</div>
                   {freeQty>0&&<div className="qty-line free">{freeQty} 件 × $0</div>}
+                  {bonusQty>0&&<div className="qty-line free">{bonusQty} 件 × $0（額外贈送）</div>}
                   <button className="remove" onClick={()=>setQty(l.product.code,0)}>移除</button>
                 </div>
                 <div className="lineprice">${displayPrice.toLocaleString()}</div>
