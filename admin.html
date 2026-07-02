@@ -1592,7 +1592,7 @@ const triggerList = parseCodes(p.triggerCodes).filter(c=>c!=="全部");
                                     <tr key={i} style={{borderTop:"1px solid var(--line)"}}>
                                       <td style={{padding:"6px 12px",fontFamily:"monospace",color:"var(--ink-soft)"}}>{l.code}</td>
                                       <td style={{padding:"6px 12px"}}>{l.name}</td>
-                                      <td style={{padding:"6px 12px",textAlign:"center"}}>{l.qty}</td>
+                                      <td style={{padding:"6px 12px",textAlign:"center"}}>{l.qty||"—"}</td>
                                       <td style={{padding:"6px 12px",textAlign:"center",color:"var(--brand)"}}>{l.giftQty||"—"}</td>
                                       <td style={{padding:"6px 12px",textAlign:"right"}}>${l.unitPrice}</td>
                                       <td style={{padding:"6px 12px",textAlign:"right",fontWeight:600}}>${Number(l.amount).toLocaleString()}</td>

@@ -989,10 +989,20 @@ function App() {
     setSubmitting(true); setPageError("");
     try {
       const d = await callGAS("submitOrder",{order:{taxId:customer.taxId,customerName:customer.name+"（"+customer.code+"）"+customer.branchName,branchCode:customer.code, note:orderNote,
-        lines:[
-          ...cartLines.map(l=>({code:l.product.code,name:l.product.name,qty:l.qty,giftQty:0,unitPrice:l.product.unitPrice,amount:l.amount,activity:"",needsReview:false})),
-          ...promoGiftLines.map(g=>({code:g.code,name:g.name+"（促銷免費）",qty:g.qty,giftQty:g.qty,unitPrice:0,amount:g.discountAmount>0?-g.discountAmount:0,activity:g.activity,needsReview:false,isGift:true}))
-        ]}});
+        lines: cartLines.map(l=>{
+          const freeQty = freeQtyByCode[l.product.code] || 0;
+          const paidQty = Math.max(0, l.qty - freeQty);
+          const giftLine = promoGiftLines.find(g=>g.code===l.product.code);
+          return {
+            code: l.product.code, name: l.product.name,
+            qty: paidQty,                                    // 數量欄＝付費件數（若整筆免費則為0，後台顯示"—"）
+            giftQty: freeQty,                                 // 贈品欄＝免費件數
+            unitPrice: l.product.unitPrice,
+            amount: paidQty * l.product.unitPrice,            // 金額只算付費部分
+            activity: freeQty>0 ? (giftLine?giftLine.activity:"促銷折抵") : "",
+            needsReview: false,
+          };
+        })}});
       localStorage.removeItem(LS_CART);
       setLastOrder({id:d.orderId,customer:customer.name,needsReview:false}); setCart({}); setOrderNote(""); setDrawerOpen(false); setStage("confirmed");
     } catch(e) { setPageError("訂單送出失敗："+e.message+"，請稍後再試一次"); }
