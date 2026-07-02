@@ -94,7 +94,8 @@
   @media(max-width:760px){.cart-label{font-size:12px;}}
   .cart-pill:hover{background:var(--brand-dark);}
   .cart-badge{background:#fff;color:var(--brand-dark);border-radius:10px;padding:1px 6px;font-size:11px;font-weight:700;}
-  .logout-link{font-size:12px;color:var(--ink-soft);background:none;border:none;cursor:pointer;padding:4px;white-space:nowrap;}
+  .logout-link{display:flex;align-items:center;gap:5px;padding:8px 14px;border:1.5px solid var(--line);border-radius:var(--radius);font-size:13px;background:#fff;cursor:pointer;color:var(--ink-soft);white-space:nowrap;transition:all .15s;flex-shrink:0;}
+  .logout-link:hover{border-color:var(--danger);color:var(--danger);background:var(--danger-tint);}
   .logout-link:hover{color:var(--ink);}
 
   /* ── 版面 ── */
@@ -357,8 +358,8 @@
     .header-search{flex:1;position:relative;}
     .header-search input{border-radius:var(--radius);background:#fff;height:42px;padding-top:0;padding-bottom:0;}
     .header-sort{flex-shrink:0;font-size:12px;padding:0 8px;height:42px;border-radius:var(--radius);}
-    .btn-orders span.label{display:inline;}
     .logout-link span.label{display:none;}
+    .logout-link{padding:8px 10px;}
     /* 手機：分類列顯示在 header 第三行 */
     .header-cats{
       grid-area:cats;
@@ -1058,7 +1059,7 @@ function App() {
         <span style={{flex:1,fontWeight:700,fontSize:15,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap",minWidth:0}}>{customerDisplayName}（{customer.code||customer.branchCode||""}）</span>
         <button style={{flexShrink:0,padding:"6px 13px",background:"var(--brand-tint)",border:"1px solid #c2dbd5",borderRadius:8,fontSize:13,cursor:"pointer",color:"var(--brand-dark)"}}
           onClick={()=>setStage("shop")}>← 返回選購</button>
-        <button className="logout-link" style={{flexShrink:0}} onClick={doLogout}>登出</button>
+        <button className="logout-link" style={{flexShrink:0}} onClick={doLogout}><span className="msi" style={{fontSize:15}}>logout</span> 登出</button>
       </div>
       <div style={{flex:1,overflowY:"auto",overflowX:"hidden"}}>
       <div className="history-wrap">
@@ -1223,7 +1224,7 @@ function App() {
           <button className="cart-pill" onClick={()=>setDrawerOpen(true)}>
             <span className="msi" style={{fontSize:16,verticalAlign:"-3px"}}>shopping_cart</span> <span className="cart-label">購物車</span>{cartCount>0&&<span className="cart-badge">{cartCount}</span>}
           </button>
-          <button className="logout-link" onClick={doLogout}><span className="label">登出</span></button>
+          <button className="logout-link" onClick={doLogout}><span className="msi" style={{fontSize:16}}>logout</span> <span className="label">登出</span></button>
         </div>
         <div className="header-searchbar">
           <select className="header-sort" value={sortBy} onChange={e=>setSortBy(e.target.value)} onInput={e=>setSortBy(e.target.value)}>
