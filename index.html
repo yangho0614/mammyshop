@@ -257,16 +257,21 @@
   .history-chevron{color:var(--ink-soft);font-size:11px;transition:transform .2s;}
   .history-chevron.open{transform:rotate(90deg);}
   .history-body{border-top:1px solid var(--line);padding:10px 16px;}
-  .history-line{display:flex;flex-wrap:wrap;align-items:baseline;justify-content:space-between;gap:4px 14px;font-size:13px;padding:8px 0;border-bottom:1px solid var(--line);}
+  .history-table-head{display:flex;gap:8px;font-size:11px;font-weight:600;color:var(--ink-soft);padding:0 0 6px;border-bottom:1px solid var(--line);}
+  .history-table-head .hcode{flex:0 0 56px;}
+  .history-table-head .hname{flex:1 1 auto;min-width:60px;}
+  .history-table-head .hqty{flex:0 0 34px;text-align:center;}
+  .history-table-head .hgift{flex:0 0 34px;text-align:center;}
+  .history-table-head .hprice{flex:0 0 54px;text-align:right;}
+  .history-table-head .hamt{flex:0 0 64px;text-align:right;}
+  .history-line{display:flex;align-items:flex-start;gap:8px;font-size:13px;padding:8px 0;border-bottom:1px solid var(--line);}
   .history-line:last-child{border-bottom:none;}
-  .history-line .lleft{display:flex;align-items:baseline;gap:8px;min-width:0;flex:1 1 160px;}
-  .history-line .lcode{color:var(--ink-soft);font-size:11px;font-family:monospace;white-space:nowrap;flex-shrink:0;}
-  .history-line .lname{min-width:0;line-height:1.4;}
-  .history-line .lright{display:flex;align-items:baseline;gap:10px;white-space:nowrap;flex-shrink:0;margin-left:auto;}
-  .history-line .lqty{color:var(--ink-soft);font-size:12px;}
-  .history-line .lgift{color:var(--brand-dark);font-size:12px;font-weight:600;}
-  .history-line .lprice{color:var(--ink-xsoft);font-size:11px;}
-  .history-line .lamt{font-weight:700;font-size:14px;min-width:56px;text-align:right;}
+  .history-line .lcode{flex:0 0 56px;color:var(--ink-soft);font-size:11px;font-family:monospace;padding-top:1px;word-break:break-all;}
+  .history-line .lname{flex:1 1 auto;min-width:60px;line-height:1.4;}
+  .history-line .lqty{flex:0 0 34px;color:var(--ink);text-align:center;}
+  .history-line .lgift{flex:0 0 34px;color:var(--brand-dark);font-weight:600;text-align:center;}
+  .history-line .lprice{flex:0 0 54px;color:var(--ink-soft);font-size:12px;text-align:right;}
+  .history-line .lamt{flex:0 0 64px;font-weight:700;text-align:right;}
   .history-foot{display:flex;justify-content:flex-end;padding-top:8px;font-size:14px;font-weight:700;border-top:1px solid var(--line);margin-top:4px;}
   /* 訂單狀態 badge */
   .order-badge{display:inline-block;font-size:11px;padding:3px 9px;border-radius:10px;font-weight:600;white-space:nowrap;}
@@ -455,6 +460,11 @@
     .drawer{width:100vw;}
     .history-wrap{padding:0 16px;margin-top:20px;}
     .history-line .lname{font-size:12px;}
+    .history-table-head,.history-line{gap:5px;font-size:12px;}
+    .history-table-head .hcode,.history-line .lcode{flex-basis:44px;font-size:10px;}
+    .history-table-head .hqty,.history-line .lqty,.history-table-head .hgift,.history-line .lgift{flex-basis:28px;}
+    .history-table-head .hprice,.history-line .lprice{flex-basis:44px;font-size:11px;}
+    .history-table-head .hamt,.history-line .lamt{flex-basis:56px;}
   }
   @media(max-width:380px){
     .grid{grid-template-columns:1fr 1fr;}
@@ -1173,17 +1183,17 @@ function App() {
                   </React.Fragment>
                 ):(
                   <React.Fragment>
+                    <div className="history-table-head">
+                      <span className="hcode">品號</span><span className="hname">品名</span><span className="hqty">數量</span><span className="hgift">贈品</span><span className="hprice">單價</span><span className="hamt">金額</span>
+                    </div>
                     {o.lines.map((l,i)=>(
                       <div key={i} className="history-line" style={matchedCodes&&matchedCodes.has(l.code)?{background:"#fffbea",borderRadius:4}:{}}>
-                        <div className="lleft">
-                          <span className="lcode">{l.code}</span>
-                          <span className="lname">{l.name}</span>
-                        </div>
-                        <div className="lright">
-                          <span className="lqty">{l.qty||"—"} 件{l.giftQty>0&&<span className="lgift"> 贈{l.giftQty}</span>}</span>
-                          <span className="lprice">${l.unitPrice}</span>
-                          <span className="lamt">${Number(l.amount).toLocaleString()}</span>
-                        </div>
+                        <span className="lcode">{l.code}</span>
+                        <span className="lname">{l.name}</span>
+                        <span className="lqty">{l.qty||"—"}</span>
+                        <span className="lgift">{l.giftQty||"—"}</span>
+                        <span className="lprice">${l.unitPrice}</span>
+                        <span className="lamt">${Number(l.amount).toLocaleString()}</span>
                       </div>
                     ))}
                     <div className="history-foot">合計 ${Math.round(o.total).toLocaleString()}</div>
