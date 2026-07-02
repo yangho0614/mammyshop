@@ -642,6 +642,23 @@ function Admin() {
     setTriggerSearch(""); setGiftSearch("");
   }
 
+  // 複製活動：把來源活動資料帶入「新增活動」表單，但清空 id，需按「確認新增」才會真正建立
+  function openDuplicate(row) {
+    setEditPromo(null);
+    setNewPromo({
+      ...row,
+      id: "",                          // 清空 id，儲存時視為全新活動
+      name: row.name + "（複製）",
+      dateFrom: toDateInputValue(row.dateFrom),
+      dateTo: toDateInputValue(row.dateTo),
+    });
+    setShowAddPromo(true);
+    setTriggerAll(row.triggerCodes === "全部");
+    setAutoGift(row.ruleType === "buy" && !row.giftCodes);
+    setTriggerSearch(""); setGiftSearch("");
+    window.scrollTo({top:0, behavior:"smooth"});
+  }
+
   function renderPromoForm() {
     const p = getPromo();
 const triggerList = parseCodes(p.triggerCodes).filter(c=>c!=="全部");
@@ -1945,6 +1962,7 @@ const triggerList = parseCodes(p.triggerCodes).filter(c=>c!=="全部");
                           {!row.active&&<span style={{fontSize:11,color:"#999",padding:"2px 8px",borderRadius:12,background:"#eee"}}>已停用</span>}
                           <span style={{fontSize:11,color:"var(--ink-soft)",marginLeft:"auto"}}>優先權 {row.priority}</span>
                           <button className="btn-edit" onClick={()=>openEdit(row)}>{isEditingThis?"收合":"編輯"}</button>
+                          <button className="btn-edit" onClick={()=>openDuplicate(row)}>複製</button>
                           <button className="btn-del" onClick={()=>deletePromo(row.id,row.name)}>刪除</button>
                         </div>
                         <div style={{display:"flex",gap:20,fontSize:12,color:"var(--ink-soft)",flexWrap:"wrap"}}>
