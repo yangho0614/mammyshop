@@ -1137,7 +1137,7 @@ function App() {
               </div>
               <span className={orderBadgeClass(ostatus)}>{ostatus}</span>
               {o.needsReview&&<span className="order-badge unconfirmed" style={{fontSize:10}}>待複核</span>}
-              <div className="history-total">${o.total.toLocaleString()}</div>
+              <div className="history-total">${Math.round(o.total).toLocaleString()}</div>
               {!isEditing&&<span className={"history-chevron"+(isExp?" open":"")}>▶</span>}
             </div>
             {isExp&&(
@@ -1163,7 +1163,7 @@ function App() {
                       <button className="btn-modify" onClick={addEditItem}>加入</button>
                     </div>
                     <div className="history-foot" style={{flexDirection:"column",alignItems:"flex-end",gap:8}}>
-                      <div style={{fontWeight:700}}>合計 ${editTotal.toLocaleString()}</div>
+                      <div style={{fontWeight:700}}>合計 ${Math.round(editTotal).toLocaleString()}</div>
                       <div style={{display:"flex",gap:8}}>
                         <button className="ghost-btn" style={{padding:"8px 16px",fontSize:13,marginTop:0}} onClick={()=>setEditingOrderId(null)}>取消</button>
                         <button className="submit-btn" style={{width:"auto",padding:"8px 24px",fontSize:13,marginTop:0}} disabled={editSaving} onClick={saveEditOrder}>{editSaving?"儲存中…":"確認修改"}</button>
@@ -1185,7 +1185,7 @@ function App() {
                         <span className="lamt">${Number(l.amount).toLocaleString()}</span>
                       </div>
                     ))}
-                    <div className="history-foot">合計 ${o.total.toLocaleString()}</div>
+                    <div className="history-foot">合計 ${Math.round(o.total).toLocaleString()}</div>
                     {o.note&&<div className="order-note-box"><span className="msi" style={{fontSize:14,verticalAlign:"-3px"}}>edit_note</span> {o.note}</div>}
                     {canEdit&&(
                       <div className="order-action-bar">
@@ -1434,7 +1434,7 @@ function App() {
                 <div className="total-row" style={{color:"var(--brand-dark)"}}><span>促銷折抵</span><span>−${promoDiscount.toLocaleString()}</span></div>
               </React.Fragment>
             )}
-            <div className="total-row grand"><span>合計</span><span>${cartTotal.toLocaleString()}</span></div>
+            <div className="total-row grand"><span>合計</span><span>${Math.round(cartTotal).toLocaleString()}</span></div>
             <textarea value={orderNote} onChange={e=>setOrderNote(e.target.value)}
               placeholder="備註（選填）：送貨時間、特殊需求…"
               style={{width:"100%",padding:"9px 11px",border:"1px solid var(--line)",borderRadius:8,fontSize:13,resize:"vertical",minHeight:52,fontFamily:"inherit",marginBottom:8,marginTop:8}}/>
