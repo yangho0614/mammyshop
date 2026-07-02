@@ -1843,16 +1843,6 @@ const triggerList = parseCodes(p.triggerCodes).filter(c=>c!=="全部");
                 style={{padding:"5px 12px",borderRadius:16,fontSize:12,border:"1.5px dashed var(--line)",background:"#fff",cursor:"pointer",color:"var(--ink-soft)"}}>
                 ＋ 複製群組
               </button>
-              <button onClick={async()=>{
-                if(!confirm(`確定要徹底刪除舊版「客戶價格表」分頁嗎？\n此分頁已被「價格_XXX」群組架構取代、系統不再使用，刪除後無法復原。`)) return;
-                try{
-                  const d = await callGAS("deleteOldPriceSheet",{});
-                  alert(d.deleted ? "已刪除「客戶價格表」舊分頁。" : "分頁不存在，可能已經刪除過了。");
-                }catch(e){alert("刪除失敗："+e.message);}
-              }}
-              style={{padding:"5px 12px",borderRadius:16,fontSize:12,border:"1.5px solid var(--danger)",background:"#fff5f4",cursor:"pointer",color:"var(--danger)"}}>
-              🗑 刪除舊版客戶價格表分頁
-            </button>
             </div>
             {/* 複製群組表單 */}
             {showCopyGroup&&(
