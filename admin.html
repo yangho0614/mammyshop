@@ -626,6 +626,7 @@ function Admin() {
   const [promoLoading,  setPromoLoading]  = useState(false);
   const [showAddPromo,  setShowAddPromo]  = useState(false);
   const [editPromo,     setEditPromo]     = useState(null);
+  const [expandedList,  setExpandedList]  = useState({}); // key: `${row.id}_trigger` 或 `${row.id}_gift`，追蹤觸發/贈品清單是否展開
   const EMPTY_PROMO = {id:"",name:"",ruleType:"buy",tiers:[{n:2,m:1}],triggerCodes:"",giftCodes:"",targetGroups:"",dateFrom:"",dateTo:"",priority:1,active:true};
   const [newPromo,      setNewPromo]      = useState({...EMPTY_PROMO});
   // 商品搜尋選擇器 state
@@ -2023,8 +2024,41 @@ const triggerList = parseCodes(p.triggerCodes).filter(c=>c!=="全部");
                           <button className="btn-del" onClick={()=>deletePromo(row.id,row.name)}>刪除</button>
                         </div>
                         <div style={{display:"flex",gap:20,fontSize:12,color:"var(--ink-soft)",flexWrap:"wrap"}}>
-                          <span>觸發：{row.triggerCodes==="全部"?"全部商品":tCodes.map(c=>{const m=masterRows.find(r=>r.code===c);return m?m.name:c;}).join("、")||"—"}</span>
-                          <span>贈品：{row.ruleType==="buy"&&!row.giftCodes?"自動最低單價":gCodes.map(c=>{const m=masterRows.find(r=>r.code===c);return m?m.name:c;}).join("、")||"—"}</span>
+                          {(()=>{
+                            const triggerNames = row.triggerCodes==="全部" ? ["全部商品"] : tCodes.map(c=>{const m=masterRows.find(r=>r.code===c);return m?m.name:c;});
+                            const tKey = row.id+"_trigger";
+                            const tExpanded = !!expandedList[tKey];
+                            const tShown = tExpanded || triggerNames.length<=3 ? triggerNames : triggerNames.slice(0,3);
+                            return (
+                              <span>
+                                觸發（{triggerNames.length}項）：{tShown.join("、")||"—"}
+                                {triggerNames.length>3 && (
+                                  <button onClick={()=>setExpandedList(p=>({...p,[tKey]:!p[tKey]}))}
+                                    style={{marginLeft:6,border:"none",background:"none",color:"var(--brand-dark)",cursor:"pointer",fontSize:12,textDecoration:"underline",padding:0}}>
+                                    {tExpanded?"收合":`...等${triggerNames.length}項`}
+                                  </button>
+                                )}
+                              </span>
+                            );
+                          })()}
+                          {(()=>{
+                            if (row.ruleType==="buy" && !row.giftCodes) return <span>贈品：自動最低單價</span>;
+                            const giftNames = gCodes.map(c=>{const m=masterRows.find(r=>r.code===c);return m?m.name:c;});
+                            const gKey = row.id+"_gift";
+                            const gExpanded = !!expandedList[gKey];
+                            const gShown = gExpanded || giftNames.length<=3 ? giftNames : giftNames.slice(0,3);
+                            return (
+                              <span>
+                                贈品（{giftNames.length}項）：{gShown.join("、")||"—"}
+                                {giftNames.length>3 && (
+                                  <button onClick={()=>setExpandedList(p=>({...p,[gKey]:!p[gKey]}))}
+                                    style={{marginLeft:6,border:"none",background:"none",color:"var(--brand-dark)",cursor:"pointer",fontSize:12,textDecoration:"underline",padding:0}}>
+                                    {gExpanded?"收合":`...等${giftNames.length}項`}
+                                  </button>
+                                )}
+                              </span>
+                            );
+                          })()}
                           <span>套用群組：{row.targetGroups?parseCodes(row.targetGroups).join("、"):"全部"}</span>
                           <span>日期：{formatDateYMD(row.dateFrom)||"∞"} ～ {formatDateYMD(row.dateTo)||"∞"}</span>
                         </div>
