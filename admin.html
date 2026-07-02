@@ -396,6 +396,26 @@ function Admin() {
   function toggleCheck(id) { setCheckedOrders(p=>({...p,[id]:!p[id]})); }
   function toggleAll() { if(allChecked){setCheckedOrders({});}else{const n={};filteredOrders.forEach(o=>{n[o.orderId]=true;});setCheckedOrders(n);} }
 
+  // ── 訂單批次更改狀態 ──
+  const [showBatchOrderStatus,   setShowBatchOrderStatus]   = useState(false);
+  const [batchOrderStatusValue,  setBatchOrderStatusValue]  = useState("未確認");
+  const [batchOrderStatusSaving, setBatchOrderStatusSaving] = useState(false);
+  function openBatchOrderStatus() { setBatchOrderStatusValue("未確認"); setShowBatchOrderStatus(true); }
+  async function applyBatchOrderStatus() {
+    const list = checkedList;
+    if (!confirm(`確定將 ${list.length} 筆訂單的狀態改為「${batchOrderStatusValue}」？`)) return;
+    setBatchOrderStatusSaving(true);
+    try {
+      for (const o of list) {
+        await callGAS("updateOrderStatus",{orderId:o.orderId, status:batchOrderStatusValue});
+      }
+      setOrders(prev=>prev.map(o=>checkedOrders[o.orderId]?{...o,orderStatus:batchOrderStatusValue}:o));
+      setCheckedOrders({});
+      setShowBatchOrderStatus(false);
+    } catch(e) { alert("批次更改狀態失敗："+e.message); }
+    finally { setBatchOrderStatusSaving(false); }
+  }
+
   function exportExcel(order) {
     const rows = order.lines.map(l=>({ "訂單編號":order.orderId,"客戶代號":order.branchCode,"客戶名稱":order.customerName,"下單時間":order.time,"產品編號":l.code,"品名":l.name,"訂購數量":l.qty,"贈品數量":l.giftQty||0,"單價":l.unitPrice,"金額":l.amount,"促銷規則":l.activity||"","狀態":l.status }));
     const ws=XLSX.utils.json_to_sheet(rows); const wb=XLSX.utils.book_new(); XLSX.utils.book_append_sheet(wb,ws,"訂單明細");
@@ -622,6 +642,7 @@ function Admin() {
     finally { setCustLoading(false); }
   }
   useEffect(() => { if (tab==="customers" && authed && custRows.length===0) loadCustomers(); }, [tab, authed]);
+  const [checkedCust, setCheckedCust] = useState({});
 
   // ── 促銷活動 ──
   const [promoRows,     setPromoRows]     = useState([]);
@@ -1020,6 +1041,38 @@ const triggerList = parseCodes(p.triggerCodes).filter(c=>c!=="全部");
     if (custSearch && !r.companyName.includes(custSearch) && !r.branchCode.includes(custSearch) && !r.branchName.includes(custSearch) && !r.taxId.includes(custSearch)) return false;
     return true;
   }), [custRows, custSearch, custRegion]);
+
+  // ── 客戶批次操作 ──
+  const checkedCustList = filteredCust.filter(r=>checkedCust[r.branchCode]);
+  const allCustChecked = filteredCust.length>0 && checkedCustList.length===filteredCust.length;
+  function toggleCustCheck(branchCode) { setCheckedCust(p=>({...p,[branchCode]:!p[branchCode]})); }
+  function toggleAllCust() {
+    if (allCustChecked) setCheckedCust({});
+    else { const n={}; filteredCust.forEach(r=>{n[r.branchCode]=true;}); setCheckedCust(n); }
+  }
+  const [showBatchCust,   setShowBatchCust]   = useState(false);
+  const [batchCustRegion, setBatchCustRegion] = useState("");
+  const [batchCustGroup,  setBatchCustGroup]  = useState("");
+  const [batchCustSaving, setBatchCustSaving] = useState(false);
+  function openBatchCust() { setBatchCustRegion(""); setBatchCustGroup(""); setShowBatchCust(true); }
+  async function applyBatchCust() {
+    if (!batchCustRegion && !batchCustGroup) { alert("請至少選擇要修改的區域或價格群組"); return; }
+    const list = checkedCustList;
+    if (!confirm(`確定將 ${list.length} 筆客戶${batchCustRegion?`的區域改為「${batchCustRegion}」`:""}${batchCustRegion&&batchCustGroup?"、":""}${batchCustGroup?`的價格群組改為「${batchCustGroup}」`:""}？`)) return;
+    setBatchCustSaving(true);
+    try {
+      for (const row of list) {
+        const patch = {...row};
+        if (batchCustRegion) patch.region = batchCustRegion;
+        if (batchCustGroup)  patch.priceGroup = batchCustGroup;
+        await callGAS("saveCustomer",{row:patch});
+      }
+      setCustRows(prev=>prev.map(r=>checkedCust[r.branchCode]?{...r,...(batchCustRegion?{region:batchCustRegion}:{}),...(batchCustGroup?{priceGroup:batchCustGroup}:{})}:r));
+      setCheckedCust({});
+      setShowBatchCust(false);
+    } catch(e) { alert("批次修改失敗："+e.message); }
+    finally { setBatchCustSaving(false); }
+  }
 
   async function saveCust(row) {
     try {
@@ -1571,8 +1624,16 @@ const triggerList = parseCodes(p.triggerCodes).filter(c=>c!=="全部");
             </div>
             {filteredOrders.length>0&&(
               <div className="batch-bar">
-                <span>{checkedList.length>0?`已勾選 ${checkedList.length} 筆`:`共 ${filteredOrders.length} 筆`}</span>
-                <button onClick={exportBatch}>{checkedList.length>0?`匯出已勾選（${checkedList.length}）`:"全部匯出 Excel"}</button>
+                <span>共 {filteredOrders.length} 筆</span>
+                <button onClick={exportBatch}>全部匯出 Excel</button>
+              </div>
+            )}
+            {checkedList.length>0&&(
+              <div className="batch-action-bar">
+                <span>已選 {checkedList.length} 筆</span>
+                <button className="btn-edit" style={{fontSize:12,padding:"4px 12px"}} onClick={openBatchOrderStatus}><span className="msi" style={{fontSize:16}}>sync_alt</span> 批次更改訂單狀態</button>
+                <button className="btn-save" style={{fontSize:12,padding:"4px 12px"}} onClick={exportBatch}><span className="msi" style={{fontSize:16}}>download</span> 下載已選 Excel</button>
+                <button className="btn-cancel" style={{fontSize:12,padding:"4px 12px"}} onClick={()=>setCheckedOrders({})}>取消選取</button>
               </div>
             )}
             {ordError&&<div className="login-error">{ordError}</div>}
@@ -2267,6 +2328,14 @@ const triggerList = parseCodes(p.triggerCodes).filter(c=>c!=="全部");
               <span style={{fontSize:12,color:"var(--ink-soft)"}}>{filteredCust.length} 個分店</span>
             </div>
 
+            {checkedCustList.length>0&&(
+              <div className="batch-action-bar">
+                <span>已選 {checkedCustList.length} 筆</span>
+                <button className="btn-edit" style={{fontSize:12,padding:"4px 12px"}} onClick={openBatchCust}><span className="msi" style={{fontSize:16}}>tune</span> 批次修改區域／價格群組</button>
+                <button className="btn-cancel" style={{fontSize:12,padding:"4px 12px"}} onClick={()=>setCheckedCust({})}>取消選取</button>
+              </div>
+            )}
+
             {showAddCust&&(
               <div className="add-form">
                 <label className="narrow">統一編號<input value={newCust.taxId} onChange={e=>setNewCust(p=>({...p,taxId:e.target.value}))} placeholder="12345678"/></label>
@@ -2286,12 +2355,13 @@ const triggerList = parseCodes(p.triggerCodes).filter(c=>c!=="全部");
             {custLoading?<p style={{color:"var(--ink-soft)",fontSize:14}}>載入中…</p>:(
               <div style={{overflowX:"auto"}}>
                 <table className="cust-mgmt-table">
-                  <thead><tr><th>統一編號</th><th>公司名稱</th><th>客戶編號</th><th>店家名稱</th><th>區域</th><th>價格群組</th><th style={{width:140}}>操作</th></tr></thead>
+                  <thead><tr><th style={{width:36}}><input type="checkbox" checked={allCustChecked} onChange={toggleAllCust} style={{width:15,height:15,accentColor:"var(--brand)"}}/></th><th>統一編號</th><th>公司名稱</th><th>客戶編號</th><th>店家名稱</th><th>區域</th><th>價格群組</th><th style={{width:140}}>操作</th></tr></thead>
                   <tbody>
                     {filteredCust.map(row=>{
                       const isE = editCust===row.branchCode;
                       return (
                         <tr key={row.branchCode} className={isE?"editing":""}>
+                          <td><input type="checkbox" checked={!!checkedCust[row.branchCode]} onChange={()=>toggleCustCheck(row.branchCode)} style={{width:15,height:15,accentColor:"var(--brand)"}}/></td>
                           <td style={{fontFamily:"monospace",fontSize:12}}>{isE?<input className="cell-input" value={custDraft.taxId??row.taxId} onChange={e=>setCustDraft(p=>({...p,taxId:e.target.value}))} style={{width:90}}/>:row.taxId||<em style={{color:"#bbb"}}>—</em>}</td>
                           <td>{isE?<input className="cell-input" value={custDraft.companyName??row.companyName} onChange={e=>setCustDraft(p=>({...p,companyName:e.target.value}))}/>:<span className="cell-text">{row.companyName}</span>}</td>
                           <td style={{fontFamily:"monospace",fontSize:12}}>{row.branchCode}</td>
@@ -2428,6 +2498,88 @@ const triggerList = parseCodes(p.triggerCodes).filter(c=>c!=="全部");
                   <button className="btn-cancel" onClick={()=>setShowBatchCat(false)} disabled={batchCatSaving}>取消</button>
                   <button className="btn-save" onClick={applyBatchCat} disabled={batchCatSaving||!batchCat}>
                     {batchCatSaving?"套用中…":"確認套用"}
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* ── 客戶批次修改區域／價格群組 Modal ── */}
+        {showBatchCust && (
+          <div className="imgmgr-mask" onClick={e=>{if(e.target===e.currentTarget&&!batchCustSaving)setShowBatchCust(false);}}>
+            <div className="imgmgr-box" style={{width:"min(420px,95vw)"}}>
+              <div className="imgmgr-head">
+                <h3>批次修改客戶</h3>
+                <span style={{fontSize:13,color:"var(--ink-soft)",flex:1,marginLeft:10}}>已選 {checkedCustList.length} 筆客戶</span>
+                <button onClick={()=>!batchCustSaving&&setShowBatchCust(false)} style={{background:"none",border:"none",fontSize:22,cursor:"pointer",color:"var(--ink-soft)",lineHeight:1,padding:"0 4px"}}><span className="msi">close</span></button>
+              </div>
+              <div className="imgmgr-body">
+                <div style={{display:"flex",flexDirection:"column",gap:14}}>
+                  <label style={{display:"flex",flexDirection:"column",gap:6,fontSize:13,fontWeight:600}}>
+                    區域（選填）
+                    <select value={batchCustRegion} onChange={e=>setBatchCustRegion(e.target.value)}
+                      style={{padding:"9px 11px",border:"1px solid var(--line)",borderRadius:8,fontSize:14,background:"#fff"}}>
+                      <option value="">不修改</option>
+                      {["北北基","桃竹苗","宜花東","台中","彰化","南投","雲林","嘉南高"].map(r=><option key={r} value={r}>{r}</option>)}
+                    </select>
+                  </label>
+                  <label style={{display:"flex",flexDirection:"column",gap:6,fontSize:13,fontWeight:600}}>
+                    價格群組（選填）
+                    <select value={batchCustGroup} onChange={e=>setBatchCustGroup(e.target.value)}
+                      style={{padding:"9px 11px",border:"1px solid var(--line)",borderRadius:8,fontSize:14,background:"#fff"}}>
+                      <option value="">不修改</option>
+                      <option value="DEFAULT">DEFAULT</option>
+                      {pGroups.filter(g=>g!=="DEFAULT").map(g=><option key={g} value={g}>{g}</option>)}
+                    </select>
+                  </label>
+                  <div style={{fontSize:12,color:"var(--ink-soft)",background:"#f8f8f8",padding:"8px 10px",borderRadius:6}}>
+                    <span className="msi" style={{fontSize:14,verticalAlign:"-3px"}}>warning</span> 只有選填的欄位會被覆蓋，留空「不修改」的欄位保持原樣，無法復原。
+                  </div>
+                </div>
+              </div>
+              <div className="imgmgr-foot">
+                <div></div>
+                <div style={{display:"flex",gap:8}}>
+                  <button className="btn-cancel" onClick={()=>setShowBatchCust(false)} disabled={batchCustSaving}>取消</button>
+                  <button className="btn-save" onClick={applyBatchCust} disabled={batchCustSaving||(!batchCustRegion&&!batchCustGroup)}>
+                    {batchCustSaving?"套用中…":"確認套用"}
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* ── 訂單批次更改狀態 Modal ── */}
+        {showBatchOrderStatus && (
+          <div className="imgmgr-mask" onClick={e=>{if(e.target===e.currentTarget&&!batchOrderStatusSaving)setShowBatchOrderStatus(false);}}>
+            <div className="imgmgr-box" style={{width:"min(420px,95vw)"}}>
+              <div className="imgmgr-head">
+                <h3>批次更改訂單狀態</h3>
+                <span style={{fontSize:13,color:"var(--ink-soft)",flex:1,marginLeft:10}}>已選 {checkedList.length} 筆訂單</span>
+                <button onClick={()=>!batchOrderStatusSaving&&setShowBatchOrderStatus(false)} style={{background:"none",border:"none",fontSize:22,cursor:"pointer",color:"var(--ink-soft)",lineHeight:1,padding:"0 4px"}}><span className="msi">close</span></button>
+              </div>
+              <div className="imgmgr-body">
+                <div style={{display:"flex",flexDirection:"column",gap:14}}>
+                  <label style={{display:"flex",flexDirection:"column",gap:6,fontSize:13,fontWeight:600}}>
+                    新狀態
+                    <select value={batchOrderStatusValue} onChange={e=>setBatchOrderStatusValue(e.target.value)}
+                      style={{padding:"9px 11px",border:"1px solid var(--line)",borderRadius:8,fontSize:14,background:"#fff"}}>
+                      {ORDER_STATUSES.map(s=><option key={s} value={s}>{s}</option>)}
+                    </select>
+                  </label>
+                  <div style={{fontSize:12,color:"var(--ink-soft)",background:"#f8f8f8",padding:"8px 10px",borderRadius:6}}>
+                    <span className="msi" style={{fontSize:14,verticalAlign:"-3px"}}>warning</span> 此操作會覆蓋所選訂單原有的狀態，無法復原。
+                  </div>
+                </div>
+              </div>
+              <div className="imgmgr-foot">
+                <div></div>
+                <div style={{display:"flex",gap:8}}>
+                  <button className="btn-cancel" onClick={()=>setShowBatchOrderStatus(false)} disabled={batchOrderStatusSaving}>取消</button>
+                  <button className="btn-save" onClick={applyBatchOrderStatus} disabled={batchOrderStatusSaving}>
+                    {batchOrderStatusSaving?"套用中…":"確認套用"}
                   </button>
                 </div>
               </div>
