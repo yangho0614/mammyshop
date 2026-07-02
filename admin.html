@@ -8,7 +8,9 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.production.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/7.23.5/babel.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" />
 <style>
+  .msi{font-family:'Material Symbols Outlined';font-weight:normal;font-style:normal;font-size:18px;line-height:1;letter-spacing:normal;text-transform:none;display:inline-block;white-space:nowrap;word-wrap:normal;direction:ltr;vertical-align:-3px;-webkit-font-smoothing:antialiased;font-variation-settings:'FILL' 0,'wght' 400,'GRAD' 0,'opsz' 20;}
   :root{--ink:#1c2b2d;--ink-soft:#4a5a5c;--line:#dde3e1;--paper:#fafaf8;--panel:#ffffff;--brand:#2f6f5e;--brand-dark:#1f4d40;--brand-tint:#eaf3f0;--warn:#b5762b;--warn-tint:#fbf0e2;--danger:#a3402f;--danger-tint:#fbeae6;--radius:10px;}
   *{box-sizing:border-box;}
   body{margin:0;font-family:"Noto Sans TC","PingFang TC","Microsoft JhengHei",sans-serif;background:var(--paper);color:var(--ink);}
@@ -757,7 +759,7 @@ const triggerList = parseCodes(p.triggerCodes).filter(c=>c!=="全部");
                                       <span style={{width:18,height:18,border:"2px solid",borderColor:triggerList.includes(r.code)?"var(--brand)":"#ccc",
                                         borderRadius:4,background:triggerList.includes(r.code)?"var(--brand)":"#fff",
                                         display:"inline-flex",alignItems:"center",justifyContent:"center",flexShrink:0}}>
-                                        {triggerList.includes(r.code)&&<span style={{color:"#fff",fontSize:11,fontWeight:700}}>✓</span>}
+                                        {triggerList.includes(r.code)&&<span className="msi" style={{color:"#fff",fontSize:14}}>check</span>}
                                       </span>
                                       <span style={{color:"var(--ink-soft)",fontFamily:"monospace",fontSize:12}}>{r.code}</span>
                                       <span style={{flex:1}}>{r.name}</span>
@@ -819,7 +821,7 @@ const triggerList = parseCodes(p.triggerCodes).filter(c=>c!=="全部");
                                     background:giftList.includes(r.code)?"#e8f4ee":"#fff",display:"flex",gap:8,alignItems:"center"}}>
                                   <span style={{color:"var(--ink-soft)",fontFamily:"monospace"}}>{r.code}</span>
                                   <span style={{flex:1}}>{r.name}</span>
-                                  {giftList.includes(r.code)&&<span style={{color:"var(--brand)",fontWeight:700}}>✓</span>}
+                                  {giftList.includes(r.code)&&<span className="msi" style={{color:"var(--brand)",fontSize:16}}>check</span>}
                                 </div>
                               ))}
                             </div>
@@ -1417,7 +1419,7 @@ const triggerList = parseCodes(p.triggerCodes).filter(c=>c!=="全部");
   if (!authed) return (
     <div className="pw-wrap">
       <div className="pw-card">
-        <h1>🔒 管理後台</h1>
+        <h1><span className="msi" style={{fontSize:22,verticalAlign:"-4px"}}>lock</span> 管理後台</h1>
         <p>請輸入後台密碼</p>
         <input className="pw-input" type="password" placeholder="密碼" value={pwInput} autoFocus
           onChange={e=>{setPwInput(e.target.value);setPwError("");}} onKeyDown={e=>{if(e.key==="Enter")handleLogin();}} />
@@ -1430,11 +1432,11 @@ const triggerList = parseCodes(p.triggerCodes).filter(c=>c!=="全部");
   // ── 主畫面 ──
   return (
     <div>
-      {uploading && <div className="uploading-mask"><div style={{fontSize:28}}>⏳</div><div>圖片處理中，請稍候…</div></div>}
+      {uploading && <div className="uploading-mask"><span className="msi" style={{fontSize:28}}>hourglass_top</span><div>圖片處理中，請稍候…</div></div>}
       {lightbox && (
         <div className="lightbox-mask" onClick={closeLb}>
           <div className="lightbox-inner" onClick={e=>e.stopPropagation()}>
-            <button className="lightbox-close" onClick={closeLb}>✕</button>
+            <button className="lightbox-close" onClick={closeLb}><span className="msi">close</span></button>
             {lightbox.images.length>1&&<button className="lightbox-btn" onClick={lbPrev}>‹</button>}
             <img src={lightbox.images[lightbox.index]} alt={lightbox.productName}/>
             {lightbox.images.length>1&&<button className="lightbox-btn" onClick={lbNext}>›</button>}
@@ -1454,17 +1456,17 @@ const triggerList = parseCodes(p.triggerCodes).filter(c=>c!=="全部");
             if(tab==="orders") loadOrders();
             else if(tab==="master") loadMaster();
             else if(tab==="prices") loadPrices();
-          }}>🔄 重新整理</button>
+          }}><span className="msi">refresh</span> 重新整理</button>
           <button className="logout-link" onClick={handleLogout}>登出</button>
         </div>
         <div className="app-header-tabs">
           {[
-            ["orders",    "📋 訂單管理"],
-            ["dashboard", "📊 數據儀表板"],
-            ["master",    "📦 商品主檔"],
-            ["prices",    "💰 客戶價格表"],
-            ["customers", "👥 客戶管理"],
-            ["promos",    "🎁 促銷活動"],
+            ["orders",    "assignment 訂單管理"],
+            ["dashboard", "bar_chart 數據儀表板"],
+            ["master",    "inventory_2 商品主檔"],
+            ["prices",    "payments 客戶價格表"],
+            ["customers", "group 客戶管理"],
+            ["promos",    "redeem 促銷活動"],
           ].map(([k,l])=>(
             <div key={k} className="tab-wrap">
               <button className={"tab-btn"+(tab===k?" active":"")} onClick={()=>setTab(k)}>{l}</button>
@@ -1481,9 +1483,9 @@ const triggerList = parseCodes(p.triggerCodes).filter(c=>c!=="全部");
         {/* 新訂單通知橫幅 */}
         {newOrderCount>0 && tab!=="orders" && (
           <div className="new-order-banner">
-            🔔 有 {newOrderCount} 筆新訂單等待處理
+            <span className="msi" style={{verticalAlign:"-3px"}}>notifications</span> 有 {newOrderCount} 筆新訂單等待處理
             <button onClick={()=>{setTab("orders");setNewOrderCount(0);loadOrders();}}>立即查看</button>
-            <button onClick={()=>setNewOrderCount(0)}>✕</button>
+            <button onClick={()=>setNewOrderCount(0)}><span className="msi">close</span></button>
           </div>
         )}
 
@@ -1569,7 +1571,7 @@ const triggerList = parseCodes(p.triggerCodes).filter(c=>c!=="全部");
                                       <td style={{padding:"6px 12px",textAlign:"center",color:"var(--brand)"}}>{l.giftQty||"—"}</td>
                                       <td style={{padding:"6px 12px",textAlign:"right"}}>${l.unitPrice}</td>
                                       <td style={{padding:"6px 12px",textAlign:"right",fontWeight:600}}>${Number(l.amount).toLocaleString()}</td>
-                                      <td style={{padding:"6px 12px"}}>{l.status==="待複核"?<span style={{color:"var(--warn)"}}>⚠ 待複核</span>:l.status}</td>
+                                      <td style={{padding:"6px 12px"}}>{l.status==="待複核"?<span style={{color:"var(--warn)"}}><span className="msi" style={{fontSize:14}}>warning</span> 待複核</span>:l.status}</td>
                                     </tr>
                                   ))}
                                   <tr style={{borderTop:"2px solid var(--line)",background:"#f0f7f5"}}>
@@ -1590,7 +1592,7 @@ const triggerList = parseCodes(p.triggerCodes).filter(c=>c!=="全部");
                                         </div>
                                       ) : (
                                         <div style={{display:"flex",alignItems:"center",gap:8}}>
-                                          <span style={{fontSize:12,color:"#7a6030",flex:1}}>{o.note ? `📝 ${o.note}` : <span style={{color:"#bbb"}}>無備註</span>}</span>
+                                          <span style={{fontSize:12,color:"#7a6030",flex:1}}>{o.note ? <React.Fragment><span className="msi" style={{fontSize:14}}>edit_note</span> {o.note}</React.Fragment> : <span style={{color:"#bbb"}}>無備註</span>}</span>
                                           <button className="btn-edit" style={{fontSize:11,padding:"3px 8px"}} onClick={()=>{setEditingNote(o.orderId);setNoteDraft(o.note||"");}}>編輯備註</button>
                                         </div>
                                       )}
@@ -1622,11 +1624,11 @@ const triggerList = parseCodes(p.triggerCodes).filter(c=>c!=="全部");
                 <option value="">全部分類</option>
                 {Object.keys(catTree).map(p=><option key={p} value={p}>{p}</option>)}
               </select>
-              <button className="btn-edit" style={{padding:"8px 14px",fontSize:13}} onClick={openCatMgr}>⚙ 管理分類</button>
-              <button className="btn-edit" style={{padding:"8px 14px",fontSize:13}} onClick={()=>importFileRef.current&&importFileRef.current.click()}>📥 Excel匯入</button>
-              <button className="btn-edit" style={{padding:"8px 14px",fontSize:13,color:"var(--danger)"}} onClick={handleDedup} disabled={deduping}>{deduping?"清除中…":"🧹 清除重複品號"}</button>
-              <button className="btn-edit" style={{padding:"8px 14px",fontSize:13,color:"#b35a00"}} onClick={handleRepairCodes} disabled={repairing}>{repairing?"修復中…":"🔧 修復品號前導零"}</button>
-              <button className="btn-edit" style={{padding:"8px 14px",fontSize:13,color:"#1a7a4c"}} onClick={handleSyncPriceRows} disabled={syncingPrice}>{syncingPrice?"同步中…":"🔗 同步商品到所有價格表"}</button>
+              <button className="btn-edit" style={{padding:"8px 14px",fontSize:13}} onClick={openCatMgr}><span className="msi">settings</span> 管理分類</button>
+              <button className="btn-edit" style={{padding:"8px 14px",fontSize:13}} onClick={()=>importFileRef.current&&importFileRef.current.click()}><span className="msi">upload_file</span> Excel匯入</button>
+              <button className="btn-edit" style={{padding:"8px 14px",fontSize:13,color:"var(--danger)"}} onClick={handleDedup} disabled={deduping}>{deduping?"清除中…":(<React.Fragment><span className="msi" style={{fontSize:16}}>cleaning_services</span> 清除重複品號</React.Fragment>)}</button>
+              <button className="btn-edit" style={{padding:"8px 14px",fontSize:13,color:"#b35a00"}} onClick={handleRepairCodes} disabled={repairing}>{repairing?"修復中…":(<React.Fragment><span className="msi" style={{fontSize:16}}>build</span> 修復品號前導零</React.Fragment>)}</button>
+              <button className="btn-edit" style={{padding:"8px 14px",fontSize:13,color:"#1a7a4c"}} onClick={handleSyncPriceRows} disabled={syncingPrice}>{syncingPrice?"同步中…":(<React.Fragment><span className="msi" style={{fontSize:16}}>link</span> 同步商品到所有價格表</React.Fragment>)}</button>
               <input type="file" accept=".xlsx,.xls,.csv" style={{display:"none"}} ref={importFileRef} onChange={e=>{handleImportFile(e.target.files[0]);e.target.value="";}}/>
               <button className="btn-save" style={{padding:"8px 16px",fontSize:13}} onClick={()=>setShowAddM(v=>!v)}>
                 {showAddM?"取消新增":"＋ 新增商品"}
@@ -1657,7 +1659,7 @@ const triggerList = parseCodes(p.triggerCodes).filter(c=>c!=="全部");
             {checkedMasterList.length>0&&(
               <div className="batch-action-bar">
                 <span>已選 {checkedMasterList.length} 筆</span>
-                <button className="btn-edit" style={{fontSize:12,padding:"4px 12px"}} onClick={openBatchCat}>🏷 批次修改分類</button>
+                <button className="btn-edit" style={{fontSize:12,padding:"4px 12px"}} onClick={openBatchCat}><span className="msi" style={{fontSize:16}}>sell</span> 批次修改分類</button>
                 <button className="btn-save" style={{fontSize:12,padding:"4px 12px"}} onClick={()=>batchSetInactive(false)}>批次設為有效</button>
                 <button className="btn-del" style={{fontSize:12,padding:"4px 12px"}} onClick={()=>batchSetInactive(true)}>批次設為失效</button>
                 <button className="btn-cancel" style={{fontSize:12,padding:"4px 12px"}} onClick={()=>setCheckedMaster({})}>取消選取</button>
@@ -1694,8 +1696,8 @@ const triggerList = parseCodes(p.triggerCodes).filter(c=>c!=="全部");
               <div className="modal-mask" onClick={()=>setShowCatMgr(false)}>
                 <div className="modal-card" style={{maxWidth:480,maxHeight:"80vh",overflowY:"auto"}} onClick={e=>e.stopPropagation()}>
                   <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:16}}>
-                    <h3 style={{margin:0,fontSize:16}}>⚙ 分類管理</h3>
-                    <button onClick={()=>setShowCatMgr(false)} style={{background:"none",border:"none",fontSize:20,cursor:"pointer",color:"var(--ink-soft)"}}>✕</button>
+                    <h3 style={{margin:0,fontSize:16}}><span className="msi" style={{verticalAlign:"-3px"}}>settings</span> 分類管理</h3>
+                    <button onClick={()=>setShowCatMgr(false)} style={{background:"none",border:"none",fontSize:20,cursor:"pointer",color:"var(--ink-soft)"}}><span className="msi">close</span></button>
                   </div>
                   {catLoading?<p style={{fontSize:13,color:"var(--ink-soft)"}}>載入中…</p>:(
                     <React.Fragment>
@@ -1710,7 +1712,7 @@ const triggerList = parseCodes(p.triggerCodes).filter(c=>c!=="全部");
                       </div>
                       {/* 拖拉排序提示 */}
                       <p style={{fontSize:11,color:"var(--ink-soft)",marginBottom:10,lineHeight:1.5}}>
-                        ☰ 拖拉可調整順序；子類別可拖到其他大類別。
+                        <span className="msi" style={{fontSize:16,verticalAlign:"-3px"}}>drag_indicator</span> 拖拉可調整順序；子類別可拖到其他大類別。
                       </p>
                       {(!dragTree||dragTree.length===0)?<p style={{fontSize:13,color:"var(--ink-soft)"}}>尚無分類，請新增。</p>:
                         dragTree.map((group,parentIdx)=>(
@@ -1721,7 +1723,7 @@ const triggerList = parseCodes(p.triggerCodes).filter(c=>c!=="全部");
                             onDrop={e=>onCatDrop(e,{type:"parent",parentIdx})}
                             style={{marginBottom:10,border:"1px solid var(--line)",borderRadius:8,overflow:"hidden"}}>
                             <div style={{display:"flex",alignItems:"center",padding:"9px 12px",background:"#f4f6f5",gap:8,cursor:"grab"}}>
-                              <span style={{color:"var(--ink-soft)",fontSize:15}}>☰</span>
+                              <span className="msi" style={{color:"var(--ink-soft)",fontSize:18}}>drag_indicator</span>
                               <span style={{fontWeight:700,fontSize:13,flex:1}}>{group.parent}</span>
                               <button className="btn-del" style={{fontSize:11,padding:"3px 8px"}} onClick={()=>delCatParent(group.parent)}>刪除大類</button>
                             </div>
@@ -1736,7 +1738,7 @@ const triggerList = parseCodes(p.triggerCodes).filter(c=>c!=="全部");
                                     onDragOver={e=>{e.preventDefault();e.stopPropagation();onCatDragOver(e,{type:"child",parentIdx,childIdx});}}
                                     onDrop={e=>{e.stopPropagation();onCatDrop(e,{type:"child",parentIdx,childIdx});}}
                                     style={{display:"flex",alignItems:"center",padding:"6px 0",borderBottom:"1px solid var(--line)",cursor:"grab",gap:6}}>
-                                    <span style={{color:"var(--ink-soft)",fontSize:12}}>☰</span>
+                                    <span className="msi" style={{color:"var(--ink-soft)",fontSize:15}}>drag_indicator</span>
                                     <span style={{flex:1,fontSize:13}}>{child}</span>
                                     <button className="btn-del" style={{fontSize:11,padding:"2px 8px"}} onClick={()=>delCatChild(group.parent,child)}>刪除</button>
                                   </div>
@@ -1750,7 +1752,7 @@ const triggerList = parseCodes(p.triggerCodes).filter(c=>c!=="全部");
                         <div style={{marginTop:12,textAlign:"right"}}>
                           <button className="btn-save" onClick={saveCatOrder} disabled={catSaving}
                             style={{padding:"9px 20px",fontSize:13}}>
-                            {catSaving?"儲存中…":"💾 儲存順序"}
+                            {catSaving?"儲存中…":(<React.Fragment><span className="msi" style={{fontSize:16}}>save</span> 儲存順序</React.Fragment>)}
                           </button>
                         </div>
                       )}
@@ -1821,7 +1823,7 @@ const triggerList = parseCodes(p.triggerCodes).filter(c=>c!=="全部");
                               )}
                               <button className="btn-edit" style={{fontSize:12,padding:"3px 10px",whiteSpace:"nowrap"}}
                                 onClick={()=>openImgMgr(row)}>
-                                🖼 管理圖片{imgs.length>0?` (${imgs.length})`:""}
+                                <span className="msi" style={{fontSize:16,verticalAlign:"-3px"}}>image</span> 管理圖片{imgs.length>0?` (${imgs.length})`:""}
                               </button>
                             </div>
                           </td>
@@ -1933,7 +1935,7 @@ const triggerList = parseCodes(p.triggerCodes).filter(c=>c!=="全部");
                 {showAddPromo?"取消新增":"＋ 新增活動"}
               </button>
               <button className="btn-edit" style={{padding:"8px 14px",fontSize:13}} onClick={loadPromos}>重新整理</button>
-              <button className="btn-edit" style={{padding:"8px 14px",fontSize:13,color:"#b35a00"}} onClick={handleRepairDates} disabled={repairingDates}>{repairingDates?"修復中…":"🔧 修復日期格式"}</button>
+              <button className="btn-edit" style={{padding:"8px 14px",fontSize:13,color:"#b35a00"}} onClick={handleRepairDates} disabled={repairingDates}>{repairingDates?"修復中…":(<React.Fragment><span className="msi" style={{fontSize:16}}>build</span> 修復日期格式</React.Fragment>)}</button>
               <span style={{fontSize:12,color:"var(--ink-soft)"}}>{promoRows.length} 個活動</span>
             </div>
 
@@ -2121,7 +2123,7 @@ const triggerList = parseCodes(p.triggerCodes).filter(c=>c!=="全部");
                 {showAddCust?"取消新增":"＋ 新增客戶"}
               </button>
               <button className="btn-edit" style={{padding:"8px 14px",fontSize:13}} onClick={loadCustomers}>重新整理</button>
-              <button className="btn-save" style={{padding:"8px 14px",fontSize:13,background:"#4a7c59"}} onClick={importCustomers}>📥 匯入名單</button>
+              <button className="btn-save" style={{padding:"8px 14px",fontSize:13,background:"#4a7c59"}} onClick={importCustomers}><span className="msi">upload_file</span> 匯入名單</button>
               <span style={{fontSize:12,color:"var(--ink-soft)"}}>{filteredCust.length} 個分店</span>
             </div>
 
@@ -2192,7 +2194,7 @@ const triggerList = parseCodes(p.triggerCodes).filter(c=>c!=="全部");
                 <h3>管理圖片</h3>
                 <span className="code-badge">{imgMgr.productCode}</span>
                 <span style={{fontSize:13,color:"var(--ink-soft)",flex:1,marginLeft:6,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{imgMgr.productName}</span>
-                <button onClick={closeImgMgr} style={{background:"none",border:"none",fontSize:22,cursor:"pointer",color:"var(--ink-soft)",lineHeight:1,padding:"0 4px"}}>✕</button>
+                <button onClick={closeImgMgr} style={{background:"none",border:"none",fontSize:22,cursor:"pointer",color:"var(--ink-soft)",lineHeight:1,padding:"0 4px"}}><span className="msi">close</span></button>
               </div>
               <div className={"imgmgr-body"+(bodyDropActive?" body-drop-active":"")}
                 onDragEnter={onBodyDragEnter}
@@ -2225,7 +2227,7 @@ const triggerList = parseCodes(p.triggerCodes).filter(c=>c!=="全部");
                     onDragEnter={onAddDragEnter}
                     onDragOver={e=>{if([...e.dataTransfer.items].some(i=>i.kind==="file")){e.preventDefault();e.stopPropagation();}}}
                     onDrop={onAddDrop}>
-                    <span className="icon">{bodyDropActive?"📂":"＋"}</span>
+                    <span className="icon">{bodyDropActive?<span className="msi" style={{fontSize:28}}>folder_open</span>:"＋"}</span>
                     <span>{bodyDropActive?"放開以上傳":"新增圖片"}</span>
                     <span style={{fontSize:11,color:"inherit",opacity:.7}}>或拖放圖片至此</span>
                   </div>
@@ -2234,7 +2236,7 @@ const triggerList = parseCodes(p.triggerCodes).filter(c=>c!=="全部");
               <div className="imgmgr-foot">
                 <div>
                   {uploading===imgMgr.productCode
-                    ? <span className="imgmgr-uploading">⏳ 處理中…</span>
+                    ? <span className="imgmgr-uploading"><span className="msi" style={{fontSize:15}}>hourglass_top</span> 處理中…</span>
                     : <span className="imgmgr-hint">拖拉圖片調整順序 ・ 拖放圖片檔案至區域內上傳 ・ 第 1 張為封面</span>
                   }
                 </div>
@@ -2255,7 +2257,7 @@ const triggerList = parseCodes(p.triggerCodes).filter(c=>c!=="全部");
               <div className="imgmgr-head">
                 <h3>批次修改分類</h3>
                 <span style={{fontSize:13,color:"var(--ink-soft)",flex:1,marginLeft:10}}>已選 {checkedMasterList.length} 筆商品</span>
-                <button onClick={()=>!batchCatSaving&&setShowBatchCat(false)} style={{background:"none",border:"none",fontSize:22,cursor:"pointer",color:"var(--ink-soft)",lineHeight:1,padding:"0 4px"}}>✕</button>
+                <button onClick={()=>!batchCatSaving&&setShowBatchCat(false)} style={{background:"none",border:"none",fontSize:22,cursor:"pointer",color:"var(--ink-soft)",lineHeight:1,padding:"0 4px"}}><span className="msi">close</span></button>
               </div>
               <div className="imgmgr-body">
                 <div style={{display:"flex",flexDirection:"column",gap:14}}>
@@ -2276,7 +2278,7 @@ const triggerList = parseCodes(p.triggerCodes).filter(c=>c!=="全部");
                     </select>
                   </label>
                   <div style={{fontSize:12,color:"var(--ink-soft)",background:"#f8f8f8",padding:"8px 10px",borderRadius:6}}>
-                    ⚠ 此操作會覆蓋所選商品原有的大類別與子類別設定，無法復原。
+                    <span className="msi" style={{fontSize:14,verticalAlign:"-3px"}}>warning</span> 此操作會覆蓋所選商品原有的大類別與子類別設定，無法復原。
                   </div>
                 </div>
               </div>

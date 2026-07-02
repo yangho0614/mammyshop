@@ -10,7 +10,9 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.production.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.production.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/7.23.5/babel.min.js"></script>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" />
 <style>
+  .msi{font-family:'Material Symbols Outlined';font-weight:normal;font-style:normal;font-size:18px;line-height:1;letter-spacing:normal;text-transform:none;display:inline-block;white-space:nowrap;word-wrap:normal;direction:ltr;vertical-align:-3px;-webkit-font-smoothing:antialiased;font-variation-settings:'FILL' 0,'wght' 400,'GRAD' 0,'opsz' 20;}
   /* ── Shopify-style 設計令牌 ── */
   :root{
     --ink:#1a1a1a; --ink-soft:#6d7175; --ink-xsoft:#8c9196;
@@ -524,7 +526,7 @@ function ImageSlider({ images }) {
   function onImgError(url) { setValidImgs(prev => prev.filter(u => u !== url)); }
 
   if (!images || images.length === 0 || validImgs.length === 0) {
-    return <div className="card-img-wrap"><div className="card-img-placeholder">📦</div></div>;
+    return <div className="card-img-wrap"><div className="card-img-placeholder"><span className="msi" style={{fontSize:32}}>inventory_2</span></div></div>;
   }
 
   const hasMult = images.length > 1;
@@ -1038,7 +1040,7 @@ function App() {
 
   if (stage==="confirmed" && lastOrder) return (
     <div className="confirm-wrap">
-      <div className="badge">✓</div>
+      <div className="badge"><span className="msi" style={{fontSize:13,color:"inherit"}}>check</span></div>
       <h2>訂單已送出</h2>
       <p>{lastOrder.customer} 您好，我們已收到您的訂單。{lastOrder.needsReview&&"其中含有特殊促銷條件的品項，將由業務人員複核後正式確認金額，"}如有問題會主動與您聯繫。</p>
       <div className="order-id">訂單編號 {lastOrder.id}</div>
@@ -1064,12 +1066,12 @@ function App() {
           <h2 style={{margin:0}}>我的訂單</h2>
           <button onClick={queryHistory} disabled={hisLoading}
             style={{padding:"7px 16px",background:hisLoading?"#c7cdcb":"var(--brand)",color:"#fff",border:"none",borderRadius:8,fontSize:13,cursor:hisLoading?"not-allowed":"pointer"}}>
-            {hisLoading?"載入中…":"🔄 重新整理"}
+            {hisLoading?"載入中…":(<React.Fragment><span className="msi" style={{fontSize:16}}>refresh</span> 重新整理</React.Fragment>)}
           </button>
         </div>
         {/* 篩選列 */}
         <div style={{display:"flex",gap:8,marginBottom:14,flexWrap:"wrap",alignItems:"center",background:"#fff",border:"1px solid var(--line)",borderRadius:10,padding:"12px 14px"}}>
-          <input placeholder="🔍 搜尋品名、品號、訂單編號…" value={hisKeyword} onChange={e=>setHisKeyword(e.target.value)}
+          <input placeholder="搜尋品名、品號、訂單編號…" value={hisKeyword} onChange={e=>setHisKeyword(e.target.value)}
             style={{flex:1,minWidth:160,padding:"8px 12px",border:"1px solid var(--line)",borderRadius:8,fontSize:13}}/>
           <div style={{display:"flex",alignItems:"center",gap:6,flexShrink:0,flexWrap:"wrap"}}>
             <span style={{fontSize:12,color:"var(--ink-soft)",whiteSpace:"nowrap"}}>日期</span>
@@ -1096,7 +1098,7 @@ function App() {
         {hisLoading&&<p style={{color:"var(--ink-soft)",fontSize:14,textAlign:"center",padding:"40px 0"}}>載入中…</p>}
         {hisOrders!==null&&filteredHisOrders.length===0&&!hisLoading&&(
           <div style={{textAlign:"center",padding:"48px 20px",color:"var(--ink-soft)"}}>
-            <div style={{fontSize:32,marginBottom:8}}>📭</div>
+            <span className="msi" style={{fontSize:32,marginBottom:8,color:"var(--ink-soft)"}}>inbox</span>
             <div style={{fontSize:14}}>{hisOrders.length===0?"目前沒有訂單記錄":"找不到符合條件的訂單"}</div>
           </div>
         )}
@@ -1132,7 +1134,7 @@ function App() {
                         <input type="number" className="edit-qty" min="1" value={l.qty}
                           onChange={e=>updateEditQty(l.code, Math.max(1,Number(e.target.value)||1))}/>
                         <span className="lamt">${l.amount.toLocaleString()}</span>
-                        <button className="btn-rm" onClick={()=>removeEditLine(l.code)}>✕</button>
+                        <button className="btn-rm" onClick={()=>removeEditLine(l.code)}><span className="msi" style={{fontSize:15}}>close</span></button>
                       </div>
                     ))}
                     <div className="add-item-bar">
@@ -1162,11 +1164,11 @@ function App() {
                       </div>
                     ))}
                     <div className="history-foot">合計 ${o.total.toLocaleString()}</div>
-                    {o.note&&<div className="order-note-box">📝 {o.note}</div>}
+                    {o.note&&<div className="order-note-box"><span className="msi" style={{fontSize:14,verticalAlign:"-3px"}}>edit_note</span> {o.note}</div>}
                     {canEdit&&(
                       <div className="order-action-bar">
-                        <button className="btn-modify" onClick={()=>openModifyConfirm(o.orderId)}>✏ 修改訂單</button>
-                        <button className="btn-cancel-order" onClick={()=>openCancelConfirm(o.orderId)}>✕ 取消訂單</button>
+                        <button className="btn-modify" onClick={()=>openModifyConfirm(o.orderId)}><span className="msi" style={{fontSize:15}}>edit</span> 修改訂單</button>
+                        <button className="btn-cancel-order" onClick={()=>openCancelConfirm(o.orderId)}><span className="msi" style={{fontSize:15}}>close</span> 取消訂單</button>
                       </div>
                     )}
                   </React.Fragment>
@@ -1213,13 +1215,13 @@ function App() {
         </div>
         <div className="header-actions">
           <button className="btn-refresh" onClick={refreshProducts} disabled={refreshing} title="重新整理商品與促銷活動">
-            {refreshing?"⏳":"🔄"} <span className="label">更新</span>
+            <span className="msi" style={{fontSize:16}}>{refreshing?"hourglass_top":"refresh"}</span> <span className="label">更新</span>
           </button>
           <button className="btn-orders" onClick={()=>setStage("history")}>
-            📋 <span className="label">我的訂單</span>
+            <span className="msi" style={{fontSize:16,verticalAlign:"-3px"}}>assignment</span> <span className="label">我的訂單</span>
           </button>
           <button className="cart-pill" onClick={()=>setDrawerOpen(true)}>
-            🛒 <span className="cart-label">購物車</span>{cartCount>0&&<span className="cart-badge">{cartCount}</span>}
+            <span className="msi" style={{fontSize:16,verticalAlign:"-3px"}}>shopping_cart</span> <span className="cart-label">購物車</span>{cartCount>0&&<span className="cart-badge">{cartCount}</span>}
           </button>
           <button className="logout-link" onClick={doLogout}><span className="label">登出</span></button>
         </div>
@@ -1231,7 +1233,7 @@ function App() {
             <option value="price_desc">價格↓</option>
           </select>
           <div className="header-search">
-            <span className="search-icon">🔍</span>
+            <span className="msi search-icon" style={{fontSize:16}}>search</span>
             <input placeholder="搜尋品名或品號…" value={search} onChange={e=>setSearch(e.target.value)} onInput={e=>setSearch(e.target.value)}/>
           </div>
         </div>
@@ -1365,7 +1367,7 @@ function App() {
       {drawerOpen&&(<React.Fragment>
         <div className="drawer-mask" onClick={()=>setDrawerOpen(false)}/>
         <div className="drawer">
-          <div className="drawer-head"><h3>購物車</h3><button onClick={()=>setDrawerOpen(false)}>✕</button></div>
+          <div className="drawer-head"><h3>購物車</h3><button onClick={()=>setDrawerOpen(false)}><span className="msi">close</span></button></div>
           <div className="drawer-body">
             {cartLines.length===0?<div className="empty-cart">購物車是空的，請先選購商品</div>:cartLines.map(l=>{
               const freeQty  = freeQtyByCode[l.product.code] || 0;
@@ -1387,7 +1389,7 @@ function App() {
             {/* 促銷免費品項（跟著商品明細一起捲動，不佔用底部固定區） */}
             {promoGiftLines.length>0&&(
               <div style={{margin:"8px 0",padding:"8px 12px",background:"#f0f7f3",borderRadius:8,border:"1px solid var(--brand-tint)"}}>
-                <div style={{fontSize:12,fontWeight:700,color:"var(--brand-dark)",marginBottom:6}}>🎁 促銷免費品項</div>
+                <div style={{fontSize:12,fontWeight:700,color:"var(--brand-dark)",marginBottom:6}}><span className="msi" style={{fontSize:15,verticalAlign:"-3px"}}>redeem</span> 促銷免費品項</div>
                 {promoGiftLines.map((g,i)=>(
                   <div key={i} style={{display:"flex",justifyContent:"space-between",fontSize:13,padding:"3px 0",borderBottom:"1px solid var(--line)"}}>
                     <span>{g.name} × {g.qty}</span>
@@ -1417,14 +1419,14 @@ function App() {
         </div>
       </React.Fragment>)}
       {idleWarning&&(
-        <div className="idle-banner">⚠ 即將自動登出，點此繼續使用
+        <div className="idle-banner"><span className="msi" style={{fontSize:15,verticalAlign:"-3px"}}>warning</span> 即將自動登出，點此繼續使用
           <button style={{marginLeft:12,background:"var(--brand)",color:"#fff",border:"none",borderRadius:6,padding:"4px 10px",cursor:"pointer"}} onClick={resetIdleTimer}>繼續使用</button>
         </div>
       )}
       {lightbox&&(
         <div className="lightbox-mask" onClick={closeLightbox}>
           <div className="lightbox-inner" onClick={e=>e.stopPropagation()}>
-            <button className="lightbox-close" onClick={closeLightbox}>✕</button>
+            <button className="lightbox-close" onClick={closeLightbox}><span className="msi">close</span></button>
             {lightbox.images.length>1&&<button className="lightbox-btn" onClick={lbPrev}>‹</button>}
             <img src={lightbox.images[lightbox.index]} alt={lightbox.productName}/>
             {lightbox.images.length>1&&<button className="lightbox-btn" onClick={lbNext}>›</button>}
@@ -1435,11 +1437,11 @@ function App() {
       {/* ── 手機底部 Footer ── */}
       <div className="bottom-nav" style={drawerOpen?{display:"none"}:undefined}>
         <button className={"bottom-nav-btn"+(stage==="history"?" active":"")} onClick={()=>setStage(stage==="history"?"shop":"history")}>
-          <span className="bnav-icon">📋</span>
+          <span className="msi bnav-icon" style={{fontSize:20}}>assignment</span>
           <span>我的訂單</span>
         </button>
         <button className="bottom-nav-cart" onClick={()=>setDrawerOpen(true)}>
-          <span className="bnav-icon">🛒</span>
+          <span className="msi bnav-icon" style={{fontSize:20}}>shopping_cart</span>
           {cartCount>0 && <span className="bnav-badge">{cartCount}</span>}
           <span>購物車</span>
         </button>
