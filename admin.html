@@ -2019,7 +2019,7 @@ const triggerList = parseCodes(p.triggerCodes).filter(c=>c!=="全部");
                             {(row.tiers||[]).map(t=>row.ruleType==="buy"?`買${t.n}送${t.m}`:`滿${t.n}送${t.m}`).join(" / ")}
                           </span>
                           {!row.active&&<span style={{fontSize:11,color:"#999",padding:"2px 8px",borderRadius:12,background:"#eee"}}>已停用</span>}
-                          <span style={{fontSize:11,color:"var(--ink-soft)",display:"flex",alignItems:"center",gap:3}}>
+                          <span style={{fontSize:11,color:"var(--ink-soft)",display:"flex",alignItems:"center",gap:3,marginLeft:"auto"}}>
                             <span className="msi" style={{fontSize:14}}>flag</span>優先權 {row.priority}
                           </span>
                         </div>
@@ -2027,24 +2027,26 @@ const triggerList = parseCodes(p.triggerCodes).filter(c=>c!=="全部");
                         {/* 資訊列：每種資訊獨立一行，內容區有寬度上限避免頂到按鈕 */}
                         <div style={{display:"flex",flexDirection:"column",gap:7,fontSize:12,color:"var(--ink-soft)",marginBottom:12}}>
                           {(()=>{
-                            const triggerNames = row.triggerCodes==="全部" ? ["全部商品"] : tCodes.map(c=>{const m=masterRows.find(r=>r.code===c);return m?m.name:c;});
+                            const triggerItems = row.triggerCodes==="全部" ? [{code:"",name:"全部商品"}] : tCodes.map(c=>{const m=masterRows.find(r=>r.code===c);return {code:c, name:m?m.name:c};});
                             const tKey = row.id+"_trigger";
                             const tExpanded = !!expandedList[tKey];
-                            const tShown = tExpanded || triggerNames.length<=3 ? triggerNames : triggerNames.slice(0,3);
+                            const tShown = tExpanded || triggerItems.length<=3 ? triggerItems : triggerItems.slice(0,3);
                             return (
                               <div style={{display:"flex",gap:6}}>
                                 <span style={{flexShrink:0,display:"flex",alignItems:"center",gap:3,color:"var(--ink)",fontWeight:600}}>
-                                  <span className="msi" style={{fontSize:15}}>bolt</span>觸發（{triggerNames.length}）
+                                  <span className="msi" style={{fontSize:15}}>bolt</span>活動商品（{triggerItems.length}）
                                 </span>
-                                <span style={{minWidth:0}}>
-                                  {tShown.join("、")||"—"}
-                                  {triggerNames.length>3 && (
+                                <div style={{minWidth:0,display:"flex",flexDirection:"column",gap:2}}>
+                                  {tShown.map((item,ii)=>(
+                                    <span key={ii}>{item.code?<span style={{fontFamily:"monospace",color:"var(--ink-xsoft)"}}>{item.code}</span>:null}{item.code?" ":""}{item.name}</span>
+                                  ))}
+                                  {triggerItems.length>3 && (
                                     <button onClick={()=>setExpandedList(p=>({...p,[tKey]:!p[tKey]}))}
-                                      style={{marginLeft:6,border:"none",background:"none",color:"var(--brand-dark)",cursor:"pointer",fontSize:12,textDecoration:"underline",padding:0}}>
-                                      {tExpanded?"收合":`...等${triggerNames.length}項`}
+                                      style={{alignSelf:"flex-start",border:"none",background:"none",color:"var(--brand-dark)",cursor:"pointer",fontSize:12,textDecoration:"underline",padding:0}}>
+                                      {tExpanded?"收合":`顯示全部${triggerItems.length}項`}
                                     </button>
                                   )}
-                                </span>
+                                </div>
                               </div>
                             );
                           })()}
