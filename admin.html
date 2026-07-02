@@ -195,7 +195,7 @@
   .cust-mgmt-table td{padding:8px 12px;border-bottom:1px solid var(--line);vertical-align:middle;}
 
   /* 新訂單通知 */
-  .notif-badge{position:absolute;top:-4px;right:-4px;background:var(--danger);color:#fff;border-radius:50%;width:16px;height:16px;font-size:10px;display:flex;align-items:center;justify-content:center;font-weight:700;}
+  .notif-badge{position:absolute;top:-4px;right:-4px;background:var(--danger);color:#fff;border-radius:9px;min-width:16px;height:16px;padding:0 4px;font-size:10px;display:flex;align-items:center;justify-content:center;font-weight:700;box-sizing:border-box;line-height:1;}
   .tab-wrap{position:relative;display:inline-block;}
   .new-order-banner{position:fixed;top:56px;right:16px;z-index:40;background:var(--brand-dark);color:#fff;padding:10px 18px;border-radius:8px;font-size:13px;display:flex;align-items:center;gap:10px;box-shadow:0 4px 16px rgba(0,0,0,.2);}
   .new-order-banner button{background:rgba(255,255,255,.2);border:none;color:#fff;padding:4px 10px;border-radius:5px;font-size:12px;cursor:pointer;}
@@ -1520,7 +1520,7 @@ const triggerList = parseCodes(p.triggerCodes).filter(c=>c!=="全部");
             <div className="stats">
               <div className="stat-card"><div className="label">今日訂單（未確認）</div><div className="value">{todayOrderCount}</div></div>
               <div className="stat-card"><div className="label">未出貨訂單（未確認）</div><div className={"value"+(unshippedOrderCount>0?" warn":"")}>{unshippedOrderCount}</div></div>
-              <div className="stat-card"><div className="label">合計金額</div><div className="value">${stats.total.toLocaleString()}</div></div>
+              <div className="stat-card"><div className="label">合計金額</div><div className="value">${Math.round(stats.total).toLocaleString()}</div></div>
             </div>
             <div className="filters">
               <input placeholder="搜尋客戶名稱或分店代號…" value={fCust} onChange={e=>setFCust(e.target.value)}/>
@@ -1563,7 +1563,7 @@ const triggerList = parseCodes(p.triggerCodes).filter(c=>c!=="全部");
                           <td style={{fontFamily:"monospace",fontSize:12}}>{o.orderId}</td>
                           <td style={{fontSize:13}}>{formatOrderName(o.customerName, o.branchCode, o.branchName)}</td>
                           <td style={{fontSize:12}}>{formatTime(o.time)}</td>
-                          <td style={{fontWeight:600}}>${o.total.toLocaleString()}</td>
+                          <td style={{fontWeight:600}}>${Math.round(o.total).toLocaleString()}</td>
                           <td onClick={e=>e.stopPropagation()}>
                             <select value={ostatus}
                               onChange={e=>changeOrderStatus(o.orderId, e.target.value)}
@@ -1601,7 +1601,7 @@ const triggerList = parseCodes(p.triggerCodes).filter(c=>c!=="全部");
                                   ))}
                                   <tr style={{borderTop:"2px solid var(--line)",background:"#f0f7f5"}}>
                                     <td colSpan={5} style={{padding:"8px 12px",textAlign:"right",fontWeight:700}}>合計</td>
-                                    <td style={{padding:"8px 12px",textAlign:"right",fontWeight:700,fontSize:14}}>${o.total.toLocaleString()}</td>
+                                    <td style={{padding:"8px 12px",textAlign:"right",fontWeight:700,fontSize:14}}>${Math.round(o.total).toLocaleString()}</td>
                                     <td></td>
                                   </tr>
                                   {/* 備註列 */}
@@ -2032,7 +2032,7 @@ const triggerList = parseCodes(p.triggerCodes).filter(c=>c!=="全部");
               <React.Fragment>
                 {/* KPI 卡片 */}
                 <div className="dash-kpi-row">
-                  <div className="kpi-card"><div className="k-label">總營業額</div><div className="k-value green">${dash.summary.totalRevenue.toLocaleString()}</div><div className="k-sub">篩選期間累計（僅計入已出貨）</div></div>
+                  <div className="kpi-card"><div className="k-label">總營業額</div><div className="k-value green">${Math.round(dash.summary.totalRevenue).toLocaleString()}</div><div className="k-sub">篩選期間累計（僅計入已出貨）</div></div>
                   <div className="kpi-card"><div className="k-label">訂單總數</div><div className="k-value blue">{dash.summary.totalOrders}</div><div className="k-sub">筆</div></div>
                   <div className="kpi-card"><div className="k-label">未確認訂單</div><div className={"k-value"+(dash.summary.pendingCount>0?" warn":"")}>{dash.summary.pendingCount}</div><div className="k-sub">待後台確認</div></div>
                   <div className="kpi-card"><div className="k-label">平均客單價</div><div className="k-value">${dash.summary.shippedOrderCount>0?Math.round(dash.summary.totalRevenue/dash.summary.shippedOrderCount).toLocaleString():"0"}</div></div>
@@ -2063,7 +2063,7 @@ const triggerList = parseCodes(p.triggerCodes).filter(c=>c!=="全部");
                           <div key={m.month} className="bar-row">
                             <span className="bar-label">{m.month}</span>
                             <div className="bar-track"><div className="bar-fill" style={{width:`${(m.revenue/max*100).toFixed(1)}%`}}/></div>
-                            <span className="bar-val">${m.revenue.toLocaleString()}</span>
+                            <span className="bar-val">${Math.round(m.revenue).toLocaleString()}</span>
                           </div>
                         ));
                       })()}
@@ -2082,7 +2082,7 @@ const triggerList = parseCodes(p.triggerCodes).filter(c=>c!=="全部");
                           {[...dash.daily].reverse().slice(0,30).map(d=>(
                             <tr key={d.date}>
                               <td>{d.date}</td>
-                              <td>${d.revenue.toLocaleString()}</td>
+                              <td>${Math.round(d.revenue).toLocaleString()}</td>
                             </tr>
                           ))}
                         </tbody>
@@ -2102,7 +2102,7 @@ const triggerList = parseCodes(p.triggerCodes).filter(c=>c!=="全部");
                           <div key={c.code} className="bar-row">
                             <span className="bar-label" title={c.name}>{i+1}. {c.name}</span>
                             <div className="bar-track"><div className="bar-fill" style={{width:`${(c.revenue/max*100).toFixed(1)}%`,background:"#3d4f9e"}}/></div>
-                            <span className="bar-val">${c.revenue.toLocaleString()}</span>
+                            <span className="bar-val">${Math.round(c.revenue).toLocaleString()}</span>
                           </div>
                         ));
                       })()}
@@ -2119,7 +2119,7 @@ const triggerList = parseCodes(p.triggerCodes).filter(c=>c!=="全部");
                           <div key={p.code} className="bar-row">
                             <span className="bar-label" title={p.name}>{i+1}. {p.name}</span>
                             <div className="bar-track"><div className="bar-fill" style={{width:`${(p.revenue/max*100).toFixed(1)}%`,background:"var(--warn)"}}/></div>
-                            <span className="bar-val">${p.revenue.toLocaleString()}</span>
+                            <span className="bar-val">${Math.round(p.revenue).toLocaleString()}</span>
                           </div>
                         ));
                       })()}
