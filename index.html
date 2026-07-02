@@ -202,13 +202,14 @@
   .lightbox-dots span{width:7px;height:7px;border-radius:50%;background:rgba(255,255,255,.35);cursor:pointer;}
   .lightbox-dots span.active{background:#fff;}
   .drawer-mask{position:fixed;inset:0;background:rgba(20,30,28,.35);z-index:30;}
-  .drawer{position:fixed;top:0;right:0;bottom:0;width:min(560px,100vw);background:var(--panel);z-index:31;display:flex;flex-direction:column;box-shadow:-8px 0 24px rgba(0,0,0,.08);overflow:hidden;}
+  .drawer{position:fixed;top:0;right:0;bottom:0;width:min(680px,100vw);background:var(--panel);z-index:31;display:flex;flex-direction:column;box-shadow:-8px 0 24px rgba(0,0,0,.08);overflow:hidden;}
   .drawer-head{padding:18px 24px;border-bottom:1px solid var(--line);display:flex;align-items:center;justify-content:space-between;flex-shrink:0;}
   .drawer-head h3{margin:0;font-size:16px;}
   .drawer-head button{background:none;border:none;font-size:20px;cursor:pointer;color:var(--ink-soft);}
   .drawer-body{flex:1;overflow-y:auto;padding:14px 24px;min-height:0;}
   .cart-line{display:flex;gap:14px;padding:16px 0;border-bottom:1px solid var(--line);align-items:flex-start;}
   .cart-line .info{flex:1;min-width:0;}
+  .cart-line-code{font-size:13px;font-family:monospace;font-weight:600;color:var(--brand-dark);letter-spacing:.03em;margin-bottom:3px;}
   .cart-line .name{font-size:14px;line-height:1.45;margin-bottom:6px;font-weight:500;}
   .cart-line .qty-line{font-size:16px;font-weight:700;line-height:1.5;color:var(--ink);}
   .cart-line .qty-line.free{color:var(--brand-dark);}
@@ -1388,6 +1389,7 @@ function App() {
               return (
               <div className="cart-line" key={l.product.code}>
                 <div className="info">
+                  <div className="cart-line-code">{l.product.code}</div>
                   <div className="name">{l.product.name}</div>
                   <div className="qty-line">{paidQty} 件 × ${l.product.unitPrice}</div>
                   {freeQty>0&&<div className="qty-line free">{freeQty} 件 × $0</div>}
@@ -1402,12 +1404,14 @@ function App() {
               <div style={{margin:"8px 0",padding:"8px 12px",background:"#f0f7f3",borderRadius:8,border:"1px solid var(--brand-tint)"}}>
                 <div style={{fontSize:12,fontWeight:700,color:"var(--brand-dark)",marginBottom:6}}><span className="msi" style={{fontSize:15,verticalAlign:"-3px"}}>redeem</span> 促銷免費品項</div>
                 {promoGiftLines.map((g,i)=>(
-                  <div key={i} style={{display:"flex",justifyContent:"space-between",fontSize:13,padding:"3px 0",borderBottom:"1px solid var(--line)"}}>
-                    <span>{g.name} × {g.qty}</span>
-                    <span style={{color:"var(--brand-dark)",fontWeight:600}}>
-                      {g.discountAmount>0?`免費（折抵 $${g.discountAmount.toLocaleString()}）`:"贈送"}
-                      　<span style={{fontSize:11,color:"var(--ink-soft)"}}>{g.activity}</span>
-                    </span>
+                  <div key={i} style={{padding:"6px 0",borderBottom:"1px solid var(--line)"}}>
+                    <div style={{display:"flex",justifyContent:"space-between",gap:10,fontSize:13}}>
+                      <span>{g.name} × {g.qty}</span>
+                      <span style={{color:"var(--brand-dark)",fontWeight:600,whiteSpace:"nowrap",flexShrink:0}}>
+                        {g.discountAmount>0?`免費（折抵 $${g.discountAmount.toLocaleString()}）`:"贈送"}
+                      </span>
+                    </div>
+                    <div style={{fontSize:11,color:"var(--ink-soft)",marginTop:2}}>{g.activity}</div>
                   </div>
                 ))}
               </div>
