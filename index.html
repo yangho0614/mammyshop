@@ -171,6 +171,9 @@
   .qty-row .added{font-size:11px;color:var(--brand-dark);font-weight:600;margin-left:8px;white-space:nowrap;}
   .card.disabled{opacity:.5;pointer-events:none;}
   .card.disabled .qty-row{background:#f5f5f5;}
+  .btn-add-cart{display:flex;align-items:center;justify-content:center;gap:6px;width:calc(100% - 28px);margin:0 14px 14px;padding:9px;border:none;border-radius:var(--radius);background:var(--brand);color:#fff;font-size:13px;font-weight:600;cursor:pointer;transition:background .15s;touch-action:manipulation;-webkit-tap-highlight-color:transparent;}
+  .btn-add-cart:hover{background:var(--brand-dark);}
+  .btn-add-cart:disabled{background:#dcdfde;color:#9aa0a0;cursor:not-allowed;}
   /* 商品卡片圖片：支援滑動 */
   .card-img-wrap{position:relative;width:100%;aspect-ratio:4/3;background:#fff;border-radius:6px;overflow:hidden;touch-action:pan-y;border:1px solid var(--line);}
   .card-img-slider{display:flex;width:100%;height:100%;transition:transform .25s ease;will-change:transform;}
@@ -756,6 +759,7 @@ function App() {
   const [cart, setCart] = useState(() => {
     try { return JSON.parse(localStorage.getItem(LS_CART)) || {}; } catch { return {}; }
   });
+  const [pendingQty, setPendingQtyState] = useState({}); // 商品卡上的暫存數量，尚未加入購物車，跟cart完全分開
   const [search, setSearch] = useState("");
   const [sortBy, setSortBy] = useState("default"); // default|price_asc|price_desc|code
   const [orderNote, setOrderNote] = useState(""); // 訂單備註
@@ -823,9 +827,9 @@ function App() {
 
   function doLogout() {
     localStorage.removeItem(LS_CUSTOMER); localStorage.removeItem(LS_PRODUCTS);
-    localStorage.removeItem(LS_CART);
+    // 購物車不清除，登出/重新整理都要保留（LS_CART 不移除，cart state 也不重置）
     [idleTimer, logoutTimer].forEach(r => { if(r.current) clearTimeout(r.current); });
-    setStage("login"); setCustomer(null); setCart({}); setTaxIdInput(""); setLoginError("");
+    setStage("login"); setCustomer(null); setTaxIdInput(""); setLoginError("");
     setLoginStep("input"); setPendingCompany(null); setSelectedBranchCode(""); setProducts([]); setIdleWarning(false);
   }
   function resetIdleTimer() {
@@ -1020,6 +1024,21 @@ function App() {
       localStorage.setItem(LS_CART, JSON.stringify(next));
       return next;
     });
+  }
+  // 商品卡上「-/數量/+」只更新暫存數量，不影響購物車
+  function setPendingQty(code, qty) {
+    setPendingQtyState(p => ({...p, [code]: Math.max(0, qty)}));
+  }
+  // 「加入購物車」：把暫存數量疊加進購物車，再把暫存數量歸零
+  function addToCart(code) {
+    const amt = pendingQty[code] || 0;
+    if (amt <= 0) return;
+    setCart(p => {
+      const next = {...p, [code]: (p[code]||0) + amt};
+      localStorage.setItem(LS_CART, JSON.stringify(next));
+      return next;
+    });
+    setPendingQtyState(p => ({...p, [code]: 0}));
   }
 
   async function handleTaxIdSubmit() {
@@ -1439,7 +1458,7 @@ function App() {
             <span className="main-count">{filtered.length} 項商品</span>
           </div>
           <div className="grid">
-            {filtered.map((p,pIdx)=>{const qty=cart[p.code]||0;const calc=computeLine(p,qty);const imgs=(p.images||[]).map(fixImgUrl);const matchedPromo=(promos||[]).find(pr=>{if(pr.triggerCodes==="全部")return true;return pr.triggerCodes.split(",").map(c=>c.trim()).includes(p.code);});return(
+            {filtered.map((p,pIdx)=>{const qty=pendingQty[p.code]||0;const calc=computeLine(p,qty);const imgs=(p.images||[]).map(fixImgUrl);const matchedPromo=(promos||[]).find(pr=>{if(pr.triggerCodes==="全部")return true;return pr.triggerCodes.split(",").map(c=>c.trim()).includes(p.code);});return(
               <div key={p.code+"_"+pIdx} className={"card"+(p.inactive?" disabled":"")}>
                 <ImageSlider images={imgs}/>
                 <div className="card-body">
@@ -1454,10 +1473,17 @@ function App() {
                   {p.inactive&&<span className="tag stop">已失效</span>}
                 </div>
                 <div className="qty-row">
-                  <button className="qty-btn" onClick={()=>setQty(p.code,qty-1)}>－</button>
-                  <input className="qty-input" type="number" min="0" value={qty} onChange={e=>setQty(p.code,Number(e.target.value)||0)}/>
-                  <button className="qty-btn" onClick={()=>setQty(p.code,qty+1)}>＋</button>
+                  <button className="qty-btn" onClick={()=>setPendingQty(p.code,qty-1)}>－</button>
+                  <input className="qty-input" type="text" inputMode="numeric" pattern="[0-9]*" value={qty===0?"0":String(qty)}
+                    onChange={e=>{
+                      const digits = e.target.value.replace(/[^0-9]/g,"").replace(/^0+(?=\d)/,""); // 過濾非數字，去除多餘前導零
+                      setPendingQty(p.code, digits===""?0:Number(digits));
+                    }}/>
+                  <button className="qty-btn" onClick={()=>setPendingQty(p.code,qty+1)}>＋</button>
                 </div>
+                <button className="btn-add-cart" disabled={qty<=0} onClick={()=>addToCart(p.code)}>
+                  <span className="msi" style={{fontSize:16}}>add_shopping_cart</span> 加入購物車
+                </button>
               </div>
             );})}
           </div>
