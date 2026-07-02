@@ -2020,10 +2020,10 @@ const triggerList = parseCodes(p.triggerCodes).filter(c=>c!=="全部");
                 <table className="mgmt-table">
                   <thead><tr><th>品號</th><th>品名</th><th>單價</th><th>活動備註</th><th>備註</th><th style={{width:140}}>操作</th></tr></thead>
                   <tbody>
-                    {filteredPrices.map(row=>{
+                    {filteredPrices.map((row,pIdx)=>{
                       const isE = editPrice&&editPrice.g===row.priceGroup&&editPrice.pc===row.productCode;
                       return (
-                        <tr key={row.priceGroup+"_"+row.productCode} className={isE?"editing":""}>
+                        <tr key={row.priceGroup+"_"+row.productCode+"_"+pIdx} className={isE?"editing":""}>
                           <td style={{fontFamily:"monospace",fontSize:12}}>{row.productCode}</td>
                           <td style={{minWidth:120}}>{isE?<input className="cell-input" value={priceDraft.productName??row.productName??""} onChange={e=>setPriceDraft(p=>({...p,productName:e.target.value}))}/>:<span className="cell-text">{row.productName||<em className="empty">—</em>}</span>}</td>
                           <td style={{minWidth:70}}>{isE?<input className="cell-input" value={priceDraft.unitPrice??row.unitPrice??""} onChange={e=>setPriceDraft(p=>({...p,unitPrice:e.target.value}))} style={{width:80}}/>:<span className="cell-text">{row.unitPrice}</span>}</td>
