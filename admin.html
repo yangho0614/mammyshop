@@ -161,6 +161,8 @@
   .kpi-card .k-value.blue{color:#3d4f9e;}
   .kpi-card .k-sub{font-size:11px;color:var(--ink-soft);margin-top:4px;}
   .dash-section{background:#fff;border:1px solid var(--line);border-radius:10px;padding:18px 20px;margin-bottom:16px;}
+  .dash-trend-row{display:grid;grid-template-columns:1fr 1fr;gap:16px;align-items:start;}
+  .dash-trend-row .dash-section{margin-bottom:0;}
   .dash-section h3{font-size:14px;margin:0 0 14px;color:var(--ink);}
   /* 長條圖 */
   .bar-chart{display:flex;flex-direction:column;gap:8px;}
@@ -236,6 +238,8 @@
     table{font-size:13px;}
     .filters{flex-direction:column;align-items:stretch;}
     .filters .date-wrap{flex-wrap:wrap;}
+    .dash-trend-row{grid-template-columns:1fr;}
+    .dash-trend-row .dash-section{margin-bottom:16px;}
   }
   @media(max-width:420px){
     .stat-card{min-width:100%;flex:1 1 100%;}
@@ -2049,6 +2053,7 @@ const triggerList = parseCodes(p.triggerCodes).filter(c=>c!=="全部");
                   </div>
                 </div>
 
+                <div className="dash-trend-row">
                 {/* 月度趨勢 */}
                 {dash.monthly.length>0 && (
                   <div className="dash-section">
@@ -2087,6 +2092,7 @@ const triggerList = parseCodes(p.triggerCodes).filter(c=>c!=="全部");
                     </div>
                   </div>
                 )}
+                </div>
 
                 <div style={{display:"flex",flexDirection:"column",gap:16}}>
                   {/* Top 商品 */}
