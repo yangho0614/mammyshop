@@ -37,6 +37,8 @@
   .app-header-actions{grid-area:actions;display:flex;align-items:center;justify-content:flex-end;gap:8px;height:48px;}
   .app-header-tabs{grid-area:tabs;display:flex;align-items:center;gap:4px;border-top:1px solid var(--line);border-bottom:2px solid var(--line);padding:0;}
   .logout-link{font-size:12px;color:var(--ink-soft);background:none;border:none;text-decoration:underline;cursor:pointer;padding:0;}
+  .btn-header-action{display:inline-flex;align-items:center;gap:5px;padding:7px 13px;border:1.5px solid var(--line);border-radius:8px;font-size:13px;background:#fff;cursor:pointer;color:var(--ink-soft);white-space:nowrap;transition:all .15s;}
+  .btn-header-action:hover{border-color:var(--brand);color:var(--brand-dark);background:var(--brand-tint);}
 
   /* Tabs */
   .admin-tabs{display:flex;gap:4px;border-bottom:2px solid var(--line);padding-bottom:0;margin-bottom:20px;}
@@ -1452,24 +1454,24 @@ const triggerList = parseCodes(p.triggerCodes).filter(c=>c!=="全部");
       <div className="app-header">
         <div className="app-header-title">管理後台</div>
         <div className="app-header-actions">
-          <button className="logout-link" onClick={()=>{
+          <button className="btn-header-action" onClick={()=>{
             if(tab==="orders") loadOrders();
             else if(tab==="master") loadMaster();
             else if(tab==="prices") loadPrices();
-          }}><span className="msi">refresh</span> 重新整理</button>
-          <button className="logout-link" onClick={handleLogout}>登出</button>
+          }}><span className="msi" style={{fontSize:16}}>refresh</span> <span>重新整理</span></button>
+          <button className="btn-header-action" onClick={handleLogout}><span className="msi" style={{fontSize:16}}>logout</span> <span>登出</span></button>
         </div>
         <div className="app-header-tabs">
           {[
-            ["orders",    "assignment 訂單管理"],
-            ["dashboard", "bar_chart 數據儀表板"],
-            ["master",    "inventory_2 商品主檔"],
-            ["prices",    "payments 客戶價格表"],
-            ["customers", "group 客戶管理"],
-            ["promos",    "redeem 促銷活動"],
-          ].map(([k,l])=>(
+            ["orders",    "assignment", "訂單管理"],
+            ["dashboard", "bar_chart", "數據儀表板"],
+            ["master",    "inventory_2", "商品主檔"],
+            ["prices",    "payments", "客戶價格表"],
+            ["customers", "group", "客戶管理"],
+            ["promos",    "redeem", "促銷活動"],
+          ].map(([k,icon,l])=>(
             <div key={k} className="tab-wrap">
-              <button className={"tab-btn"+(tab===k?" active":"")} onClick={()=>setTab(k)}>{l}</button>
+              <button className={"tab-btn"+(tab===k?" active":"")} onClick={()=>setTab(k)}><span className="msi" style={{fontSize:16,verticalAlign:"-3px"}}>{icon}</span> {l}</button>
               {k==="orders" && newOrderCount>0 && <span className="notif-badge">{newOrderCount}</span>}
             </div>
           ))}
