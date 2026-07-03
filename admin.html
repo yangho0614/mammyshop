@@ -55,6 +55,7 @@
   .filters{display:flex;flex-wrap:wrap;gap:10px;margin-bottom:16px;align-items:center;}
   .filters input,.filters select{padding:8px 11px;border:1px solid var(--line);border-radius:8px;font-size:13px;background:#fff;}
   .filters input{flex:1;min-width:140px;}
+  .filter-group{display:contents;}
   .date-wrap{display:flex;align-items:center;gap:6px;}
   .date-wrap span{font-size:12px;color:var(--ink-soft);}
   .ghost-btn{padding:6px 12px;background:#fff;border:1px solid var(--line);border-radius:7px;font-size:13px;cursor:pointer;}
@@ -239,7 +240,9 @@
     .stat-card .value{font-size:22px;}
     table{font-size:13px;}
     .filters{flex-direction:column;align-items:stretch;}
-    .filters .date-wrap{flex-wrap:wrap;}
+    .filters .filter-group{display:flex;flex-direction:row;flex-wrap:wrap;gap:8px;align-items:center;}
+    .filters .filter-group select{flex:0 0 auto;min-width:0;}
+    .filters .date-wrap{flex-wrap:wrap;flex:1;min-width:0;}
     .dash-trend-row{grid-template-columns:1fr;}
     .bar-label{width:170px;font-size:11px;}
     .dash-trend-row .dash-section{margin-bottom:16px;}
@@ -1613,21 +1616,17 @@ const triggerList = parseCodes(p.triggerCodes).filter(c=>c!=="全部");
             </div>
             <div className="filters">
               <input placeholder="搜尋客戶名稱或分店代號…" value={fCust} onChange={e=>setFCust(e.target.value)}/>
-              <select value={fStatus} onChange={e=>setFStatus(e.target.value)}>
-                <option value="all">全部狀態</option><option value="未確認">未確認</option><option value="準備中">準備中</option><option value="已出貨">已出貨</option>
-              </select>
-              <div className="date-wrap">
-                <span>從</span><input type="date" value={fFrom} onChange={e=>setFFrom(e.target.value)}/>
-                <span>到</span><input type="date" value={fTo} onChange={e=>setFTo(e.target.value)}/>
-                {(fFrom||fTo)&&<button className="ghost-btn" onClick={()=>{setFFrom("");setFTo("");}}>清除</button>}
+              <div className="filter-group">
+                <select value={fStatus} onChange={e=>setFStatus(e.target.value)}>
+                  <option value="all">全部狀態</option><option value="未確認">未確認</option><option value="準備中">準備中</option><option value="已出貨">已出貨</option>
+                </select>
+                <div className="date-wrap">
+                  <span>從</span><input type="date" value={fFrom} onChange={e=>setFFrom(e.target.value)}/>
+                  <span>到</span><input type="date" value={fTo} onChange={e=>setFTo(e.target.value)}/>
+                  {(fFrom||fTo)&&<button className="ghost-btn" onClick={()=>{setFFrom("");setFTo("");}}>清除</button>}
+                </div>
               </div>
             </div>
-            {filteredOrders.length>0&&(
-              <div className="batch-bar">
-                <span>共 {filteredOrders.length} 筆</span>
-                <button onClick={exportBatch}>全部匯出 Excel</button>
-              </div>
-            )}
             {checkedList.length>0&&(
               <div className="batch-action-bar">
                 <span>已選 {checkedList.length} 筆</span>
