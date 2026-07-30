@@ -1,0 +1,464 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700;900&family=Manrope:wght@500;600;700;800&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,400,0,0&display=block" rel="stylesheet">
+<style>
+  body { margin:0; background:#FFFFFF; font-family:'Noto Sans TC', system-ui, sans-serif; -webkit-font-smoothing:antialiased; }
+  a { color:#8A6A00; text-decoration:none; }
+  a:hover { color:#6E5400; }
+</style>
+</helmet>
+
+<div style="background:#FFFFFF; min-height:100vh; display:flex; flex-direction:column">
+
+  <div style="position:sticky; top:0; z-index:20; background:rgba(255,255,255,.93); backdrop-filter:blur(10px); border-bottom:1px solid #EDEEF0">
+    <div style="max-width:1140px; margin:0 auto; padding:0 48px; height:72px; display:flex; align-items:center; gap:14px">
+      <span style="width:28px; height:28px; border-radius:6.5px; background:#F5C531; position:relative; flex:none"><span style="position:absolute; left:7px; top:12.1px; width:14px; height:3.8px; border-radius:1.9px; background:#101215"></span><span style="position:absolute; left:12.1px; top:7px; width:3.8px; height:14px; border-radius:1.9px; background:#101215"></span></span>
+      <span style="font-family:'Manrope',sans-serif; font-size:19px; font-weight:800; letter-spacing:-.01em; color:#14161A">SUPA<span style="color:#8A6A00">+</span></span>
+      <span style="font-family:'IBM Plex Mono',monospace; font-size:10.5px; letter-spacing:.12em; color:#8A8F98; border:1px solid #E1E3E7; border-radius:5px; padding:3px 6px">v0.38.3</span>
+      <span style="flex:1"></span>
+      <span style="display:flex; align-items:center; gap:30px">
+        <a href="#tools" style="font-size:13.5px; font-weight:500; color:#41464E" style-hover="color:#14161A">四個工具</a>
+        <a href="#privacy" style="font-size:13.5px; font-weight:500; color:#41464E" style-hover="color:#14161A">資料處理</a>
+        <a href="#pricing" style="font-size:13.5px; font-weight:500; color:#41464E" style-hover="color:#14161A">價格</a>
+        <a href="#faq" style="font-size:13.5px; font-weight:500; color:#41464E" style-hover="color:#14161A">常見問題</a>
+        <a href="#install" style="background:#F5C531; border-radius:9px; padding:10px 18px; font-size:13px; font-weight:700; color:#1A1400" style-hover="background:#FFD75C; color:#1A1400">加入 Chrome</a>
+      </span>
+    </div>
+  </div>
+
+  <sc-if value="{{ isA }}" hint-placeholder-val="{{ true }}">
+  <div style="border-bottom:1px solid #EDEEF0">
+    <div style="max-width:1140px; margin:0 auto; padding:112px 48px 120px; display:flex; gap:80px; align-items:flex-start; flex-wrap:wrap">
+      <div style="flex:1; min-width:420px; display:flex; flex-direction:column; gap:30px">
+        <span style="font-family:'IBM Plex Mono',monospace; font-size:11px; letter-spacing:.18em; text-transform:uppercase; color:#8A6A00">Chrome 側邊欄 · 賣家工具</span>
+        <h1 style="margin:0; font-size:60px; font-weight:900; line-height:1.14; letter-spacing:-.02em; color:#14161A; text-wrap:pretty">出貨印單，<br>從勾選到印出<br>只按一次。</h1>
+        <p style="margin:0; font-size:17px; line-height:1.9; color:#41464E; max-width:520px; text-wrap:pretty">在批次出貨頁勾選訂單，側邊面板即時同步。寄件單、裝箱單、撿貨單一次下載完，檔名自動用「日期-物流名稱-文件類型」命名，不用再自己改檔名、也不用開新分頁。</p>
+        <div style="display:flex; align-items:center; gap:12px; flex-wrap:wrap; padding-top:4px">
+          <a href="#install" style="background:#F5C531; border-radius:10px; padding:16px 28px; font-size:15px; font-weight:700; color:#1A1400" style-hover="background:#FFD75C; color:#1A1400">加入 Chrome — 免費試用 14 天</a>
+          <a href="#tools" style="background:#FFFFFF; border:1px solid #DEE0E4; border-radius:10px; padding:15px 24px; font-size:14px; font-weight:500; color:#14161A" style-hover="background:#F3F4F6; color:#14161A">看四個工具</a>
+        </div>
+        <div style="display:flex; flex-wrap:wrap; gap:12px 28px; padding-top:10px">
+          <span style="display:flex; align-items:center; gap:8px"><span style="width:6px; height:6px; border-radius:50%; background:#0F6E42; flex:none"></span><span style="font-family:'IBM Plex Mono',monospace; font-size:11.5px; color:#6C7178">四個工具同一個面板</span></span>
+          <span style="display:flex; align-items:center; gap:8px"><span style="width:6px; height:6px; border-radius:50%; background:#0F6E42; flex:none"></span><span style="font-family:'IBM Plex Mono',monospace; font-size:11.5px; color:#6C7178">訂單資料不離開瀏覽器</span></span>
+          <span style="display:flex; align-items:center; gap:8px"><span style="width:6px; height:6px; border-radius:50%; background:#0F6E42; flex:none"></span><span style="font-family:'IBM Plex Mono',monospace; font-size:11.5px; color:#6C7178">深色／淺色跟隨系統</span></span>
+        </div>
+      </div>
+
+      <div style="flex:none; display:flex; flex-direction:column; gap:14px; align-items:flex-start">
+        <div style="width:360px; background:#F3F4F6; border:1px solid #DEE0E4; border-radius:14px; overflow:hidden; box-shadow:0 26px 50px -24px rgba(20,22,26,.30); display:flex; flex-direction:column">
+          <div style="height:44px; box-sizing:border-box; padding:0 13px; display:flex; align-items:center; gap:9px; background:#FFFFFF">
+            <span style="width:24px; height:24px; border-radius:5.5px; background:#F5C531; position:relative; flex:none"><span style="position:absolute; left:6px; top:10.4px; width:12px; height:3.2px; border-radius:1.6px; background:#101215"></span><span style="position:absolute; left:10.4px; top:6px; width:3.2px; height:12px; border-radius:1.6px; background:#101215"></span></span>
+            <span style="font-family:'Manrope',sans-serif; font-size:16px; font-weight:800; letter-spacing:-.01em; color:#14161A; flex:1">SUPA<span style="color:#8A6A00">+</span></span>
+            <span style="display:inline-flex; align-items:center; gap:5px; flex:none"><span style="width:6px; height:6px; border-radius:50%; background:#0F6E42"></span><span style="font-family:'IBM Plex Mono',monospace; font-size:10px; color:#0F6E42">已同步</span></span>
+            <span style="font-family:'Material Symbols Outlined'; font-size:17px; color:#8A8F98; flex:none">settings</span>
+          </div>
+          <div style="height:38px; box-sizing:border-box; display:flex; background:#FFFFFF; border-bottom:1px solid #E1E3E7">
+            <span style="flex:1; display:flex; align-items:center; justify-content:center; border-bottom:2px solid #F5C531; background:#F3F4F6"><span style="font-family:'Material Symbols Outlined'; font-size:19px; color:#14161A">receipt_long</span></span>
+            <span style="flex:1; display:flex; align-items:center; justify-content:center; border-bottom:2px solid transparent"><span style="font-family:'Material Symbols Outlined'; font-size:19px; color:#8A8F98">local_shipping</span></span>
+            <span style="flex:1; display:flex; align-items:center; justify-content:center; border-bottom:2px solid transparent"><span style="font-family:'Material Symbols Outlined'; font-size:19px; color:#8A8F98">calculate</span></span>
+            <span style="flex:1; display:flex; align-items:center; justify-content:center; border-bottom:2px solid transparent; position:relative"><span style="font-family:'Material Symbols Outlined'; font-size:19px; color:#8A8F98">monitoring</span><span style="position:absolute; top:8px; right:22px; width:6px; height:6px; border-radius:50%; background:#C08A17"></span></span>
+          </div>
+          <div style="padding:14px 13px 13px; display:flex; flex-direction:column; gap:9px">
+            <div style="display:flex; align-items:baseline; gap:8px"><span style="font-size:15px; font-weight:700; color:#14161A">出貨印單</span><span style="font-family:'IBM Plex Mono',monospace; font-size:10.5px; color:#A2A7B0; margin-left:auto">已勾選 12 張 · 22:41</span></div>
+            <div style="display:flex; align-items:center; justify-content:space-between; background:#FFFFFF; border:1px solid #E1E3E7; border-radius:10px; padding:12px"><span style="display:flex; flex-direction:column; gap:2px"><span style="font-size:12.5px; font-weight:700; color:#23272E">本批可產生文件</span><span style="font-size:11px; color:#8A8F98">3 種文件 · 與勾選即時同步</span></span><span style="font-family:'Manrope',sans-serif; font-size:22px; font-weight:800; color:#8A6A00">12</span></div>
+            <div style="display:flex; gap:7px">
+              <div style="flex:1; background:#FFFFFF; border:1px solid #E1E3E7; border-radius:10px; padding:9px 6px; display:flex; flex-direction:column; align-items:center; gap:2px"><span style="font-size:10.5px; color:#8A8F98">寄件單</span><span style="font-family:'Manrope',sans-serif; font-size:16px; font-weight:800; color:#14161A">12</span><span style="font-family:'IBM Plex Mono',monospace; font-size:11px; color:#8A6A00">PDF</span></div>
+              <div style="flex:1; background:#FFFFFF; border:1px solid #E1E3E7; border-radius:10px; padding:9px 6px; display:flex; flex-direction:column; align-items:center; gap:2px"><span style="font-size:10.5px; color:#8A8F98">裝箱單</span><span style="font-family:'Manrope',sans-serif; font-size:16px; font-weight:800; color:#14161A">12</span><span style="font-family:'IBM Plex Mono',monospace; font-size:11px; color:#8A6A00">PDF</span></div>
+              <div style="flex:1; background:#FFFFFF; border:1px solid #E1E3E7; border-radius:10px; padding:9px 6px; display:flex; flex-direction:column; align-items:center; gap:2px"><span style="font-size:10.5px; color:#8A8F98">撿貨單</span><span style="font-family:'Manrope',sans-serif; font-size:16px; font-weight:800; color:#14161A">1</span><span style="font-family:'IBM Plex Mono',monospace; font-size:11px; color:#8A6A00">PDF</span></div>
+            </div>
+            <div style="display:flex; flex-direction:column; gap:7px; background:#FFFFFF; border:1px solid #E1E3E7; border-radius:10px; padding:11px">
+              <div style="display:flex; align-items:baseline"><span style="font-size:11.5px; color:#8A8F98; flex:1">完成紀錄</span><span style="font-family:'IBM Plex Mono',monospace; font-size:11px; color:#6C7178">3 筆</span></div>
+              <div style="display:flex; align-items:center; gap:8px"><span style="font-family:'IBM Plex Mono',monospace; font-size:11.5px; color:#41464E; flex:1; overflow:hidden; text-overflow:ellipsis; white-space:nowrap">0730-黑貓-寄件單.pdf</span><span style="font-family:'Material Symbols Outlined'; font-size:15px; color:#8A8F98">download</span><span style="font-family:'Material Symbols Outlined'; font-size:15px; color:#8A8F98">print</span></div>
+              <div style="display:flex; align-items:center; gap:8px"><span style="font-family:'IBM Plex Mono',monospace; font-size:11.5px; color:#41464E; flex:1; overflow:hidden; text-overflow:ellipsis; white-space:nowrap">0730-黑貓-裝箱單.pdf</span><span style="font-family:'Material Symbols Outlined'; font-size:15px; color:#8A8F98">download</span><span style="font-family:'Material Symbols Outlined'; font-size:15px; color:#8A8F98">print</span></div>
+              <div style="display:flex; align-items:center; gap:8px"><span style="font-family:'IBM Plex Mono',monospace; font-size:11.5px; color:#41464E; flex:1; overflow:hidden; text-overflow:ellipsis; white-space:nowrap">0730-店到店-撿貨單.pdf</span><span style="font-family:'Material Symbols Outlined'; font-size:15px; color:#8A8F98">download</span><span style="font-family:'Material Symbols Outlined'; font-size:15px; color:#8A8F98">print</span></div>
+            </div>
+          </div>
+          <div style="margin-top:auto; background:#FFFFFF; border-top:1px solid #E1E3E7; padding:11px 13px 13px"><div style="background:#F5C531; border-radius:10px; padding:12px; text-align:center; font-size:13.5px; font-weight:700; color:#1A1400">合併下載 · 3 份</div></div>
+        </div>
+        <span style="font-family:'IBM Plex Mono',monospace; font-size:10.5px; color:#A2A7B0; max-width:360px; line-height:1.7">實際面板寬 360px，貼在瀏覽器側邊，不佔分頁。</span>
+      </div>
+    </div>
+  </div>
+  </sc-if>
+
+  <sc-if value="{{ isB }}">
+  <div style="border-bottom:1px solid #EDEEF0">
+    <div style="max-width:1140px; margin:0 auto; padding:104px 48px 0; display:flex; flex-direction:column; align-items:center; gap:28px">
+      <span style="font-family:'IBM Plex Mono',monospace; font-size:11px; letter-spacing:.18em; text-transform:uppercase; color:#8A6A00">Chrome 側邊欄 · 賣家工具</span>
+      <h1 style="margin:0; font-size:52px; font-weight:900; line-height:1.22; letter-spacing:-.02em; color:#14161A; text-align:center; max-width:800px; text-wrap:pretty">出貨印單三步做完，剩下的時間留給出貨</h1>
+      <p style="margin:0; font-size:17px; line-height:1.9; color:#41464E; max-width:600px; text-align:center; text-wrap:pretty">勾選、同步、下載。寄件單、裝箱單、撿貨單一次產出，檔名自動命名，全程不用離開出貨頁。</p>
+      <div style="display:flex; align-items:center; gap:12px; flex-wrap:wrap; justify-content:center">
+        <a href="#install" style="background:#F5C531; border-radius:10px; padding:16px 28px; font-size:15px; font-weight:700; color:#1A1400" style-hover="background:#FFD75C; color:#1A1400">加入 Chrome — 免費試用 14 天</a>
+        <a href="#tools" style="background:#FFFFFF; border:1px solid #DEE0E4; border-radius:10px; padding:15px 24px; font-size:14px; font-weight:500; color:#14161A" style-hover="background:#F3F4F6; color:#14161A">看四個工具</a>
+      </div>
+
+      <div style="display:flex; gap:16px; flex-wrap:wrap; justify-content:center; width:100%; padding-top:26px">
+        <div style="flex:1; min-width:270px; background:#FFFFFF; border:1px solid #E1E3E7; border-top:2px solid #F5C531; border-radius:12px; padding:26px 26px 28px; display:flex; flex-direction:column; gap:10px">
+          <span style="font-family:'IBM Plex Mono',monospace; font-size:11px; letter-spacing:.14em; color:#A2A7B0">STEP 01</span>
+          <span style="font-size:17px; font-weight:700; color:#14161A">在出貨頁勾選訂單</span>
+          <span style="font-size:13.5px; line-height:1.85; color:#41464E; text-wrap:pretty">批次出貨頁勾到哪，側邊面板就同步到哪，不用複製訂單編號。</span>
+        </div>
+        <div style="flex:1; min-width:270px; background:#FFFFFF; border:1px solid #E1E3E7; border-top:2px solid #F5C531; border-radius:12px; padding:26px 26px 28px; display:flex; flex-direction:column; gap:10px">
+          <span style="font-family:'IBM Plex Mono',monospace; font-size:11px; letter-spacing:.14em; color:#A2A7B0">STEP 02</span>
+          <span style="font-size:17px; font-weight:700; color:#14161A">排好要印的欄位</span>
+          <span style="font-size:13.5px; line-height:1.85; color:#41464E; text-wrap:pretty">欄位順序可拖曳排序，調成你的撿貨順手度，設定會記住。</span>
+        </div>
+        <div style="flex:1; min-width:270px; background:#FFFFFF; border:1px solid #E1E3E7; border-top:2px solid #F5C531; border-radius:12px; padding:26px 26px 28px; display:flex; flex-direction:column; gap:10px">
+          <span style="font-family:'IBM Plex Mono',monospace; font-size:11px; letter-spacing:.14em; color:#A2A7B0">STEP 03</span>
+          <span style="font-size:17px; font-weight:700; color:#14161A">一次下載或直接列印</span>
+          <span style="font-size:13.5px; line-height:1.85; color:#41464E; text-wrap:pretty">檔名自動用「日期-物流名稱-文件類型」，完成紀錄可再次下載或列印。</span>
+        </div>
+      </div>
+
+      <div style="width:360px; margin-top:34px; background:#F3F4F6; border:1px solid #DEE0E4; border-radius:14px 14px 0 0; border-bottom:none; overflow:hidden; box-shadow:0 -6px 44px -24px rgba(20,22,26,.35); display:flex; flex-direction:column">
+        <div style="height:44px; box-sizing:border-box; padding:0 13px; display:flex; align-items:center; gap:9px; background:#FFFFFF">
+          <span style="width:24px; height:24px; border-radius:5.5px; background:#F5C531; position:relative; flex:none"><span style="position:absolute; left:6px; top:10.4px; width:12px; height:3.2px; border-radius:1.6px; background:#101215"></span><span style="position:absolute; left:10.4px; top:6px; width:3.2px; height:12px; border-radius:1.6px; background:#101215"></span></span>
+          <span style="font-family:'Manrope',sans-serif; font-size:16px; font-weight:800; letter-spacing:-.01em; color:#14161A; flex:1">SUPA<span style="color:#8A6A00">+</span></span>
+          <span style="display:inline-flex; align-items:center; gap:5px; flex:none"><span style="width:6px; height:6px; border-radius:50%; background:#0F6E42"></span><span style="font-family:'IBM Plex Mono',monospace; font-size:10px; color:#0F6E42">已同步</span></span>
+          <span style="font-family:'Material Symbols Outlined'; font-size:17px; color:#8A8F98; flex:none">settings</span>
+        </div>
+        <div style="height:38px; box-sizing:border-box; display:flex; background:#FFFFFF; border-bottom:1px solid #E1E3E7">
+          <span style="flex:1; display:flex; align-items:center; justify-content:center; border-bottom:2px solid #F5C531; background:#F3F4F6"><span style="font-family:'Material Symbols Outlined'; font-size:19px; color:#14161A">receipt_long</span></span>
+          <span style="flex:1; display:flex; align-items:center; justify-content:center; border-bottom:2px solid transparent"><span style="font-family:'Material Symbols Outlined'; font-size:19px; color:#8A8F98">local_shipping</span></span>
+          <span style="flex:1; display:flex; align-items:center; justify-content:center; border-bottom:2px solid transparent"><span style="font-family:'Material Symbols Outlined'; font-size:19px; color:#8A8F98">calculate</span></span>
+          <span style="flex:1; display:flex; align-items:center; justify-content:center; border-bottom:2px solid transparent"><span style="font-family:'Material Symbols Outlined'; font-size:19px; color:#8A8F98">monitoring</span></span>
+        </div>
+        <div style="padding:14px 13px 22px; display:flex; flex-direction:column; gap:9px">
+          <div style="display:flex; align-items:baseline; gap:8px"><span style="font-size:15px; font-weight:700; color:#14161A">出貨印單</span><span style="font-family:'IBM Plex Mono',monospace; font-size:10.5px; color:#A2A7B0; margin-left:auto">已勾選 12 張 · 22:41</span></div>
+          <div style="display:flex; align-items:center; justify-content:space-between; background:#FFFFFF; border:1px solid #E1E3E7; border-radius:10px; padding:12px"><span style="display:flex; flex-direction:column; gap:2px"><span style="font-size:12.5px; font-weight:700; color:#23272E">本批可產生文件</span><span style="font-size:11px; color:#8A8F98">3 種文件 · 即時同步</span></span><span style="font-family:'Manrope',sans-serif; font-size:22px; font-weight:800; color:#8A6A00">12</span></div>
+          <div style="background:#F5C531; border-radius:10px; padding:12px; text-align:center; font-size:13.5px; font-weight:700; color:#1A1400">合併下載 · 3 份</div>
+        </div>
+      </div>
+    </div>
+  </div>
+  </sc-if>
+
+  <div id="tools" style="border-bottom:1px solid #EDEEF0; background:#F7F8F9">
+    <div style="max-width:1140px; margin:0 auto; padding:104px 48px; display:flex; flex-direction:column; gap:44px">
+      <div style="display:flex; align-items:flex-end; gap:40px; flex-wrap:wrap">
+        <div style="flex:1; min-width:320px; display:flex; flex-direction:column; gap:16px">
+          <span style="font-family:'IBM Plex Mono',monospace; font-size:11px; letter-spacing:.18em; color:#A2A7B0">01 — 04</span>
+          <h2 style="margin:0; font-size:38px; font-weight:900; line-height:1.3; letter-spacing:-.01em; color:#14161A; text-wrap:pretty">四個工具，一個面板，切換不用開分頁</h2>
+        </div>
+        <p style="margin:0; flex:none; width:340px; font-size:14px; line-height:1.9; color:#6C7178; text-wrap:pretty">標頭、圖示列、底部主按鈕永遠在同一個位置；換工具只換中間內容。快捷鍵 1／2／3／4 直接切。</p>
+      </div>
+
+      <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(250px, 1fr)); gap:16px">
+        <div style="background:#FFFFFF; border:1px solid #E1E3E7; border-radius:14px; padding:30px 28px 32px; display:flex; flex-direction:column; gap:15px" style-hover="border:1px solid #F5C531">
+          <span style="width:42px; height:42px; border-radius:11px; background:#F7F8F9; border:1px solid #E1E3E7; display:flex; align-items:center; justify-content:center"><span style="font-family:'Material Symbols Outlined'; font-size:22px; color:#14161A">receipt_long</span></span>
+          <span style="font-size:18px; font-weight:700; color:#14161A">出貨印單</span>
+          <span style="font-size:13.5px; line-height:1.9; color:#41464E; text-wrap:pretty">勾選訂單即時同步，一鍵下載寄件單、產生裝箱單、下載撿貨單。</span>
+          <div style="height:1px; background:#EDEEF0"></div>
+          <div style="display:flex; flex-direction:column; gap:8px">
+            <span style="display:flex; gap:9px; font-size:12.5px; line-height:1.75; color:#6C7178"><span style="color:#C08A17; flex:none">·</span>欄位順序可拖曳排序</span>
+            <span style="display:flex; gap:9px; font-size:12.5px; line-height:1.75; color:#6C7178"><span style="color:#C08A17; flex:none">·</span>完成紀錄可個別下載或列印</span>
+            <span style="display:flex; gap:9px; font-size:12.5px; line-height:1.75; color:#6C7178"><span style="color:#C08A17; flex:none">·</span>檔名＝日期-物流名稱-文件類型</span>
+          </div>
+        </div>
+
+        <div style="background:#FFFFFF; border:1px solid #E1E3E7; border-radius:14px; padding:30px 28px 32px; display:flex; flex-direction:column; gap:15px" style-hover="border:1px solid #F5C531">
+          <span style="width:42px; height:42px; border-radius:11px; background:#F7F8F9; border:1px solid #E1E3E7; display:flex; align-items:center; justify-content:center"><span style="font-family:'Material Symbols Outlined'; font-size:22px; color:#14161A">local_shipping</span></span>
+          <span style="font-size:18px; font-weight:700; color:#14161A">運費補助計算</span>
+          <span style="font-size:13.5px; line-height:1.9; color:#41464E; text-wrap:pretty">讀你自己的錢包頁面，算出本月運費補助用量，一鍵帶入官方申請表單。</span>
+          <div style="height:1px; background:#EDEEF0"></div>
+          <div style="display:flex; flex-direction:column; gap:8px">
+            <span style="display:flex; gap:9px; font-size:12.5px; line-height:1.75; color:#6C7178"><span style="color:#C08A17; flex:none">·</span>退貨／出貨／未取三類分開統計</span>
+            <span style="display:flex; gap:9px; font-size:12.5px; line-height:1.75; color:#6C7178"><span style="color:#C08A17; flex:none">·</span>自動判斷賣家類型的每月上限</span>
+            <span style="display:flex; gap:9px; font-size:12.5px; line-height:1.75; color:#6C7178"><span style="color:#C08A17; flex:none">·</span>每月 10–25 號申請期系統通知提醒</span>
+          </div>
+        </div>
+
+        <div style="background:#FFFFFF; border:1px solid #E1E3E7; border-radius:14px; padding:30px 28px 32px; display:flex; flex-direction:column; gap:15px" style-hover="border:1px solid #F5C531">
+          <span style="width:42px; height:42px; border-radius:11px; background:#F7F8F9; border:1px solid #E1E3E7; display:flex; align-items:center; justify-content:center"><span style="font-family:'Material Symbols Outlined'; font-size:22px; color:#14161A">calculate</span></span>
+          <span style="font-size:18px; font-weight:700; color:#14161A">毛利計算機</span>
+          <span style="font-size:13.5px; line-height:1.9; color:#41464E; text-wrap:pretty">純試算，不需要訂單資料。一般日／活動日 × 免運方案一／二，四種情境一次比。</span>
+          <div style="height:1px; background:#EDEEF0"></div>
+          <div style="display:flex; flex-direction:column; gap:8px">
+            <span style="display:flex; gap:9px; font-size:12.5px; line-height:1.75; color:#6C7178"><span style="color:#C08A17; flex:none">·</span>手續費、金流成本、活動加碼全列明細</span>
+            <span style="display:flex; gap:9px; font-size:12.5px; line-height:1.75; color:#6C7178"><span style="color:#C08A17; flex:none">·</span>底部固定結果條：售價／獲利／獲利率</span>
+            <span style="display:flex; gap:9px; font-size:12.5px; line-height:1.75; color:#6C7178"><span style="color:#C08A17; flex:none">·</span>還沒開店也能先算</span>
+          </div>
+        </div>
+
+        <div style="background:#FFFFFF; border:1px solid #F5C531; border-radius:14px; padding:30px 28px 32px; display:flex; flex-direction:column; gap:15px; position:relative; box-shadow:0 14px 30px -22px rgba(20,22,26,.3)">
+          <span style="position:absolute; top:20px; right:20px; font-family:'IBM Plex Mono',monospace; font-size:10px; letter-spacing:.14em; color:#1A1400; background:#F5C531; border-radius:4px; padding:3px 7px">NEW</span>
+          <span style="width:42px; height:42px; border-radius:11px; background:#FDF6E7; border:1px solid #F0DBA8; display:flex; align-items:center; justify-content:center"><span style="font-family:'Material Symbols Outlined'; font-size:22px; color:#7A5A0A">monitoring</span></span>
+          <span style="font-size:18px; font-weight:700; color:#14161A">價格追蹤</span>
+          <span style="font-size:13.5px; line-height:1.9; color:#41464E; text-wrap:pretty">逛商品頁一鍵加入追蹤，每天自動背景檢查一次價格，漲跌都看得到。</span>
+          <div style="height:1px; background:#EDEEF0"></div>
+          <div style="display:flex; flex-direction:column; gap:8px">
+            <span style="display:flex; gap:9px; font-size:12.5px; line-height:1.75; color:#6C7178"><span style="color:#C08A17; flex:none">·</span>可自訂群組、拖曳排序與跨群組搬移</span>
+            <span style="display:flex; gap:9px; font-size:12.5px; line-height:1.75; color:#6C7178"><span style="color:#C08A17; flex:none">·</span>縮圖、賣場、價格走勢小圖一列看完</span>
+            <span style="display:flex; gap:9px; font-size:12.5px; line-height:1.75; color:#6C7178"><span style="color:#C08A17; flex:none">·</span>目前上限 20 支商品</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div style="border-bottom:1px solid #EDEEF0">
+    <div style="max-width:1140px; margin:0 auto; padding:104px 48px; display:flex; gap:80px; align-items:flex-start; flex-wrap:wrap">
+      <div style="flex:1; min-width:400px; display:flex; flex-direction:column; gap:26px">
+        <span style="font-family:'IBM Plex Mono',monospace; font-size:11px; letter-spacing:.18em; color:#8A6A00">本次新增</span>
+        <h2 style="margin:0; font-size:38px; font-weight:900; line-height:1.28; letter-spacing:-.01em; color:#14161A; text-wrap:pretty">價格追蹤：從商品頁加入，之後它自己每天看</h2>
+        <p style="margin:0; font-size:15.5px; line-height:1.95; color:#41464E; max-width:520px; text-wrap:pretty">逛商品頁時，瀏覽器最右邊會出現一個黑底「SUPA+」小方塊。滑鼠移過去才展開「加入追蹤」，避免手滑誤觸；把手也可以上下拖曳暫時挪開。</p>
+        <div style="display:flex; flex-direction:column; gap:20px; padding-top:4px">
+          <div style="display:flex; gap:14px; align-items:flex-start"><span style="font-family:'Material Symbols Outlined'; font-size:20px; color:#7A5A0A; flex:none">verified</span><span style="display:flex; flex-direction:column; gap:5px"><span style="font-size:14.5px; font-weight:700; color:#14161A">抓的是頁面自帶的公開結構化資料</span><span style="font-size:13px; line-height:1.85; color:#6C7178; text-wrap:pretty">商品名稱、圖片、價格、賣場名稱與 Logo 都取自頁面本身提供的結構化資料，不是猜排版，比較不容易因平台改版失效。</span></span></div>
+          <div style="display:flex; gap:14px; align-items:flex-start"><span style="font-family:'Material Symbols Outlined'; font-size:20px; color:#7A5A0A; flex:none">schedule</span><span style="display:flex; flex-direction:column; gap:5px"><span style="font-size:14.5px; font-weight:700; color:#14161A">每天一次，不吵人</span><span style="font-size:13px; line-height:1.85; color:#6C7178; text-wrap:pretty">背景自動檢查，面板沒開也會跑；想立刻知道就按「立即檢查全部」。</span></span></div>
+          <div style="display:flex; gap:14px; align-items:flex-start"><span style="font-family:'Material Symbols Outlined'; font-size:20px; color:#7A5A0A; flex:none">drag_indicator</span><span style="display:flex; flex-direction:column; gap:5px"><span style="font-size:14.5px; font-weight:700; color:#14161A">群組整理，顏色標色塊</span><span style="font-size:13px; line-height:1.85; color:#6C7178; text-wrap:pretty">群組可收合、可選色，群組與商品都能拖曳排序，商品也能跨群組搬移；刪除前都會先確認。</span></span></div>
+        </div>
+      </div>
+
+      <div style="flex:none; width:360px; background:#F3F4F6; border:1px solid #DEE0E4; border-radius:14px; overflow:hidden; box-shadow:0 26px 50px -24px rgba(20,22,26,.30); display:flex; flex-direction:column">
+        <div style="height:44px; box-sizing:border-box; padding:0 13px; display:flex; align-items:center; gap:9px; background:#FFFFFF">
+          <span style="width:24px; height:24px; border-radius:5.5px; background:#F5C531; position:relative; flex:none"><span style="position:absolute; left:6px; top:10.4px; width:12px; height:3.2px; border-radius:1.6px; background:#101215"></span><span style="position:absolute; left:10.4px; top:6px; width:3.2px; height:12px; border-radius:1.6px; background:#101215"></span></span>
+          <span style="font-family:'Manrope',sans-serif; font-size:16px; font-weight:800; letter-spacing:-.01em; color:#14161A; flex:1">SUPA<span style="color:#8A6A00">+</span></span>
+          <span style="display:inline-flex; align-items:center; gap:5px; flex:none"><span style="width:6px; height:6px; border-radius:50%; background:#0F6E42"></span><span style="font-family:'IBM Plex Mono',monospace; font-size:10px; color:#0F6E42">已同步</span></span>
+          <span style="font-family:'Material Symbols Outlined'; font-size:17px; color:#8A8F98; flex:none">settings</span>
+        </div>
+        <div style="height:38px; box-sizing:border-box; display:flex; background:#FFFFFF; border-bottom:1px solid #E1E3E7">
+          <span style="flex:1; display:flex; align-items:center; justify-content:center; border-bottom:2px solid transparent"><span style="font-family:'Material Symbols Outlined'; font-size:19px; color:#8A8F98">receipt_long</span></span>
+          <span style="flex:1; display:flex; align-items:center; justify-content:center; border-bottom:2px solid transparent"><span style="font-family:'Material Symbols Outlined'; font-size:19px; color:#8A8F98">local_shipping</span></span>
+          <span style="flex:1; display:flex; align-items:center; justify-content:center; border-bottom:2px solid transparent"><span style="font-family:'Material Symbols Outlined'; font-size:19px; color:#8A8F98">calculate</span></span>
+          <span style="flex:1; display:flex; align-items:center; justify-content:center; border-bottom:2px solid #F5C531; background:#F3F4F6"><span style="font-family:'Material Symbols Outlined'; font-size:19px; color:#14161A">monitoring</span></span>
+        </div>
+        <div style="padding:14px 13px 13px; display:flex; flex-direction:column; gap:9px">
+          <div style="display:flex; align-items:baseline; gap:8px"><span style="font-size:15px; font-weight:700; color:#14161A">價格追蹤</span><span style="font-family:'IBM Plex Mono',monospace; font-size:10.5px; color:#A2A7B0; margin-left:auto">12 / 20 支 · 06:00 檢查</span></div>
+          <div style="background:#FFFFFF; border:1px solid #E1E3E7; border-radius:10px; padding:10px 11px; display:flex; align-items:center; gap:8px"><span style="font-family:'Material Symbols Outlined'; font-size:16px; color:#6C7178">create_new_folder</span><span style="font-size:12.5px; font-weight:500; color:#23272E; flex:1">新增群組</span><span style="font-family:'IBM Plex Mono',monospace; font-size:10.5px; color:#A2A7B0">3 組</span></div>
+
+          <div style="display:flex; flex-direction:column; gap:6px">
+            <div style="background:#FDF6E7; border:1px solid #F0DBA8; border-radius:8px; padding:7px 10px; display:flex; align-items:center; gap:7px"><span style="font-family:'Material Symbols Outlined'; font-size:15px; color:#7A5A0A">expand_more</span><span style="font-size:12px; font-weight:700; color:#7A5A0A; flex:1">熱賣競品</span><span style="font-family:'IBM Plex Mono',monospace; font-size:10.5px; color:#7A5A0A">5</span></div>
+            <div style="background:#FFFFFF; border:1px solid #E1E3E7; border-radius:10px; padding:10px; display:flex; gap:10px; align-items:center">
+              <span style="width:38px; height:38px; border-radius:7px; background:repeating-linear-gradient(135deg,#E7E9EC 0 5px,#F3F4F6 5px 10px); flex:none"></span>
+              <span style="display:flex; flex-direction:column; gap:3px; flex:1; min-width:0">
+                <span style="font-size:12px; color:#41464E; overflow:hidden; text-overflow:ellipsis; white-space:nowrap">加厚牛皮紙箱 60×40×40 五層</span>
+                <span style="display:flex; align-items:center; gap:6px"><span style="width:12px; height:12px; border-radius:3px; background:repeating-linear-gradient(135deg,#DEE0E4 0 4px,#EDEEF0 4px 8px); flex:none"></span><span style="font-size:10.5px; color:#8A8F98; overflow:hidden; text-overflow:ellipsis; white-space:nowrap">紙箱王 · 官方賣場</span></span>
+              </span>
+              <span style="display:flex; flex-direction:column; align-items:flex-end; gap:3px; flex:none">
+                <span style="font-family:'IBM Plex Mono',monospace; font-size:12.5px; font-weight:600; color:#8A6A00">$1,280</span>
+                <span style="display:flex; align-items:center; gap:5px"><span style="display:flex; align-items:flex-end; gap:1.5px; height:12px"><span style="width:2.5px; height:5px; background:#DEE0E4"></span><span style="width:2.5px; height:7px; background:#DEE0E4"></span><span style="width:2.5px; height:6px; background:#DEE0E4"></span><span style="width:2.5px; height:9px; background:#DEE0E4"></span><span style="width:2.5px; height:8px; background:#DEE0E4"></span><span style="width:2.5px; height:12px; background:#B3402C"></span></span><span style="font-family:'IBM Plex Mono',monospace; font-size:10.5px; color:#B3402C">+6.7%</span></span>
+              </span>
+            </div>
+            <div style="background:#FFFFFF; border:1px solid #E1E3E7; border-radius:10px; padding:10px; display:flex; gap:10px; align-items:center">
+              <span style="width:38px; height:38px; border-radius:7px; background:repeating-linear-gradient(135deg,#E7E9EC 0 5px,#F3F4F6 5px 10px); flex:none"></span>
+              <span style="display:flex; flex-direction:column; gap:3px; flex:1; min-width:0">
+                <span style="font-size:12px; color:#41464E; overflow:hidden; text-overflow:ellipsis; white-space:nowrap">氣泡袋 防水破壞袋 混合尺寸</span>
+                <span style="display:flex; align-items:center; gap:6px"><span style="width:12px; height:12px; border-radius:3px; background:repeating-linear-gradient(135deg,#DEE0E4 0 4px,#EDEEF0 4px 8px); flex:none"></span><span style="font-size:10.5px; color:#8A8F98; overflow:hidden; text-overflow:ellipsis; white-space:nowrap">包材倉 · 出貨快</span></span>
+              </span>
+              <span style="display:flex; flex-direction:column; align-items:flex-end; gap:3px; flex:none">
+                <span style="font-family:'IBM Plex Mono',monospace; font-size:12.5px; font-weight:600; color:#8A6A00">$268</span>
+                <span style="display:flex; align-items:center; gap:5px"><span style="display:flex; align-items:flex-end; gap:1.5px; height:12px"><span style="width:2.5px; height:11px; background:#DEE0E4"></span><span style="width:2.5px; height:10px; background:#DEE0E4"></span><span style="width:2.5px; height:10px; background:#DEE0E4"></span><span style="width:2.5px; height:7px; background:#DEE0E4"></span><span style="width:2.5px; height:6px; background:#DEE0E4"></span><span style="width:2.5px; height:4px; background:#0F6E42"></span></span><span style="font-family:'IBM Plex Mono',monospace; font-size:10.5px; color:#0F6E42">−12.1%</span></span>
+              </span>
+            </div>
+            <div style="background:#E9F3F8; border:1px solid #BFDCE9; border-radius:8px; padding:7px 10px; display:flex; align-items:center; gap:7px"><span style="font-family:'Material Symbols Outlined'; font-size:15px; color:#0B4F66">chevron_right</span><span style="font-size:12px; font-weight:700; color:#0B4F66; flex:1">自家商品比價</span><span style="font-family:'IBM Plex Mono',monospace; font-size:10.5px; color:#0B4F66">7</span></div>
+          </div>
+        </div>
+        <div style="margin-top:auto; background:#FFFFFF; border-top:1px solid #E1E3E7; padding:11px 13px 13px"><div style="background:#F5C531; border-radius:10px; padding:12px; text-align:center; font-size:13.5px; font-weight:700; color:#1A1400">立即檢查全部</div></div>
+      </div>
+    </div>
+  </div>
+
+  <div id="privacy" style="border-bottom:1px solid #EDEEF0; background:#F7F8F9">
+    <div style="max-width:1140px; margin:0 auto; padding:104px 48px; display:flex; flex-direction:column; gap:40px">
+      <div style="display:flex; align-items:flex-end; gap:40px; flex-wrap:wrap">
+        <div style="flex:1; min-width:320px; display:flex; flex-direction:column; gap:16px">
+          <span style="font-family:'IBM Plex Mono',monospace; font-size:11px; letter-spacing:.18em; color:#A2A7B0">資料處理</span>
+          <h2 style="margin:0; font-size:38px; font-weight:900; line-height:1.3; letter-spacing:-.01em; color:#14161A">你的訂單資料不會上傳</h2>
+        </div>
+        <p style="margin:0; flex:none; width:340px; font-size:14px; line-height:1.9; color:#6C7178; text-wrap:pretty">工具在你的瀏覽器裡讀你已經登入、已經看得到的頁面，不需要帳號密碼，也沒有我們的伺服器在中間。</p>
+      </div>
+      <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(260px, 1fr)); gap:16px">
+        <div style="background:#FFFFFF; border:1px solid #E1E3E7; border-radius:14px; padding:28px; display:flex; flex-direction:column; gap:12px">
+          <span style="font-family:'Material Symbols Outlined'; font-size:23px; color:#0F6E42">lock</span>
+          <span style="font-size:16px; font-weight:700; color:#14161A">本機處理</span>
+          <span style="font-size:13px; line-height:1.9; color:#41464E; text-wrap:pretty">訂單、金額、運費資料都在你的瀏覽器內計算與產檔，不傳送到第三方。</span>
+        </div>
+        <div style="background:#FFFFFF; border:1px solid #E1E3E7; border-radius:14px; padding:28px; display:flex; flex-direction:column; gap:12px">
+          <span style="font-family:'Material Symbols Outlined'; font-size:23px; color:#0F6E42">key_off</span>
+          <span style="font-size:16px; font-weight:700; color:#14161A">不要你的密碼</span>
+          <span style="font-size:13px; line-height:1.9; color:#41464E; text-wrap:pretty">不代登入、不接管帳號，只在你自己打開的頁面上工作。</span>
+        </div>
+        <div style="background:#FFFFFF; border:1px solid #E1E3E7; border-radius:14px; padding:28px; display:flex; flex-direction:column; gap:12px">
+          <span style="font-family:'Material Symbols Outlined'; font-size:23px; color:#0F6E42">public</span>
+          <span style="font-size:16px; font-weight:700; color:#14161A">追蹤只讀公開資料</span>
+          <span style="font-size:13px; line-height:1.9; color:#41464E; text-wrap:pretty">價格追蹤讀的是商品頁本身提供的公開結構化資料，追蹤清單存在你的裝置上。</span>
+        </div>
+      </div>
+
+      <div style="background:#FDF6E7; border:1px solid #F0DBA8; border-radius:14px; padding:32px 34px; display:flex; flex-direction:column; gap:20px">
+        <div style="display:flex; align-items:center; gap:10px"><span style="width:5px; height:5px; border-radius:50%; background:#C08A17; flex:none"></span><span style="font-size:16px; font-weight:700; color:#7A5A0A">先講清楚的限制</span></div>
+        <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(280px, 1fr)); gap:22px 34px">
+          <div style="display:flex; flex-direction:column; gap:6px"><span style="font-family:'IBM Plex Mono',monospace; font-size:11px; color:#C08A17">01</span><span style="font-size:14px; font-weight:700; color:#14161A">價格追蹤上限 20 支</span><span style="font-size:13px; line-height:1.85; color:#6C7178; text-wrap:pretty">背景每天要逐一開分頁檢查，數量太多會拖慢速度。</span></div>
+          <div style="display:flex; flex-direction:column; gap:6px"><span style="font-family:'IBM Plex Mono',monospace; font-size:11px; color:#C08A17">02</span><span style="font-size:14px; font-weight:700; color:#14161A">拖曳把手位置不會記憶</span><span style="font-size:13px; line-height:1.85; color:#6C7178; text-wrap:pretty">重新整理後回到預設位置，這是待改進項目。</span></div>
+          <div style="display:flex; flex-direction:column; gap:6px"><span style="font-family:'IBM Plex Mono',monospace; font-size:11px; color:#C08A17">03</span><span style="font-size:14px; font-weight:700; color:#14161A">抓取邏輯還是第一版</span><span style="font-size:13px; line-height:1.85; color:#6C7178; text-wrap:pretty">平台頁面結構若變動可能需要微調；目前已處理過網址格式被前端改寫的狀況。</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div id="install" style="border-bottom:1px solid #EDEEF0">
+    <div style="max-width:1140px; margin:0 auto; padding:104px 48px; display:flex; gap:80px; flex-wrap:wrap; align-items:flex-start">
+      <div style="flex:1; min-width:360px; display:flex; flex-direction:column; gap:30px">
+        <div style="display:flex; flex-direction:column; gap:16px">
+          <span style="font-family:'IBM Plex Mono',monospace; font-size:11px; letter-spacing:.18em; color:#A2A7B0">安裝</span>
+          <h2 style="margin:0; font-size:38px; font-weight:900; line-height:1.3; letter-spacing:-.01em; color:#14161A">三步、大約一分鐘</h2>
+        </div>
+        <div style="display:flex; flex-direction:column">
+          <div style="display:flex; gap:20px; padding:20px 0; border-bottom:1px solid #EDEEF0"><span style="font-family:'Manrope',sans-serif; font-size:19px; font-weight:800; color:#8A6A00; width:30px; flex:none">01</span><span style="display:flex; flex-direction:column; gap:5px"><span style="font-size:15px; font-weight:700; color:#14161A">從 Chrome 線上應用程式商店安裝</span><span style="font-size:13px; line-height:1.85; color:#6C7178">按「加入 Chrome」，確認權限後就完成安裝。</span></span></div>
+          <div style="display:flex; gap:20px; padding:20px 0; border-bottom:1px solid #EDEEF0"><span style="font-family:'Manrope',sans-serif; font-size:19px; font-weight:800; color:#8A6A00; width:30px; flex:none">02</span><span style="display:flex; flex-direction:column; gap:5px"><span style="font-size:15px; font-weight:700; color:#14161A">釘選到工具列</span><span style="font-size:13px; line-height:1.85; color:#6C7178">按擴充功能圖示 → 釘選 SUPA+，之後一鍵就能開側邊面板。</span></span></div>
+          <div style="display:flex; gap:20px; padding:20px 0"><span style="font-family:'Manrope',sans-serif; font-size:19px; font-weight:800; color:#8A6A00; width:30px; flex:none">03</span><span style="display:flex; flex-direction:column; gap:5px"><span style="font-size:15px; font-weight:700; color:#14161A">打開出貨頁，開始勾選</span><span style="font-size:13px; line-height:1.85; color:#6C7178">面板會自動同步你勾選的訂單；快捷鍵 1／2／3／4 切換工具。</span></span></div>
+        </div>
+        <a href="#install" style="align-self:flex-start; background:#F5C531; border-radius:10px; padding:16px 28px; font-size:15px; font-weight:700; color:#1A1400" style-hover="background:#FFD75C; color:#1A1400">加入 Chrome — 免費試用 14 天</a>
+        <span style="font-family:'IBM Plex Mono',monospace; font-size:10.5px; color:#A2A7B0">商店連結上架後補上。</span>
+      </div>
+
+      <div id="pricing" style="flex:none; width:380px; display:flex; flex-direction:column; gap:12px">
+        <div style="background:#FFFFFF; border:1px solid #DEE0E4; border-top:3px solid #F5C531; border-radius:14px; padding:34px 32px; display:flex; flex-direction:column; gap:22px; box-shadow:0 20px 44px -28px rgba(20,22,26,.32)">
+          <div style="display:flex; flex-direction:column; gap:7px">
+            <span style="font-size:17px; font-weight:700; color:#14161A">SUPA+ 訂閱</span>
+            <span style="font-size:13px; line-height:1.85; color:#6C7178">四個工具全開，之後新增的工具也包含在內。</span>
+          </div>
+          <div style="display:flex; align-items:baseline; gap:9px">
+            <span style="font-family:'Manrope',sans-serif; font-size:46px; font-weight:800; letter-spacing:-.02em; color:#14161A">{{ monthlyPrice }}</span>
+            <span style="font-size:13.5px; color:#6C7178">／月</span>
+          </div>
+          <div style="display:flex; align-items:center; gap:8px; background:#F7F8F9; border:1px solid #E1E3E7; border-radius:10px; padding:11px 12px"><span style="font-size:12.5px; color:#6C7178; flex:1">年繳</span><span style="font-family:'IBM Plex Mono',monospace; font-size:12px; font-weight:600; color:#23272E">{{ annualPrice }}</span></div>
+          <div style="height:1px; background:#EDEEF0"></div>
+          <div style="display:flex; flex-direction:column; gap:11px">
+            <span style="display:flex; gap:10px; align-items:center; font-size:13.5px; color:#41464E"><span style="font-family:'Material Symbols Outlined'; font-size:18px; color:#0F6E42; flex:none">check</span>出貨印單、運費補助、毛利計算、價格追蹤</span>
+            <span style="display:flex; gap:10px; align-items:center; font-size:13.5px; color:#41464E"><span style="font-family:'Material Symbols Outlined'; font-size:18px; color:#0F6E42; flex:none">check</span>免費試用 14 天，不需先付款</span>
+            <span style="display:flex; gap:10px; align-items:center; font-size:13.5px; color:#41464E"><span style="font-family:'Material Symbols Outlined'; font-size:18px; color:#0F6E42; flex:none">check</span>可隨時取消，取消後仍可用到期末</span>
+          </div>
+          <div style="background:#F5C531; border-radius:10px; padding:14px; text-align:center; font-size:14.5px; font-weight:700; color:#1A1400">開始 14 天試用</div>
+        </div>
+        <span style="font-family:'IBM Plex Mono',monospace; font-size:10.5px; line-height:1.7; color:#A2A7B0">方案金額為草案，確認後我直接改成正式數字。</span>
+      </div>
+    </div>
+  </div>
+
+  <sc-if value="{{ showTestimonials }}" hint-placeholder-val="{{ true }}">
+  <div style="border-bottom:1px solid #EDEEF0; background:#F7F8F9">
+    <div style="max-width:1140px; margin:0 auto; padding:88px 48px; display:flex; flex-direction:column; gap:28px">
+      <div style="display:flex; align-items:baseline; gap:16px; flex-wrap:wrap">
+        <h2 style="margin:0; font-size:30px; font-weight:900; letter-spacing:-.01em; color:#14161A">賣家怎麼說</h2>
+        <span style="font-family:'IBM Plex Mono',monospace; font-size:11px; letter-spacing:.12em; color:#A2A7B0">待補 — 三則使用者回饋</span>
+      </div>
+      <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(280px, 1fr)); gap:16px">
+        <div style="background:repeating-linear-gradient(135deg,#FFFFFF 0 8px,#F3F4F6 8px 16px); border:1px dashed #DEE0E4; border-radius:14px; padding:28px; min-height:160px; display:flex; flex-direction:column; justify-content:space-between; gap:18px">
+          <span style="font-family:'IBM Plex Mono',monospace; font-size:11.5px; line-height:1.85; color:#6C7178">引言一句話<br>／ 出貨印單省時間</span>
+          <span style="font-family:'IBM Plex Mono',monospace; font-size:10.5px; color:#A2A7B0">姓名 · 賣場類型 · 月出貨量</span>
+        </div>
+        <div style="background:repeating-linear-gradient(135deg,#FFFFFF 0 8px,#F3F4F6 8px 16px); border:1px dashed #DEE0E4; border-radius:14px; padding:28px; min-height:160px; display:flex; flex-direction:column; justify-content:space-between; gap:18px">
+          <span style="font-family:'IBM Plex Mono',monospace; font-size:11.5px; line-height:1.85; color:#6C7178">引言一句話<br>／ 運費補助沒再漏報</span>
+          <span style="font-family:'IBM Plex Mono',monospace; font-size:10.5px; color:#A2A7B0">姓名 · 賣場類型 · 月出貨量</span>
+        </div>
+        <div style="background:repeating-linear-gradient(135deg,#FFFFFF 0 8px,#F3F4F6 8px 16px); border:1px dashed #DEE0E4; border-radius:14px; padding:28px; min-height:160px; display:flex; flex-direction:column; justify-content:space-between; gap:18px">
+          <span style="font-family:'IBM Plex Mono',monospace; font-size:11.5px; line-height:1.85; color:#6C7178">引言一句話<br>／ 價格追蹤抓到調價</span>
+          <span style="font-family:'IBM Plex Mono',monospace; font-size:10.5px; color:#A2A7B0">姓名 · 賣場類型 · 月出貨量</span>
+        </div>
+      </div>
+    </div>
+  </div>
+  </sc-if>
+
+  <div id="faq" style="border-bottom:1px solid #EDEEF0">
+    <div style="max-width:1140px; margin:0 auto; padding:104px 48px; display:flex; gap:80px; flex-wrap:wrap; align-items:flex-start">
+      <div style="flex:none; width:300px; display:flex; flex-direction:column; gap:16px">
+        <span style="font-family:'IBM Plex Mono',monospace; font-size:11px; letter-spacing:.18em; color:#A2A7B0">常見問題</span>
+        <h2 style="margin:0; font-size:32px; font-weight:900; line-height:1.3; letter-spacing:-.01em; color:#14161A">先問清楚再安裝</h2>
+        <p style="margin:0; font-size:13px; line-height:1.9; color:#6C7178; text-wrap:pretty">還有沒回答到的，寫信給我們：<a href="mailto:hello@supaplus.app">hello@supaplus.app</a></p>
+      </div>
+      <div style="flex:1; min-width:400px; display:flex; flex-direction:column">
+        <div style="padding:22px 0; border-bottom:1px solid #EDEEF0; display:flex; flex-direction:column; gap:9px"><span style="font-size:16px; font-weight:700; color:#14161A">會不會被判定違規？</span><span style="font-size:13.5px; line-height:1.95; color:#41464E; text-wrap:pretty">工具只在你自己的瀏覽器裡整理你已登入、已看得到的頁面資料，不代操作、不繞過任何驗證。名稱與商店標題也不使用任何平台商標。</span></div>
+        <div style="padding:22px 0; border-bottom:1px solid #EDEEF0; display:flex; flex-direction:column; gap:9px"><span style="font-size:16px; font-weight:700; color:#14161A">需要提供帳號密碼嗎？</span><span style="font-size:13.5px; line-height:1.95; color:#41464E; text-wrap:pretty">不需要。你自己登入後開頁面即可，擴充功能不接管登入流程。</span></div>
+        <div style="padding:22px 0; border-bottom:1px solid #EDEEF0; display:flex; flex-direction:column; gap:9px"><span style="font-size:16px; font-weight:700; color:#14161A">運費補助的金額算得準嗎？</span><span style="font-size:13.5px; line-height:1.95; color:#41464E; text-wrap:pretty">依你錢包頁面實際列出的紀錄統計，分退貨／出貨／未取三類，並依賣家類型對應每月上限。送出申請前建議仍以官方表單畫面為準。</span></div>
+        <div style="padding:22px 0; border-bottom:1px solid #EDEEF0; display:flex; flex-direction:column; gap:9px"><span style="font-size:16px; font-weight:700; color:#14161A">價格追蹤為什麼只能 20 支？</span><span style="font-size:13.5px; line-height:1.95; color:#41464E; text-wrap:pretty">背景檢查是逐一開分頁讀取，數量太多會拖慢瀏覽器。上限會隨檢查方式改進再放寬。</span></div>
+        <div style="padding:22px 0; border-bottom:1px solid #EDEEF0; display:flex; flex-direction:column; gap:9px"><span style="font-size:16px; font-weight:700; color:#14161A">支援淺色模式嗎？</span><span style="font-size:13.5px; line-height:1.95; color:#41464E; text-wrap:pretty">跟隨系統設定，也可以在設定頁固定成深色或淺色。</span></div>
+        <div style="padding:22px 0; display:flex; flex-direction:column; gap:9px"><span style="font-size:16px; font-weight:700; color:#14161A">試用結束後資料會不見嗎？</span><span style="font-size:13.5px; line-height:1.95; color:#41464E; text-wrap:pretty">追蹤清單、群組與欄位設定都存在你的裝置上，重新訂閱後照舊可用。</span></div>
+      </div>
+    </div>
+  </div>
+
+  <div style="border-bottom:1px solid #EDEEF0; background:#F7F8F9">
+    <div style="max-width:1140px; margin:0 auto; padding:88px 48px; display:flex; gap:80px; flex-wrap:wrap; align-items:flex-start">
+      <div style="flex:none; width:300px; display:flex; flex-direction:column; gap:16px">
+        <span style="font-family:'IBM Plex Mono',monospace; font-size:11px; letter-spacing:.18em; color:#A2A7B0">更新紀錄</span>
+        <h2 style="margin:0; font-size:32px; font-weight:900; line-height:1.3; letter-spacing:-.01em; color:#14161A">改了什麼都寫出來</h2>
+      </div>
+      <div style="flex:1; min-width:400px; display:flex; flex-direction:column; gap:18px">
+        <div style="background:#FFFFFF; border:1px solid #E1E3E7; border-radius:14px; padding:28px 30px; display:flex; flex-direction:column; gap:16px">
+          <div style="display:flex; align-items:center; gap:12px"><span style="font-family:'IBM Plex Mono',monospace; font-size:12.5px; font-weight:600; color:#8A6A00">v0.38.3</span><span style="font-family:'IBM Plex Mono',monospace; font-size:10.5px; color:#A2A7B0">2026-07</span><span style="font-family:'IBM Plex Mono',monospace; font-size:10px; letter-spacing:.12em; color:#1A1400; background:#F5C531; border-radius:4px; padding:3px 7px; margin-left:auto">LATEST</span></div>
+          <div style="display:flex; flex-direction:column; gap:10px">
+            <span style="display:flex; gap:10px; font-size:13.5px; line-height:1.85; color:#41464E"><span style="color:#8A6A00; flex:none">＋</span>新增價格追蹤：商品頁把手一鍵加入、每日自動檢查、追蹤清單與價格走勢</span>
+            <span style="display:flex; gap:10px; font-size:13.5px; line-height:1.85; color:#41464E"><span style="color:#8A6A00; flex:none">＋</span>追蹤清單支援自訂群組、收合、拖曳排序與跨群組搬移，群組可標色</span>
+            <span style="display:flex; gap:10px; font-size:13.5px; line-height:1.85; color:#6C7178"><span style="color:#0B6E8F; flex:none">△</span>改用頁面自帶的公開結構化資料抓取，已處理網址格式被前端改寫的狀況</span>
+          </div>
+        </div>
+        <span style="font-family:'IBM Plex Mono',monospace; font-size:10.5px; line-height:1.7; color:#A2A7B0">更早的版本紀錄待補：把你要公開的項目給我，我照這個格式往下排。</span>
+      </div>
+    </div>
+  </div>
+
+  <div style="background:#FFFFFF">
+    <div style="max-width:1140px; margin:0 auto; padding:96px 48px 36px; display:flex; flex-direction:column; gap:52px">
+      <div style="display:flex; gap:36px; align-items:center; justify-content:space-between; flex-wrap:wrap; background:#14161A; border-radius:16px; padding:44px 48px">
+        <div style="display:flex; flex-direction:column; gap:10px; flex:1; min-width:300px">
+          <span style="font-size:26px; font-weight:900; letter-spacing:-.01em; color:#FFFFFF">今天的出貨單，讓它自己印完</span>
+          <span style="font-size:14px; line-height:1.85; color:#A2A7B0">安裝一分鐘，14 天免費試用，不合用直接移除。</span>
+        </div>
+        <a href="#install" style="background:#F5C531; border-radius:10px; padding:16px 30px; font-size:15px; font-weight:700; color:#1A1400; flex:none" style-hover="background:#FFD75C; color:#1A1400">加入 Chrome</a>
+      </div>
+      <div style="display:flex; gap:26px; align-items:center; flex-wrap:wrap; border-top:1px solid #EDEEF0; padding-top:30px">
+        <span style="width:22px; height:22px; border-radius:5px; background:#F5C531; position:relative; flex:none"><span style="position:absolute; left:5.5px; top:9.5px; width:11px; height:3px; border-radius:1.5px; background:#101215"></span><span style="position:absolute; left:9.5px; top:5.5px; width:3px; height:11px; border-radius:1.5px; background:#101215"></span></span>
+        <span style="font-family:'Manrope',sans-serif; font-size:15px; font-weight:800; color:#14161A">SUPA<span style="color:#8A6A00">+</span></span>
+        <span style="font-size:12px; color:#8A8F98; flex:1">出貨印單・運費補助申請・毛利計算機・價格追蹤</span>
+        <span style="display:flex; gap:22px; align-items:center">
+          <a href="#privacy" style="font-size:12px; color:#6C7178" style-hover="color:#14161A">資料處理說明</a>
+          <a href="#faq" style="font-size:12px; color:#6C7178" style-hover="color:#14161A">常見問題</a>
+          <a href="mailto:hello@supaplus.app" style="font-size:12px; color:#6C7178" style-hover="color:#14161A">聯絡我們</a>
+        </span>
+        <span style="font-family:'IBM Plex Mono',monospace; font-size:10.5px; color:#C3C7CD; width:100%">SUPA+ 為獨立開發的第三方工具，與任何電商平台無隸屬關係。</span>
+      </div>
+    </div>
+  </div>
+
+  <div onClick="{{ toggleHero }}" style="position:fixed; right:24px; bottom:24px; z-index:40; background:#FFFFFF; border:1px solid #DEE0E4; border-radius:999px; padding:11px 17px; display:flex; align-items:center; gap:9px; cursor:pointer; box-shadow:0 14px 30px -16px rgba(20,22,26,.35)" style-hover="border:1px solid #F5C531">
+    <span style="font-family:'Material Symbols Outlined'; font-size:16px; color:#8A6A00">swap_horiz</span>
+    <span style="font-family:'IBM Plex Mono',monospace; font-size:11px; letter-spacing:.1em; color:#41464E">首屏結構 {{ heroLabel }}</span>
+  </div>
+
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;heroVariant&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;A 大標＋面板&quot;,&quot;B 三步流程&quot;],&quot;default&quot;:&quot;A 大標＋面板&quot;,&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;版面&quot;},&quot;showTestimonials&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:true,&quot;tsType&quot;:&quot;boolean&quot;,&quot;section&quot;:&quot;版面&quot;},&quot;monthlyPrice&quot;:{&quot;editor&quot;:&quot;text&quot;,&quot;default&quot;:&quot;NT$149&quot;,&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;方案&quot;},&quot;annualPrice&quot;:{&quot;editor&quot;:&quot;text&quot;,&quot;default&quot;:&quot;NT$1,490 / 年（省兩個月）&quot;,&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;方案&quot;}}">
+class Component extends DCLogic {
+  constructor(props) {
+    super(props);
+    this.state = { hero: props.heroVariant === "B 三步流程" ? "B" : "A" };
+  }
+  renderVals() {
+    const hero = this.state.hero;
+    return {
+      isA: hero === "A",
+      isB: hero === "B",
+      heroLabel: hero === "A" ? "A · 大標＋面板" : "B · 三步流程",
+      toggleHero: () => this.setState(s => ({ hero: s.hero === "A" ? "B" : "A" })),
+      monthlyPrice: this.props.monthlyPrice ?? "NT$149",
+      annualPrice: this.props.annualPrice ?? "NT$1,490 / 年（省兩個月）",
+      showTestimonials: this.props.showTestimonials ?? true
+    };
+  }
+}
+</script>
+</body>
+</html>
